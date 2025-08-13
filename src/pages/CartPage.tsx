@@ -1,6 +1,6 @@
 import React from 'react'
 
-const CartPage = () => {
+const CartPage:React.FC = () => {
   return (
     <div>
       Cart

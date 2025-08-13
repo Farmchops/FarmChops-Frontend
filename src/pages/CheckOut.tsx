@@ -1,6 +1,6 @@
 import React from 'react'
 
-const CheckOut = () => {
+const CheckOut:React.FC = () => {
   return (
     <div>
       CheckOut

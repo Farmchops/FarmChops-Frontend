@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Thanks = () => {
+const Thanks:React.FC  = () => {
   return (
     <div>
       Thakns
