@@ -31,7 +31,7 @@ const WhyChooseUs: React.FC = () => {
 
 
             {/* Right Text */}
-            <div className="max-w-md md:w-1/2 text-[#0A0A0A] md:my-8">
+            <div className="max-w-md md:w-1/2 text-[#0A0A0A] md:my-8 m-4 ">
                 <p className="uppercase text-xs  ">
                     Why Choose Us
                 </p>

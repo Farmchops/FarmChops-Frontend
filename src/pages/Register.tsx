@@ -74,7 +74,7 @@ export default function Register() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md"
+        className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md mx-4"
       >
         <h2 className="text-2xl md:text-3xl font-medium text-gray-900 text-center mb-6">
           Create Account

@@ -46,6 +46,7 @@
   @apply w-full px-3 py-2 border rounded-md mb-2 outline-none placeholder:text-sm;
   border-color: #E6E6E6;
 } */
+ 
 .custom-input:focus {
   border-color: #E6E6E6;
 }
