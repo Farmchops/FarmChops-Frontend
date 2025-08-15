@@ -2,8 +2,24 @@ import React, { useState } from "react";
 import { FilterSidebar } from "../components/Product/FilterBar";
 import { SortBar } from "../components/Product/SortBar";
 import { ProductGrid } from "../components/Product/ProductGrid";
-import image from "../assets/product.jpg"
+// import image from "../assets/product.jpg"
 import ExploreStore from "../components/ExploreStore";
+
+
+export type ProductAvailability = "in stock" | "on sale" | "sharable product";
+
+export type ProductQuantityType = "bulk" | "retail";
+
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  category: string[]; // e.g. ["vegetable", "herbs"]
+  quantity: ProductQuantityType;
+  availability: ProductAvailability;
+}
+
 
 export interface Product {
   id: number;
@@ -12,13 +28,9 @@ export interface Product {
   image: string;
 }
 
-const mockProducts: Product[] = Array(9).fill(null).map((_, i) => ({
-  id: i + 1,
-  name: "Green Apple",
-  price: 234,
-  image: image,
-}));
 
+
+import { mockProducts } from "../data/productdata";
 
 const Products: React.FC = () => {
   const [products] = useState<Product[]>(mockProducts);

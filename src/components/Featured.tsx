@@ -47,7 +47,7 @@ const Featured: React.FC = () => {
             <h1 className="text-3xl font-medium mb-8 text-center">Featured Product</h1>
 
             {/* Category Grid */}
-            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 justify-center ">
+            <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-4 justify-center ">
                 {featured.map((feat) => (
                     <div
                         key={feat.id}

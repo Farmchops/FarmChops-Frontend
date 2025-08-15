@@ -35,11 +35,25 @@
 }
 
 
-body {
+/* body {
   font-family: "NeueMontreal";
+} */
+
+
+
+/* index.css or App.css */
+body {
+  font-family: "Nunito Sans", sans-serif;
 }
 
 
+/* h1 {
+  font-family: "Plus Jakarta Sans", sans-serif;
+} */
+
+p {
+  font-family: "DM Sans", sans-serif;
+}
 
 /* Add the rest of your styles here... */
 

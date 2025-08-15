@@ -38,7 +38,7 @@ const Category: React.FC = () => {
             <h1 className="text-3xl font-medium mb-8 text-center">Shop by Category</h1>
 
             {/* Category Grid */}
-            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-5 justify-center md:mx-16 lg:mx-32">
+            <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-5 justify-center md:mx-16 lg:mx-32">
                 {categories.map((categ) => (
                     <div
                         key={categ.id}
