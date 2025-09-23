@@ -3,8 +3,9 @@ import { FilterSidebar } from "../components/Product/FilterBar";
 import { SortBar } from "../components/Product/SortBar";
 import { ProductGrid } from "../components/Product/ProductGrid";
 // import image from "../assets/product.jpg"
-import ExploreStore from "../components/ExploreStore";
 
+import { mockProducts } from "../data/productdata";
+import ProductPageHero from "../components/Product/ProductPageHero";
 
 export type ProductAvailability = "in stock" | "on sale" | "sharable product";
 
@@ -18,26 +19,20 @@ export interface Product {
   category: string[]; // e.g. ["vegetable", "herbs"]
   quantity: ProductQuantityType;
   availability: ProductAvailability;
-}
-
-
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
+  seller?: string;
+  shareable?: boolean;
 }
 
 
 
-import { mockProducts } from "../data/productdata";
+
 
 const Products: React.FC = () => {
   const [products] = useState<Product[]>(mockProducts);
 
   return (
     <div>
-      <ExploreStore />
+      <ProductPageHero />
       <SortBar totalResults={products.length} />
 
       <div className="flex flex-col lg:flex-row min-h-screen bg-green-50 p-4 gap-6">
@@ -50,6 +45,9 @@ const Products: React.FC = () => {
         <div className="flex-1 flex flex-col gap-4">
           <ProductGrid products={products} />
         </div>
+
+
+
       </div>
     </div>
 

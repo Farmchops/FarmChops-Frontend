@@ -3,9 +3,16 @@ import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 import cartnav from "../assets/cartnav.png";
+import { useSelector } from "react-redux";
+import type { RootState } from "../redux/store";
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
+
+    // Get total count from Redux
+    const cartCount = useSelector((state: RootState) =>
+        state.cart.items.reduce((sum, item) => sum + item.quantity, 0)
+    );
 
     // Close sidebar when a route is clicked
     const handleClose = () => setIsOpen(false);
@@ -22,15 +29,15 @@ const Navbar = () => {
                     </div>
 
                     {/* Middle - Navigation Links (Desktop) */}
-                    <div className="hidden md:flex space-x-8">
+                    <div className="hidden md:flex space-x-8 text-[15px]">
                         <Link to="/" className="hover:text-[#20571E]">Home</Link>
                         <Link to="/about" className="hover:text-[#20571E]">About Us</Link>
                         <Link to="/products" className="hover:text-[#20571E]">Products</Link>
-                        <Link to="/contact" className="hover:text-[#20571E]">Contact Us</Link>
+                        <Link to="/contact" className="hover:text-[#20571E]">Contact us</Link>
                     </div>
 
                     {/* Right - Cart & Auth Buttons */}
-                    <div className="hidden md:flex items-center space-x-4 text-[16px]">
+                    <div className="hidden md:flex items-center space-x-4 text-[16px] ">
                         {/* Cart */}
                         <Link
                             to="/cart"
@@ -38,8 +45,8 @@ const Navbar = () => {
                         >
                             <div className="relative">
                                 <img src={cartnav} alt="" />
-                                <span className="absolute -top-2 -right-2 bg-[#20571E] text-white text-xs font-light rounded-full px-1">
-                                    0
+                                <span className="absolute -top-3 -right-3 bg-[#20571E] text-white text-xs font-light rounded-full px-2 py-0.5">
+                                    {cartCount}
                                 </span>
                             </div>
                             <span className="font-base text-[#20571E]">My Cart</span>
@@ -48,16 +55,17 @@ const Navbar = () => {
                         {/* Auth Buttons */}
                         <Link
                             to="/login"
-                            className="px-3 py-1 rounded-md border border-[#1D7B3C] text-[#1D7B3C] hover:bg-[#20571E] hover:text-white transition"
+                            className="px-3 py-1 rounded-md border border-[#1D7B3C] text-[#1D7B3C] hover:bg-[#20571E] hover:text-white transition text-[15px]"
                         >
                             Login
                         </Link>
                         <Link
                             to="/signup"
-                            className="px-3 py-1 rounded-md bg-[#1D7B3C] text-white hover:bg-[#20571E] transition"
+                            className="px-3 py-1 rounded-md bg-[#1D7B3C] text-white hover:bg-[#20571E] transition font-light text-[15px]"
                         >
                             Sign Up
                         </Link>
+
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -73,7 +81,8 @@ const Navbar = () => {
             </div>
 
             {/* Pay Section (Always visible under nav) */}
-            <div className="bg-[#1D7B3C] text-white flex justify-end gap-8 py-2 text-xs md:text-[16px] pr-8">
+            <div className="bg-[#1D7B3C] text-white flex justify-end gap-8 py-2 text-xs md:text-[15px] pr-8 font-light">
+                {/* <p>Deal of the Day</p> */}
                 <p>Pay for me</p>
                 <p>Pay later</p>
                 <p>info@farm-chops.com</p>
@@ -90,7 +99,7 @@ const Navbar = () => {
                 className={`fixed top-0 right-0 h-full w-4/5 bg-white shadow-lg z-50 transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"
                     }`}
             >
-                <div className="flex justify-between items-center p-4 border-b">
+                <div className="flex justify-between items-center p-4 border- h-16 ">
                     <img src={logo} alt="Farm Chops logo" className="w-18 sm:w-24 md:w-30" />
                     <button onClick={handleClose} aria-label="Close menu">
                         <X size={24} />
@@ -111,7 +120,7 @@ const Navbar = () => {
                     >
                         <div className="relative">
                             <img src={cartnav} alt="" />
-                            <span className="absolute -top-2 -right-2 bg-[#1D7B3C] text-white text-xs font-light rounded-full px-1">
+                            <span className="absolute -top-2 -right-2 bg-[#1D7B3C] text-white text-xs rounded-full px-1">
                                 0
                             </span>
                         </div>

@@ -9,7 +9,7 @@ export const SortBar: React.FC<SortBarProps> = ({ totalResults }) => {
     return (
         <div className="flex flex-col sm:flex-row justify-between items-center p-4 bg-green-50">
             {/* Filter Button */}
-            <button className="px-3 py-2 mt-2 rounded-full bg-[#00B207] text-white text-sm font-light hover:bg-[#20571E] transition flex gap-2">
+            <button className="px-3 py-2 mt-2 rounded-full bg-[#1D7B3C] text-white text-sm font-light hover:bg-[#20571E] transition flex gap-2">
                 Filter <img src={filter} alt="filter icon" />
             </button>
 

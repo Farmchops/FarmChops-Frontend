@@ -41,7 +41,7 @@ const featured = [
 
 const Featured: React.FC = () => {
     return (
-        <section className="max-w-screen-2xl mx-auto px-4 py-12 md:py-24 bg-green-100 text-[#1A1A1A]">
+        <section className=" mx-auto px-4 py-12 md:py-24 bg-green-100 text-[#1A1A1A]">
             {/* Section Heading */}
             <p className="text-xs text-[#00B207] font-semibold mb-2 uppercase text-center">Category</p>
             <h1 className="text-3xl font-medium mb-8 text-center">Featured Product</h1>

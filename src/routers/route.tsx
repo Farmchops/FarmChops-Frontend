@@ -12,6 +12,7 @@ import Register from "../pages/Register";
 import CartPage from "../pages/CartPage";
 import Checkout from "../pages/CheckOut";
 import Thanks from "../pages/ThankYou";
+import VerifyEmail from "../pages/VerifyEmail";
 
 // Auth & Admin
 // import PrivateRoute from "./PrivateRoute";
@@ -37,6 +38,8 @@ const router = createBrowserRouter([
             { path: "/login", element: <Login /> },
             { path: "/signup", element: <Register /> },
             { path: "/cart", element: <CartPage /> },
+            { path: "/verifyemail", element: <VerifyEmail /> },
+
             {
                 path: "/checkout",
                 // element: (
