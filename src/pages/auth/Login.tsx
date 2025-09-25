@@ -6,6 +6,7 @@ import Footer from "../../components/Footer";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { useLoginMutation } from "../../redux/api/authApi";
 import type { RootState } from "../../redux/store";
+import { EyeOff, Eye } from "lucide-react";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Login() {
     const [password, setPassword] = useState<string>("");
     const [remember, setRemember] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         // Redirect if already authenticated
@@ -82,7 +84,7 @@ export default function Login() {
                         className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md mb-3 outline-none placeholder:text-sm disabled:bg-gray-50"
                     />
 
-                    <input
+                    {/* <input
                         type="password"
                         placeholder="Password"
                         value={password}
@@ -92,7 +94,32 @@ export default function Login() {
                         }}
                         disabled={isLoading}
                         className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md mb-3 outline-none placeholder:text-sm disabled:bg-gray-50"
-                    />
+                    /> */}
+
+
+
+                    <div className="relative mb-3">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                setError("");
+                            }}
+                            disabled={isLoading}
+                            className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute text-xs right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                            {showPassword ? <EyeOff className="font-light"/> : <Eye className="font-light"/>}
+                            {/* You can swap emojis with <Eye /> and <EyeOff /> from lucide-react */}
+                        </button>
+                    </div>
+
 
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">

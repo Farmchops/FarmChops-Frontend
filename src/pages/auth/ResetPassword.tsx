@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Footer from "../../components/Footer";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { useResetPasswordMutation } from "../../redux/api/authApi";
+import { EyeOff, Eye } from "lucide-react";
+
 
 interface ResetFormData {
     resetCode: string;
@@ -28,6 +30,10 @@ export default function ResetPassword() {
 
     const [errors, setErrors] = useState<ErrorMessages>({});
     const [serverError, setServerError] = useState<string>("");
+
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
     useEffect(() => {
         if (!email) {
@@ -122,7 +128,7 @@ export default function ResetPassword() {
                         <p className="text-red-500 text-xs mb-3">{errors.resetCode}</p>
                     )}
 
-                    <input
+                    {/* <input
                         type="password"
                         name="newPassword"
                         placeholder="New Password"
@@ -133,9 +139,32 @@ export default function ResetPassword() {
                     />
                     {errors.newPassword && (
                         <p className="text-red-500 text-xs mb-3">{errors.newPassword}</p>
+                    )} */}
+
+                    <div className="relative mb-3">
+                        <input
+                            type={showNewPassword ? "text" : "password"}
+                            name="newPassword"
+                            placeholder="New Password"
+                            value={formData.newPassword}
+                            onChange={handleChange}
+                            disabled={isLoading}
+                            className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                            {showNewPassword ? <EyeOff className="font-light" /> : <Eye className="font-light" />}
+                        </button>
+                    </div>
+                    {errors.newPassword && (
+                        <p className="text-red-500 text-xs mb-3">{errors.newPassword}</p>
                     )}
 
-                    <input
+
+                    {/* <input
                         type="password"
                         name="confirmPassword"
                         placeholder="Confirm New Password"
@@ -146,7 +175,30 @@ export default function ResetPassword() {
                     />
                     {errors.confirmPassword && (
                         <p className="text-red-500 text-xs mb-3">{errors.confirmPassword}</p>
+                    )} */}
+
+                    <div className="relative mb-3">
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            name="confirmPassword"
+                            placeholder="Confirm New Password"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            disabled={isLoading}
+                            className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                            {showConfirmPassword ? <EyeOff className="font-light" /> : <Eye className="font-light" />}
+                        </button>
+                    </div>
+                    {errors.confirmPassword && (
+                        <p className="text-red-500 text-xs mb-3">{errors.confirmPassword}</p>
                     )}
+
 
                     {serverError && (
                         <p className="text-red-500 text-sm mb-3 text-center">{serverError}</p>

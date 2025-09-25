@@ -73,7 +73,7 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
             </div>
 
             {/* Price & Add to Cart */}
-            <div className="flex items-center justify-between px-1 md:px-3 pb-3">
+            <div className="flex  items-center justify-between px-1 md:px-3 pb-3">
                 <p className="text-xs md:text-sm font-medium text-[#1A1A1A]">₦{product.price}</p>
                 {/* <button 
                     onClick={onAddToCart}
@@ -84,10 +84,10 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
                 <button
                     onClick={onAddToCart}
                     disabled={adding}
-                    className={`flex items-center gap-1 px-3 py-2 rounded-md text-white text-xs md:text-sm transition ${adding ? "bg-gray-400 cursor-not-allowed" : "bg-[#1D7B3C] hover:bg-green-700"
+                    className={`flex items-center gap-1 px-1 py-1 md:px-3 md:py-2 rounded-md text-white text-xs md:text-sm transition ${adding ? "bg-gray-400 cursor-not-allowed" : "bg-[#1D7B3C] hover:bg-green-700"
                         }`}
                 >
-                    {adding ? "Added" : "Add to Cart"}
+                    {adding ? "Added" : "Add to cart"}
                     <img src={cartImg} alt="cart" className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
             </div>
