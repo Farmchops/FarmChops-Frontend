@@ -3,7 +3,7 @@ import type { Product } from "../../pages/Products";
 import { Heart, Eye } from "lucide-react";
 import cartImg from "../../assets/cart.svg";
 import { useDispatch } from "react-redux";
-import { addItem } from "../../redux/features/cartSlice";
+import { addItem } from "../../redux/features/cart/cartSlice";
 
 interface ProductCardProps {
     product: Product;

@@ -1,5 +1,5 @@
 // src/routes/routes.tsx
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "../App";
 
 // Public pages
@@ -7,12 +7,19 @@ import Home from "../pages/Home";
 import About from "../pages/About";
 import Products from "../pages/Products";
 import Contacts from "../pages/Contacts";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
+// import Login from "../pages/Login";
+// import Register from "../pages/Register";
 import CartPage from "../pages/CartPage";
 import Checkout from "../pages/CheckOut";
 import Thanks from "../pages/ThankYou";
 import VerifyEmail from "../pages/VerifyEmail";
+import EmailVerification from "../pages/auth/EmailVerification";
+import ForgotPassword from "../pages/auth/ForgetPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
+import Register from "../pages/auth/Register";
+import Login from "../pages/auth/Login";
+import { ProtectedRoute } from "../components/ProtectedRoute";
+import ProfileCompletion from "../pages/auth/ProfileCompletion";
 
 // Auth & Admin
 // import PrivateRoute from "./PrivateRoute";
@@ -35,10 +42,26 @@ const router = createBrowserRouter([
             { path: "/about", element: <About /> },
             { path: "/products", element: <Products /> },
             { path: "/contact", element: <Contacts /> },
-            { path: "/login", element: <Login /> },
-            { path: "/signup", element: <Register /> },
+            // { path: "/login", element: <Login /> },
+            // { path: "/signup", element: <Register /> },
             { path: "/cart", element: <CartPage /> },
             { path: "/verifyemail", element: <VerifyEmail /> },
+
+
+
+            // {/* Public routes */ }
+            { path: "/register", element: < Register /> },
+            { path: "/signup", element: <Navigate to="/register" replace /> },
+            { path: "/verify-email", element: <EmailVerification /> },
+            { path: "/login", element: <Login /> },
+            { path: "/forgot-password", element: <ForgotPassword /> },
+            { path: "/reset-password", element: <ResetPassword /> },
+            {
+                path: "/complete-profile", element:
+                    <ProtectedRoute>
+                        <ProfileCompletion />
+                    </ProtectedRoute>
+            } ,
 
             {
                 path: "/checkout",
