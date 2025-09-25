@@ -58,7 +58,7 @@ export const authApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+            async onQueryStarted(_unused, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
                     if (data.success && data.data) {
@@ -106,7 +106,7 @@ export const authApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+            async onQueryStarted(_unused, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
                     if (data.success && data.data) {
@@ -131,7 +131,7 @@ export const authApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
+            async onQueryStarted(_unused, { dispatch, queryFulfilled, getState }) {
                 try {
                     const { data } = await queryFulfilled;
                     if (data.success && data.data) {
@@ -162,7 +162,7 @@ export const authApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+            async onQueryStarted(_unused, { dispatch, queryFulfilled }) {
                 try {
                     await queryFulfilled;
                     dispatch(logout());

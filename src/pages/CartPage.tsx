@@ -1,10 +1,10 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus,  } from "lucide-react";
 import {
   removeItem,
   updateQuantity,
-  clearCart,
+  // clearCart,
 } from "../redux/features/cart/cartSlice";
 import type { RootState } from "../redux/store";
 import { useNavigate } from "react-router-dom";

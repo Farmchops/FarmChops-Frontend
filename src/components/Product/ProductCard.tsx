@@ -1,6 +1,7 @@
 import { useState, type FC } from "react";
 import type { Product } from "../../pages/Products";
-import { Heart, Eye } from "lucide-react";
+import { Heart,} from "lucide-react";
+// import { Heart, Eye } from "lucide-react";
 import cartImg from "../../assets/cart.svg";
 import { useDispatch } from "react-redux";
 import { addItem } from "../../redux/features/cart/cartSlice";
