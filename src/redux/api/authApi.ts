@@ -75,31 +75,6 @@ export const authApi = createApi({
         }),
 
         // Login
-        // login: builder.mutation<ApiResponse<{ user: User; token: string }>, LoginRequest>({
-        //     query: (data) => ({
-        //         url: '/login',
-        //         method: 'POST',
-        //         body: data,
-        //     }),
-        //     async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        //         try {
-        //             const { data } = await queryFulfilled;
-        //             if (data.success && data.data) {
-        //                 // Check if profile is complete
-        //                 const user = data.data.user;
-        //                 const profileComplete = !!(user.firstName && user.lastName && user.phone);
-
-        //                 dispatch(setCredentials({
-        //                     user: data.data.user,
-        //                     token: data.data.token,
-        //                     profileComplete,
-        //                 }));
-        //             }
-        //         } catch (error) {
-        //             // Handle error
-        //         }
-        //     },
-        // }),
         login: builder.mutation<ApiResponse<{ user: User; token: string }>, LoginRequest>({
             query: (data) => ({
                 url: '/login',
@@ -110,11 +85,14 @@ export const authApi = createApi({
                 try {
                     const { data } = await queryFulfilled;
                     if (data.success && data.data) {
+                        // Check if profile is complete
+                        const user = data.data.user;
+                        const profileComplete = !!(user.firstName && user.lastName && user.phone);
+
                         dispatch(setCredentials({
                             user: data.data.user,
                             token: data.data.token,
-                            // ❌ don't manually check firstName/lastName/phone
-                            profileComplete: false,
+                            profileComplete,
                         }));
                     }
                 } catch (error) {
@@ -122,7 +100,6 @@ export const authApi = createApi({
                 }
             },
         }),
-
 
         // Update profile
         updateProfile: builder.mutation<ApiResponse<{ user: User; profileComplete: boolean }>, ProfileUpdateRequest>({
