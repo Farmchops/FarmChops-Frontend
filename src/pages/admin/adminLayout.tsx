@@ -12,12 +12,14 @@ import {
     LogOut,
     Menu,
     X,
+    Shapes
 } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
 import { logout as logoutAction } from "../../redux/features/auth/authSlice";
 import { useLogoutMutation } from "../../redux/api/authApi";
+import logo from "../../assets/logo.png"
 
 const AdminLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -54,19 +56,18 @@ const AdminLayout = () => {
 
     const menuItems = [
         { path: "overview", label: "Overview", icon: LayoutDashboard },
-        { path: "categories", label: "Categories", icon: FolderTree },
+        { path: "categories", label: "Categories", icon: Shapes },
         { path: "products", label: "Products", icon: Package },
         { path: "orders", label: "Orders", icon: ShoppingCart },
         { path: "sales", label: "Sales", icon: TrendingUp },
         { path: "users", label: "Users", icon: Users },
         { path: "settings", label: "Settings", icon: Settings },
-        { path: "help", label: "Help", icon: HelpCircle },
     ];
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-green-100">
             {/* Top Navigation Bar */}
-            <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
+            <header className="bg-whiteshadow-sm fixed top-0 left-0 right-0 z-10">
                 <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-4">
                         <button
@@ -75,25 +76,30 @@ const AdminLayout = () => {
                         >
                             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
-                        <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+                        {/* <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1> */}
                     </div>
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-600">{user?.email || "Admin"}</span>
-                        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+                        <span className="text-sm text-gray-600">{user?.firstName || "Admin"}</span>
+                        <div className="w-8 h-8 rounded-full bg-gray-500 text-white  flex items-center justify-center text-sm font-semibold">
                             {user?.firstName?.charAt(0).toUpperCase() || "A"}
                         </div>
                     </div>
                 </div>
             </header>
 
-            <div className="flex pt-14">
+            <div className="flex pt">
+
                 {/* Sidebar */}
                 <aside
                     className={`fixed lg:static inset-y-0 left-0 z-20 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
                         } pt-14 lg:pt-0`}
                 >
-                    <nav className="h-full flex flex-col p-4">
-                        <ul className="flex-1 space-y-1">
+                    <nav className="min-h-screen flex flex-col p-4">
+                        <div className="flex items-center justify-center">
+                            <img src={logo} alt="Farm Chops logo" className="sm:w-24 md:w-30 " />
+
+                        </div>
+                        <ul className="flex-1 space-y-1 mt-8">
                             {menuItems.map((item) => {
                                 const Icon = item.icon;
                                 return (
@@ -102,24 +108,36 @@ const AdminLayout = () => {
                                             to={item.path}
                                             onClick={() => setSidebarOpen(false)}
                                             className={({ isActive }) =>
-                                                `flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors ${isActive ? "bg-primary text-white hover:bg-primary/90" : ""
+                                                `flex items-center gap-3 px-4 py-3 rounded-lg text-base font-light text-[#808080] transition-colors- ${isActive ? "text-[#1D7B3C] bg-[#DFF5EB]" : ""
                                                 }`
                                             }
                                         >
-                                            <Icon size={20} />
+                                            <Icon size={20} className="text-[#121212]"/>
                                             <span className="font-medium">{item.label}</span>
                                         </NavLink>
                                     </li>
                                 );
                             })}
                         </ul>
+                        <NavLink
+                            to={"help"}
+                            onClick={() => setSidebarOpen(false)}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-4 py-3 rounded-lg text-base font-light text-[#808080] transition-colors- ${isActive ? "text-[#1D7B3C] bg-[#DFF5EB]" : ""
+                                }`
+                            }
+                        >
+                            <HelpCircle size={20} className="text-[#121212]" />
+                            <span className="font-medium">Help</span>
+                        </NavLink>
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors w-full"
+                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-[#808080]  hover:bg-red-50 transition-colors w-full"
                         >
-                            <LogOut size={20} />
+                            <LogOut size={20} className="text-[#121212]" />
                             <span className="font-medium">Logout</span>
                         </button>
+
                     </nav>
                 </aside>
 
