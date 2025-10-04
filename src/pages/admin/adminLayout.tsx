@@ -2,7 +2,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
-    FolderTree,
     Package,
     ShoppingCart,
     TrendingUp,

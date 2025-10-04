@@ -11,12 +11,11 @@ const ProfileLayout = () => {
 
     // auth state
     const user = useSelector((state: RootState) => state.auth.user);
-    const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
 
     // logout mutation (uses your authApi logout endpoint)
     const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
-
+    console.log(isLoggingOut)
     // Defensive display name / initial logic
     // const displayName = (user?.firstName || user?.email?.split("@")[0] || "User") as string;
     // const avatarLetter = (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase();

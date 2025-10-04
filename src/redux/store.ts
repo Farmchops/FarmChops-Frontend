@@ -1,18 +1,46 @@
-// src/store/index.ts
+// // src/store/index.ts
+// import { configureStore } from '@reduxjs/toolkit';
+// import { authApi } from './api/authApi';
+// import authReducer from '../redux/features/auth/authSlice';
+
+// import cartReducer from "./features/cart/cartSlice";
+
+// export const store = configureStore({
+//     reducer: {
+//         auth: authReducer,
+//         [authApi.reducerPath]: authApi.reducer,
+//         cart: cartReducer,
+//     },
+//     middleware: (getDefaultMiddleware) =>
+//         getDefaultMiddleware().concat(authApi.middleware),
+// });
+
+// export type RootState = ReturnType<typeof store.getState>;
+// export type AppDispatch = typeof store.dispatch;
+
+
+
+// src/store/index.ts (Updated with Product & Category APIs)
 import { configureStore } from '@reduxjs/toolkit';
 import { authApi } from './api/authApi';
+import { productApi } from './api/productApi';
+import { categoryApi } from './api/categoryApi';
 import authReducer from '../redux/features/auth/authSlice';
-
-import cartReducer from "./features/cart/cartSlice";
+import cartReducer from '../redux/features/cart/cartSlice';
 
 export const store = configureStore({
     reducer: {
         auth: authReducer,
-        [authApi.reducerPath]: authApi.reducer,
         cart: cartReducer,
+        [authApi.reducerPath]: authApi.reducer,
+        [productApi.reducerPath]: productApi.reducer,
+        [categoryApi.reducerPath]: categoryApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(authApi.middleware),
+        getDefaultMiddleware()
+            .concat(authApi.middleware)
+            .concat(productApi.middleware)
+            .concat(categoryApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

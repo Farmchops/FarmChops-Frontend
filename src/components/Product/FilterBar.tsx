@@ -3,7 +3,6 @@
 // import icon2 from "../../assets/productIcon/icon2.png";
 // import icon3 from "../../assets/productIcon/icon3.png";
 // import cartImg from "../../assets/cart.svg";
-// import { DualRangeSlider } from "./DualRangeSlider";
 // export const FilterSidebar: React.FC = () => {
 //     const [minPrice, setMinPrice] = useState(500);
 //     const [maxPrice, setMaxPrice] = useState(1000);
@@ -51,25 +50,7 @@
 //             </div>
 
 //             {/* Price Filter */}
-//             <div className="mt-4">
-//                 <h3 className="font-semibold mb-10 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
-//                     Fill by price
-//                 </h3>
-//                 <DualRangeSlider
-//                     min={0}
-//                     max={10000}
-//                     step={50}
-//                     initialMin={minPrice}
-//                     initialMax={maxPrice}
-//                     minGap={100}
-//                     currency="₦"
-//                     onChange={({ min, max }) => {
-//                         setMinPrice(min);
-//                         setMaxPrice(max);
-//                         console.log('Price range changed:', { min, max });
-//                     }}
-//                 />
-//             </div>
+// {/* //min price, max price */}
 
 //             {/* Condition */}
 //             <div className="mt-4">
@@ -113,137 +94,130 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-// src/components/Product/FilterSidebar.tsx (Updated to work with new product structure)
-import React from 'react';
-import { Search, Filter } from 'lucide-react';
-import type { Product } from '../../types/product';
+// src/components/Product/FilterBar.tsx - Updated with API data
+import React from "react";
+import type { Category } from "../../types/category";
 
 interface FilterSidebarProps {
-    searchTerm: string;
-    onSearchChange: (term: string) => void;
+    categories: Category[];
     selectedCategory: string;
     onCategoryChange: (category: string) => void;
     priceRange: [number, number];
     onPriceRangeChange: (range: [number, number]) => void;
-    products: Product[];
+    stockFilter: string[];
+    onStockFilterChange: (filter: string[]) => void;
 }
 
 export const FilterSidebar: React.FC<FilterSidebarProps> = ({
-    searchTerm,
-    onSearchChange,
+    categories,
     selectedCategory,
     onCategoryChange,
     priceRange,
     onPriceRangeChange,
-    products,
+    stockFilter,
+    onStockFilterChange,
 }) => {
-    // Get unique categories from products
-    const categories = ['all', ...new Set(products.map(p => p.category))];
-
-    // Get price range from products
-    const allPrices = products.flatMap(p => [p.pricing.retail.price, p.pricing.bulk.price]);
-    const minPrice = Math.min(...allPrices);
-    const maxPrice = Math.max(...allPrices);
+    const toggleStockFilter = (value: string) => {
+        if (stockFilter.includes(value)) {
+            onStockFilterChange(stockFilter.filter((f) => f !== value));
+        } else {
+            onStockFilterChange([...stockFilter, value]);
+        }
+    };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md space-y-6">
-            <div className="flex items-center gap-2">
-                <Filter size={20} />
-                <h2 className="text-lg font-semibold">Filters</h2>
-            </div>
-
-            {/* Search */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Search Products</label>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        placeholder="Search by name, description..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                    />
-                </div>
-            </div>
-
+        <aside className="h-full bg-white rounded-xl shadow-sm p-4 flex flex-col gap-6">
             {/* Categories */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
-                <div className="space-y-2">
-                    {categories.map((category) => (
-                        <label key={category} className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="category"
-                                value={category}
-                                checked={selectedCategory === category}
-                                onChange={(e) => onCategoryChange(e.target.value)}
-                                className="text-[#1D7B3C] focus:ring-[#1D7B3C]"
-                            />
-                            <span className="text-sm capitalize">
-                                {category} {category !== 'all' && `(${products.filter(p => p.category === category).length})`}
+            <div>
+                <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
+                    Category
+                </h3>
+                <ul className="space-y-2">
+                    <li
+                        onClick={() => onCategoryChange("all")}
+                        className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === "all" ? "bg-green-50 text-[#1D7B3C] font-medium" : "text-[#1A1A1A]"
+                            }`}
+                    >
+                        <span>All Products</span>
+                        <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
+                            <span className="text-[#253D4E] font-medium text-xs">
+                                {categories.reduce((sum, cat) => sum + cat.productCount, 0)}
                             </span>
-                        </label>
+                        </div>
+                    </li>
+                    {categories.map((cat) => (
+                        <li
+                            key={cat._id}
+                            onClick={() => onCategoryChange(cat._id)}
+                            className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === cat._id ? "bg-green-50 text-[#1D7B3C] font-medium" : "text-[#1A1A1A]"
+                                }`}
+                        >
+                            <div className="gap-2 flex items-center">
+                                {cat.image && (
+                                    <img src={cat.image} alt={cat.name} className="w-6 h-6 rounded" />
+                                )}
+                                <span>{cat.name}</span>
+                            </div>
+                            <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
+                                <span className="text-[#253D4E] font-medium text-xs">{cat.productCount}</span>
+                            </div>
+                        </li>
                     ))}
-                </div>
+                </ul>
             </div>
 
-            {/* Price Range */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Price Range</label>
-                <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
+            {/* Price Filter */}
+            <div>
+                <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
+                    Price Range
+                </h3>
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
                         <input
                             type="number"
                             value={priceRange[0]}
                             onChange={(e) => onPriceRangeChange([parseInt(e.target.value) || 0, priceRange[1]])}
                             placeholder="Min"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                         />
-                        <span>-</span>
+                        <span className="text-gray-500">-</span>
                         <input
                             type="number"
                             value={priceRange[1]}
-                            onChange={(e) => onPriceRangeChange([priceRange[0], parseInt(e.target.value) || maxPrice])}
+                            onChange={(e) => onPriceRangeChange([priceRange[0], parseInt(e.target.value) || 1000000])}
                             placeholder="Max"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                         />
-                    </div>
-                    <div className="text-xs text-gray-500">
-                        Range: ₦{minPrice.toLocaleString()} - ₦{maxPrice.toLocaleString()}
                     </div>
                 </div>
             </div>
 
-            {/* Stock Status */}
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Availability</label>
-                <div className="space-y-2">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="text-[#1D7B3C] focus:ring-[#1D7B3C]" />
-                        <span className="text-sm">In Stock</span>
+            {/* Stock Condition */}
+            {/* <div>
+                <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
+                    Item Condition
+                </h3>
+                <div className="space-y-2 text-sm">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={stockFilter.includes("in-stock")}
+                            onChange={() => toggleStockFilter("in-stock")}
+                            className="w-5 h-5 rounded border-[#CCCCCC] text-[#1D7B3C] focus:ring-[#1D7B3C]"
+                        />
+                        In Stock
                     </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="text-[#1D7B3C] focus:ring-[#1D7B3C]" />
-                        <span className="text-sm">On Sale</span>
-                    </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" className="text-[#1D7B3C] focus:ring-[#1D7B3C]" />
-                        <span className="text-sm">Bulk Available</span>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={stockFilter.includes("out-of-stock")}
+                            onChange={() => toggleStockFilter("out-of-stock")}
+                            className="w-5 h-5 rounded border-[#CCCCCC] text-[#1D7B3C] focus:ring-[#1D7B3C]"
+                        />
+                        Out of Stock
                     </label>
                 </div>
-            </div>
-        </div>
+            </div> */}
+        </aside>
     );
 };

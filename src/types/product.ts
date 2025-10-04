@@ -1,25 +1,28 @@
-// src/types/product.ts
+import type { PaginationMeta } from "./api";
+import type { CategoryReference } from "./category";
+
+// src/types/product.ts - Product types (Complete)
 export type ProductStatus = 'active' | 'inactive' | 'out_of_stock';
-export type ProductQuantityType = 'retail' | 'bulk';
-export type ProductAvailability = 'in stock' | 'on sale' | 'low stock';
 
 export interface ProductPricing {
     retail: {
         price: number;
-        unit: string; // e.g., "per kg", "per piece"
+        unit: string;
         minQuantity: number;
+        currency?: string;
     };
     bulk: {
         price: number;
-        unit: string; // e.g., "per 25kg bag", "per crate"
+        unit: string;
         minQuantity: number;
+        currency?: string;
     };
 }
 
 export interface ProductInventory {
     availableStock: number;
     lowStockThreshold: number;
-    unit: string; // base unit (kg, pieces, bags, etc.)
+    unit: string;
 }
 
 export interface ProductStats {
@@ -28,25 +31,106 @@ export interface ProductStats {
     totalSold: number;
 }
 
+export interface BulkSavings {
+    amount: number | null;
+    percentage: number;
+}
+
+// Full product type as returned from API
 export interface Product {
     _id: string;
     name: string;
     description: string;
     images: string[];
-    category: string; // Will be populated from category reference
+    category: string; //Category_id
     pricing: ProductPricing;
     inventory: ProductInventory;
     status: ProductStatus;
     tags: string[];
     slug: string;
     stats: ProductStats;
-    seller?: string; // For display purposes
-    shareable?: boolean; // Computed based on bulk availability
     createdAt: string;
     updatedAt: string;
+    __v?: number;
+    isLowStock: boolean;
+    bulkSavings: BulkSavings;
+    id: string;
 }
 
-// For backward compatibility and cart
+// Product list response
+export interface ProductsListResponse {
+    products: Product[];
+    pagination: PaginationMeta;
+}
+
+// Search product type (lighter version)
+export interface SearchProduct {
+    _id: string;
+    name: string;
+    images: string[];
+    category: CategoryReference;
+    pricing: {
+        retail: {
+            price: number;
+        };
+    };
+    tags: string[];
+    slug: string;
+    isLowStock: boolean;
+    bulkSavings: BulkSavings;
+    id: string;
+}
+
+export interface SearchProductsResponse {
+    products: SearchProduct[];
+    count: number;
+    query: string;
+}
+
+// Product stats response
+export interface ProductStatsItem {
+    _id: string;
+    name: string;
+    category: {
+        _id: string;
+        name: string;
+        id: string;
+    };
+    stats: {
+        viewCount?: number;
+        orderCount?: number;
+    };
+    isLowStock: boolean;
+    bulkSavings: BulkSavings;
+    id: string;
+}
+
+export interface ProductStatsResponse {
+    summary: {
+        total: number;
+        active: number;
+        inactive: number;
+        outOfStock: number;
+        lowStock: number;
+    };
+    lowStockProducts: ProductStatsItem[];
+    mostViewed: ProductStatsItem[];
+    mostOrdered: ProductStatsItem[];
+}
+
+// Request types for Product
+export interface UpdateProductPayload {
+    name?: string;
+    description?: string;
+    pricing?: ProductPricing;
+    inventory?: ProductInventory;
+    status?: ProductStatus;
+    tags?: string[];
+}
+
+// Cart item type
+export type ProductQuantityType = 'retail' | 'bulk';
+
 export interface CartItem {
     id: string;
     name: string;

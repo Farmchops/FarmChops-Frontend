@@ -71,93 +71,136 @@
 
 
 
-
-
-
-
-// src/pages/Products.tsx (Updated)
+// src/pages/Products.tsx - Main Product Page with API
 import React, { useState, useMemo } from "react";
 import { FilterSidebar } from "../components/Product/FilterBar";
 import { SortBar } from "../components/Product/SortBar";
 import { ProductGrid } from "../components/Product/ProductGrid";
-import { mockProducts } from "../data/realisticProductData";
 import ProductPageHero from "../components/Product/ProductPageHero";
 import type { Product } from "../types/product";
+import { useGetProductsQuery } from "@/redux/api/productApi";
+import { useGetCategoriesQuery } from "@/redux/api/categoryApi";
 
-// Export the updated Product type
-export type { Product } from "../types/product";
-export type { ProductAvailability, ProductQuantityType } from "../types/product";
+export type { Product };
 
 const Products: React.FC = () => {
-  const [products] = useState<Product[]>(mockProducts);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
-  const [sortBy, setSortBy] = useState<string>("name");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
+  const [stockFilter, setStockFilter] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>("latest");
 
-  // Filter and search products
+  // Fetch products and categories from API
+  const { data: productsData, isLoading: productsLoading } = useGetProductsQuery({ page: 1, limit: 100 });
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetCategoriesQuery();
+
+  const categories = categoriesData?.data?.categories || [];
+
+  // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter(product => {
-      // Search filter
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const products = productsData?.data?.products || [];
+    let filtered = [...products];
 
-      // Category filter
-      const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
+    // Search filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(search) ||
+          p.description.toLowerCase().includes(search) ||
+          p.tags.some((tag) => tag.toLowerCase().includes(search))
+      );
+    }
 
-      // Price filter (using retail price for filtering)
-      const matchesPrice = product.pricing.retail.price >= priceRange[0] &&
-        product.pricing.retail.price <= priceRange[1];
+    // Category filter
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((p) => p.category._id === selectedCategory);
+    }
 
-      return matchesSearch && matchesCategory && matchesPrice;
+    // Price filter (using retail price)
+    filtered = filtered.filter((p) => {
+      const price = p.pricing.retail.price;
+      return price >= priceRange[0] && price <= priceRange[1];
     });
 
-    // Sort products
+    // Stock filter
+    if (stockFilter.length > 0) {
+      filtered = filtered.filter((p) => {
+        if (stockFilter.includes("in-stock") && p.status === "active" && p.inventory.availableStock > 0) {
+          return true;
+        }
+        if (stockFilter.includes("out-of-stock") && (p.status === "out_of_stock" || p.inventory.availableStock === 0)) {
+          return true;
+        }
+        return false;
+      });
+    }
+
+    // Sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case "price_low":
+        case "price-low":
           return a.pricing.retail.price - b.pricing.retail.price;
-        case "price_high":
+        case "price-high":
           return b.pricing.retail.price - a.pricing.retail.price;
-        case "popular":
-          return b.stats.orderCount - a.stats.orderCount;
-        case "newest":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        default:
+        case "name":
           return a.name.localeCompare(b.name);
+        case "latest":
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
 
     return filtered;
-  }, [products, searchTerm, selectedCategory, priceRange, sortBy]);
+  }, [productsData, searchTerm, selectedCategory, priceRange, stockFilter, sortBy]);
+
+  if (productsLoading || categoriesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1D7B3C] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <ProductPageHero />
       <SortBar
         totalResults={filteredProducts.length}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         sortBy={sortBy}
         onSortChange={setSortBy}
       />
 
-      <div className="flex flex-col lg:flex-row min-h-screen bg-green-50 p-4 gap-6">
+      <div className="flex flex-col lg:flex-row min-h-screen bg-green-50 p-4 md:px-8 gap-6">
         {/* Sidebar */}
         <div className="lg:w-1/4">
           <FilterSidebar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            categories={categories}
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
             priceRange={priceRange}
             onPriceRangeChange={setPriceRange}
-            products={products}
+            stockFilter={stockFilter}
+            onStockFilterChange={setStockFilter}
           />
         </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col gap-4">
-          <ProductGrid products={filteredProducts} />
+          {filteredProducts.length === 0 ? (
+            <div className="bg-white rounded-lg p-12 text-center">
+              <div className="text-gray-400 text-5xl mb-4">🔍</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+              <p className="text-gray-500">Try adjusting your search or filters</p>
+            </div>
+          ) : (
+            <ProductGrid products={filteredProducts} />
+          )}
         </div>
       </div>
     </div>

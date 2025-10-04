@@ -44,7 +44,9 @@ const Overview: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 mt-4 space-y-6">
+      <h1 className="text-3xl font-semibold">Dashboard</h1>
+
       {/* Top Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((item, idx) => (
