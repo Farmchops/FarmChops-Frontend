@@ -33,6 +33,8 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  console.log(error)
+
   // Reset when modal opens / initial changes
   useEffect(() => {
     if (open) {

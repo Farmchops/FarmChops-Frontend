@@ -28,12 +28,13 @@ const AdminLayout = () => {
 
     // auth state
     const user = useSelector((state: RootState) => state.auth.user);
-    const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+    // const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
 
     // logout mutation (uses your authApi logout endpoint)
     const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
-
+    console.log(isLoggingOut)
+    
     const handleLogout = async () => {
         try {
             if (user?.email) {
@@ -111,7 +112,7 @@ const AdminLayout = () => {
                                                 }`
                                             }
                                         >
-                                            <Icon size={20} className="text-[#121212]"/>
+                                            <Icon size={20} className="text-[#121212]" />
                                             <span className="font-medium">{item.label}</span>
                                         </NavLink>
                                     </li>

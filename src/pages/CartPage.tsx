@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Minus, Plus,  } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import {
   removeItem,
   updateQuantity,
@@ -22,10 +22,17 @@ const CartPage: React.FC = () => {
   );
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
+    // Find the cart item so we can get its purchase type (bulk vs retail)
+    const item = cart.find((i) => i.id === id);
+    // Defensive: accept either `quantityType` or `type` (legacy mismatch)
+    const quantityType = (item as any)?.quantityType ?? (item as any)?.type ?? "retail";
+
     if (quantity <= 0) {
+      // If you later change removeItem to accept type too, pass it here
       dispatch(removeItem(id));
     } else {
-      dispatch(updateQuantity({ id, quantity }));
+      // Now include quantityType as required by your slice
+      dispatch(updateQuantity({ id, quantityType, quantity }));
     }
   };
 
@@ -36,7 +43,7 @@ const CartPage: React.FC = () => {
     }
     alert(`Proceeding to checkout. Total: $${subtotal.toFixed(2)}`);
     // dispatch(clearCart());
-    navigate("/checkout"); // ✅ navigate to checkout page
+    navigate("/checkout");
   };
 
   return (
@@ -47,7 +54,6 @@ const CartPage: React.FC = () => {
           <h2 className="text-3xl font-bold text-[#121212] mb-2">Order summary</h2>
           <p className="text-[#737373]">You have items waiting on your list</p>
         </div>
-
 
         {cart.length === 0 ? (
           <p className="text-[#9FA5A3] my-10">Your cart is empty.</p>
@@ -66,54 +72,63 @@ const CartPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {cart.map((item) => (
-                    <tr key={item.id} className="">
-                      <td className="p-4 flex items-center gap-3">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                        <span>{item.name}</span>
-                      </td>
-                      <td className="p-4">${item.price.toFixed(2)}</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
+                  {cart.map((item) => {
+                    const quantityType = (item as any).quantityType ?? (item as any).type ?? "retail";
+                    return (
+                      <tr key={`${item.id}-${quantityType}`} className="">
+                        <td className="p-4 flex items-center gap-3">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-16 h-16 object-cover rounded"
+                          />
+                          <div>
+                            <div>{item.name}</div>
+                            <div className="text-xs text-gray-500">
+                              {quantityType === "bulk" ? "Bulk" : "Retail"}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="p-4">₦{item.price.toLocaleString()}</td>
+
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                handleUpdateQuantity(item.id, item.quantity - 1)
+                              }
+                              className="p-1 border rounded hover:bg-gray-200"
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <span className="w-8 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() =>
+                                handleUpdateQuantity(item.id, item.quantity + 1)
+                              }
+                              className="p-1 border rounded hover:bg-gray-200"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        </td>
+
+                        <td className="p-4">
+                          ₦{(item.price * item.quantity).toLocaleString()}
+                        </td>
+
+                        <td className="p-4">
                           <button
-                            onClick={() =>
-                              handleUpdateQuantity(item.id, item.quantity - 1)
-                            }
-                            className="p-1 border rounded hover:bg-gray-200"
+                            onClick={() => dispatch(removeItem(item.id))}
+                            className="text-red-600 hover:text-red-800"
                           >
-                            <Minus size={14} />
+                            X
                           </button>
-                          <span className="w-8 text-center">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() =>
-                              handleUpdateQuantity(item.id, item.quantity + 1)
-                            }
-                            className="p-1 border rounded hover:bg-gray-200"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </td>
-                      <td className="p-4">
-                        <button
-                          onClick={() => dispatch(removeItem(item.id))}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          {/* <Trash2 size={16} /> */}
-                          X
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 
@@ -140,7 +155,7 @@ const CartPage: React.FC = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>₦{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping:</span>
@@ -148,7 +163,7 @@ const CartPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t border-[#9FA5A3] pt-2">
                   <span>Total:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>₦{subtotal.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -164,10 +179,7 @@ const CartPage: React.FC = () => {
       </section>
 
       <Footer />
-
-
     </div>
-
   );
 };
 

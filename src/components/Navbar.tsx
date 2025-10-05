@@ -317,9 +317,10 @@ const Navbar: React.FC = () => {
 
             {/* Green pay bar */}
             <div className="bg-[#1D7B3C] text-white flex justify-end gap-8 py-2 text-xs md:text-[15px] pr-8 font-light">
+                <p>Deal of the Day</p>
                 <p>Pay for me</p>
+                <p>Bulk Buying</p>
                 <p>Pay later</p>
-                <p>info@farm-chops.com</p>
             </div>
 
             {/* Overlay for mobile */}
@@ -340,10 +341,10 @@ const Navbar: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col space-y-6 p-6 text-lg">
-                    <Link to="/" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-medium text-[#121212] border-b-[0.5px] border-[#D9DBE9]">Home</Link>
-                    <Link to="/about" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-medium text-[#121212] border-b-[0.5px] border-[#D9DBE9]">About Us</Link>
-                    <Link to="/products" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-medium text-[#121212] border-b-[0.5px] border-[#D9DBE9]">Products</Link>
-                    <Link to="/contact" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-medium text-[#121212] border-b-[0.5px] border-[#D9DBE9]">Contact Us</Link>
+                    <Link to="/" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-bold text-[#121212] border-b-[0.5px] border-[#D9DBE9]">Home</Link>
+                    <Link to="/about" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-bold text-[#121212] border-b-[0.5px] border-[#D9DBE9]">About Us</Link>
+                    <Link to="/products" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-bold text-[#121212] border-b-[0.5px] border-[#D9DBE9]">Products</Link>
+                    <Link to="/contact" onClick={() => setIsOpen(false)} className="hover:text-[#20571E] text-[25px] font-bold text-[#121212] border-b-[0.5px] border-[#D9DBE9]">Contact Us</Link>
 
                     {/* Cart */}
                     <Link to="/cart" onClick={() => setIsOpen(false)} className="relative flex items-center gap-4 p-2 rounded-md hover:bg-green-100 hover:text-[#20571E] transition">

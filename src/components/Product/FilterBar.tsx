@@ -98,6 +98,10 @@
 import React from "react";
 import type { Category } from "../../types/category";
 
+// import icon1 from "../../assets/productIcon/icon1.png";
+// import icon2 from "../../assets/productIcon/icon2.png";
+// import icon3 from "../../assets/productIcon/icon3.png";
+
 interface FilterSidebarProps {
     categories: Category[];
     selectedCategory: string;
@@ -153,6 +157,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 }`}
                         >
                             <div className="gap-2 flex items-center">
+
                                 {cat.image && (
                                     <img src={cat.image} alt={cat.name} className="w-6 h-6 rounded" />
                                 )}
@@ -167,7 +172,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
 
             {/* Price Filter */}
-            <div>
+            <div className="hidden">
                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
                     Price Range
                 </h3>
@@ -192,8 +197,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 </div>
             </div>
 
-            {/* Stock Condition */}
-            {/* <div>
+            {/* Stock Condition Hidden */}
+            <div className="hidden"> 
                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
                     Item Condition
                 </h3>
@@ -217,7 +222,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         Out of Stock
                     </label>
                 </div>
-            </div> */}
+            </div>
         </aside>
     );
 };
