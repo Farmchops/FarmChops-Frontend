@@ -36,19 +36,19 @@ interface DeleteCategoryResponse {
 }
 
 // Request types
-interface CreateCategoryRequest {
-    name: string;
-    description: string;
-    image?: File;
-}
+// interface CreateCategoryRequest {
+//     name: string;
+//     description: string;
+//     image?: File;
+// }
 
-interface UpdateCategoryRequest {
-    id: string;
-    name?: string;
-    description?: string;
-    image?: File;
-    isActive?: boolean;
-}
+// interface UpdateCategoryRequest {
+//     id: string;
+//     name?: string;
+//     description?: string;
+//     image?: File;
+//     isActive?: boolean;
+// }
 
 const baseQuery = fetchBaseQuery({
     baseUrl: 'https://api.farmchops.com/api',
@@ -108,7 +108,7 @@ export const categoryApi = createApi({
                     'Content-Type': 'application/json',
                 },
             }),
-            invalidatesTags: (result, error, { id }) => [
+            invalidatesTags: (_result, _error, { id }) => [
                 { type: 'Category', id },
                 { type: 'Categories', id: 'LIST' },
             ],

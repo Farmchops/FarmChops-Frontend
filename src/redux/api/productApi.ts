@@ -89,7 +89,7 @@ export const productApi = createApi({
                     'Content-Type': 'application/json',
                 },
             }),
-            invalidatesTags: (result, error, { id }) => [
+            invalidatesTags: (_result, _error, { id }) => [
                 { type: 'Product', id },
                 { type: 'Products', id: 'LIST' },
                 { type: 'ProductStats', id: 'STATS' },

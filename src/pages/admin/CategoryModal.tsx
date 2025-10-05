@@ -184,9 +184,8 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
           onDragEnter={() => setDragActive(true)}
           onDragLeave={() => setDragActive(false)}
           onDrop={onDrop}
-          className={`mb-3 rounded border-2 border-dashed p-4 text-center ${
-    dragActive ? "border-green-600 bg-green-50" : "border-gray-800 bg-white"
-} `}
+          className={`mb-3 rounded border-2 border-dashed p-4 text-center ${dragActive ? "border-green-600 bg-green-50" : "border-gray-800 bg-white"
+            } `}
           style={{ cursor: "pointer" }}
           onClick={() => inputRef.current?.click()}
         >
@@ -274,3 +273,4 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
     </div>
   );
 }
+

@@ -4,6 +4,72 @@ import type { CategoryReference } from "./category";
 // src/types/product.ts - Product types (Complete)
 export type ProductStatus = 'active' | 'inactive' | 'out_of_stock';
 
+
+
+// export type ProductStatus = 'active' | 'inactive' | 'out_of_stock' | 'draft';
+
+export interface BulkTier {
+    name: string;
+    price: number;
+    unit: string;
+    minQuantity: number;
+}
+
+export interface ProductPricing {
+    retail: {
+        price: number;
+        unit: string;
+        minQuantity: number;
+        currency?: string;
+    };
+    bulkTiers?: BulkTier[]; // Changed from single bulk object to array
+}
+
+export interface ProductInventory {
+    availableStock: number;
+    lowStockThreshold: number;
+    unit: string;
+}
+
+export interface ProductStats {
+    viewCount: number;
+    orderCount: number;
+    totalSold: number;
+}
+
+export interface BulkSavings {
+    amount: number | null;
+    percentage: number;
+    tierName?: string; // Added tier name
+}
+
+// Full product type as returned from API
+export interface Product {
+    _id: string;
+    name: string;
+    description: string;
+    images: string[];
+    category: {
+        _id: string;
+        name: string;
+        description?: string;
+        slug: string;
+        id: string;
+    };
+    pricing: ProductPricing;
+    inventory: ProductInventory;
+    status: ProductStatus;
+    tags: string[];
+    slug: string;
+    stats: ProductStats;
+    createdAt: string;
+    updatedAt: string;
+    __v?: number;
+    isLowStock: boolean;
+    bulkSavings: BulkSavings | null; // Can be null if no bulk tiers
+    id: string;
+}
+
 export interface ProductPricing {
     retail: {
         price: number;
@@ -37,25 +103,25 @@ export interface BulkSavings {
 }
 
 // Full product type as returned from API
-export interface Product {
-    _id: string;
-    name: string;
-    description: string;
-    images: string[];
-    category: string; //Category_id
-    pricing: ProductPricing;
-    inventory: ProductInventory;
-    status: ProductStatus;
-    tags: string[];
-    slug: string;
-    stats: ProductStats;
-    createdAt: string;
-    updatedAt: string;
-    __v?: number;
-    isLowStock: boolean;
-    bulkSavings: BulkSavings;
-    id: string;
-}
+// export interface Product {
+//     _id: string;
+//     name: string;
+//     description: string;
+//     images: string[];
+//     category: string; //Category_id
+//     pricing: ProductPricing;
+//     inventory: ProductInventory;
+//     status: ProductStatus;
+//     tags: string[];
+//     slug: string;
+//     stats: ProductStats;
+//     createdAt: string;
+//     updatedAt: string;
+//     __v?: number;
+//     isLowStock: boolean;
+//     bulkSavings: BulkSavings;
+//     id: string;
+// }
 
 // Product list response
 export interface ProductsListResponse {
@@ -140,3 +206,7 @@ export interface CartItem {
     quantityType: ProductQuantityType;
     unit: string;
 }
+
+
+
+

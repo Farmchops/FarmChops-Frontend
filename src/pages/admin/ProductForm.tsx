@@ -1,13 +1,22 @@
 // src/pages/admin/ProductForm.tsx
 import React, { useState, useEffect } from "react";
-import { Upload,  X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { useGetCategoriesQuery } from "@/redux/api/categoryApi";
 import { useCreateProductMutation, useUpdateProductMutation } from "@/redux/api/productApi";
+import type { BulkTier, ProductStatus } from "@/types/product";
 
 interface ProductFormProps {
     product?: any;
     onCancel: () => void;
     onSuccess: () => void;
+}
+
+interface BulkTierForm {
+    id: string; // for React key
+    name: string;
+    price: string;
+    unit: string;
+    minQuantity: string;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess }) => {
@@ -16,6 +25,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
 
     const [createProduct, { isLoading: creating }] = useCreateProductMutation();
     const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
+
+    const [bulkTiers, setBulkTiers] = useState<BulkTierForm[]>([
+        { id: '1', name: 'Bulk', price: '', unit: '', minQuantity: '' }
+    ]);
 
     const [form, setForm] = useState({
         name: "",
@@ -34,10 +47,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         tags: "",
     });
 
+
     const [images, setImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState("");
+
+    useEffect(() => {
+        if (product?.pricing?.bulkTiers && product.pricing.bulkTiers.length > 0) {
+            setBulkTiers(
+                product.pricing.bulkTiers.map((tier: BulkTier, idx: number) => ({
+                    id: String(idx + 1),
+                    name: tier.name,
+                    price: tier.price.toString(),
+                    unit: tier.unit,
+                    minQuantity: tier.minQuantity.toString(),
+                }))
+            );
+        }
+    }, [product]);
 
     // Load product data if editing
     useEffect(() => {
@@ -46,15 +74,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 name: product.name || "",
                 description: product.description || "",
                 category: product.category?._id || "",
-                availableStock: product.inventory?.availableStock?.toString() || "100",
-                lowStockThreshold: product.inventory?.lowStockThreshold?.toString() || "10",
-                unit: product.inventory?.unit || "kg",
+                availableStock: product.inventory?.availableStock?.toString() || "",
+                lowStockThreshold: product.inventory?.lowStockThreshold?.toString() || "",
+                unit: product.inventory?.unit || "",
                 retailPrice: product.pricing?.retail?.price?.toString() || "",
-                retailUnit: product.pricing?.retail?.unit || "kg",
-                retailMinQty: product.pricing?.retail?.minQuantity?.toString() || "1",
+                retailUnit: product.pricing?.retail?.unit || "",
+                retailMinQty: product.pricing?.retail?.minQuantity?.toString() || "",
                 bulkPrice: product.pricing?.bulk?.price?.toString() || "",
-                bulkUnit: product.pricing?.bulk?.unit || "kg",
-                bulkMinQty: product.pricing?.bulk?.minQuantity?.toString() || "10",
+                bulkUnit: product.pricing?.bulk?.unit || "",
+                bulkMinQty: product.pricing?.bulk?.minQuantity?.toString() || "",
                 status: product.status || "active",
                 tags: product.tags?.join(", ") || "",
             });
@@ -67,7 +95,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
-        
+
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: "" }));
         }
@@ -78,7 +106,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         if (e.target.files) {
             const files = Array.from(e.target.files);
             const totalImages = images.length + files.length;
-            
+
             if (totalImages > 5) {
                 setErrors(prev => ({ ...prev, images: "Maximum 5 images allowed" }));
                 return;
@@ -89,7 +117,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
             // Create previews
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setImagePreviews(prev => [...prev, ...newPreviews]);
-            
+
             if (errors.images) {
                 setErrors(prev => ({ ...prev, images: "" }));
             }
@@ -101,32 +129,71 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
+    const addBulkTier = () => {
+        setBulkTiers(prev => [
+            ...prev,
+            {
+                id: String(Date.now()),
+                name: `Tier ${prev.length + 1}`,
+                price: '',
+                unit: 'kg',
+                minQuantity: '10'
+            }
+        ]);
+    };
+
+    const removeBulkTier = (id: string) => {
+        if (bulkTiers.length > 1) {
+            setBulkTiers(prev => prev.filter(tier => tier.id !== id));
+        }
+    };
+
+    const updateBulkTier = (id: string, field: keyof BulkTierForm, value: string) => {
+        setBulkTiers(prev =>
+            prev.map(tier =>
+                tier.id === id ? { ...tier, [field]: value } : tier
+            )
+        );
+    };
+
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
 
         if (!form.name.trim()) newErrors.name = "Product name is required";
         if (!form.description.trim()) newErrors.description = "Description is required";
         if (!form.category) newErrors.category = "Category is required";
-        
+
         const retailPrice = parseFloat(form.retailPrice);
-        const bulkPrice = parseFloat(form.bulkPrice);
-        
+
         if (!form.retailPrice || retailPrice <= 0) {
             newErrors.retailPrice = "Valid retail price is required";
         }
-        if (!form.bulkPrice || bulkPrice <= 0) {
-            newErrors.bulkPrice = "Valid bulk price is required";
-        }
-        
-        // CRITICAL: Backend validates bulk price must be LESS than retail
-        if (retailPrice && bulkPrice && bulkPrice >= retailPrice) {
-            newErrors.bulkPrice = "Bulk price must be less than retail price";
-        }
-        
+
+        // Validate each bulk tier
+        bulkTiers.forEach((tier, index) => {
+            if (!tier.name.trim()) {
+                newErrors[`bulkTier_${tier.id}_name`] = `Tier ${index + 1} name is required`;
+            }
+
+            const tierPrice = parseFloat(tier.price);
+            if (!tier.price || tierPrice <= 0) {
+                newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be greater than 0`;
+            }
+
+            // Bulk tier must be less than retail
+            if (retailPrice && tierPrice && tierPrice >= retailPrice) {
+                newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be less than retail`;
+            }
+
+            if (!tier.minQuantity || parseInt(tier.minQuantity) <= 0) {
+                newErrors[`bulkTier_${tier.id}_minQty`] = `Tier ${index + 1} min quantity must be greater than 0`;
+            }
+        });
+
         if (!form.availableStock || parseInt(form.availableStock) < 0) {
             newErrors.availableStock = "Valid stock quantity is required";
         }
-        
+
         if (!product && images.length === 0) {
             newErrors.images = "At least one image is required";
         }
@@ -140,11 +207,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         if (!validate()) return;
 
         try {
+            // Filter out empty bulk tiers
+            const validBulkTiers = bulkTiers.filter(tier =>
+                tier.price && parseFloat(tier.price) > 0
+            );
+
+            const bulkTiersData = validBulkTiers.map(tier => ({
+                name: tier.name.trim(),
+                price: parseFloat(tier.price),
+                unit: tier.unit,
+                minQuantity: parseInt(tier.minQuantity),
+            }));
+
             if (product) {
-                // UPDATE - Use JSON body
+                // UPDATE
                 const updatePayload = {
                     name: form.name.trim(),
                     description: form.description.trim(),
+                    //Something fishy in category
+                    category: form.category.trim(),
                     pricing: {
                         retail: {
                             price: parseFloat(form.retailPrice),
@@ -153,22 +234,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                             minQuantity: parseInt(form.retailMinQty),
                         },
                         bulk: {
-                            price: parseFloat(form.bulkPrice),
+                            price: bulkTiersData.length > 0 ? bulkTiersData[0].price : 0,
                             currency: "NGN",
-                            unit: form.bulkUnit,
-                            minQuantity: parseInt(form.bulkMinQty),
+                            unit: bulkTiersData.length > 0 ? bulkTiersData[0].unit : "",
+                            minQuantity: bulkTiersData.length > 0 ? bulkTiersData[0].minQuantity : 0,
                         },
+                        bulkTiers: bulkTiersData.length > 0 ? bulkTiersData : undefined,
                     },
                     inventory: {
                         availableStock: parseInt(form.availableStock),
                         lowStockThreshold: parseInt(form.lowStockThreshold),
                         unit: form.unit,
                     },
-                    status: form.status as "active" | "inactive" | "out_of_stock",
+                    status: form.status as ProductStatus,
                     tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
                 };
-
-                // console.log("UPDATE Payload:", updatePayload);
 
                 const result = await updateProduct({
                     id: product._id,
@@ -179,22 +259,20 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                     alert("Product updated successfully!");
                     onSuccess();
                 }
-            } else {
-                // CREATE - Use FormData (matches your backend exactly)
+            }
+            else {
+                // CREATE
                 const formData = new FormData();
 
-                // Append images (multiple files)
                 images.forEach((image) => {
                     formData.append("images", image);
                 });
 
-                // Basic fields
                 formData.append("name", form.name.trim());
                 formData.append("description", form.description.trim());
                 formData.append("category", form.category);
                 formData.append("status", form.status);
 
-                // Pricing object as JSON string (your backend parses it)
                 const pricing = {
                     retail: {
                         price: parseFloat(form.retailPrice),
@@ -202,16 +280,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                         unit: form.retailUnit,
                         minQuantity: parseInt(form.retailMinQty),
                     },
-                    bulk: {
-                        price: parseFloat(form.bulkPrice),
-                        currency: "NGN",
-                        unit: form.bulkUnit,
-                        minQuantity: parseInt(form.bulkMinQty),
-                    },
+                    bulkTiers: bulkTiersData.length > 0 ? bulkTiersData : undefined,
                 };
                 formData.append("pricing", JSON.stringify(pricing));
 
-                // Inventory object as JSON string (your backend parses it)
                 const inventory = {
                     availableStock: parseInt(form.availableStock),
                     lowStockThreshold: parseInt(form.lowStockThreshold),
@@ -219,20 +291,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 };
                 formData.append("inventory", JSON.stringify(inventory));
 
-                // Tags as JSON string (your backend parses it)
                 const tags = form.tags.split(",").map(t => t.trim()).filter(Boolean);
                 formData.append("tags", JSON.stringify(tags));
-
-                // Debug logging
-                // console.log("=== CREATE PRODUCT REQUEST ===");
-                // console.log("Images count:", images.length);
-                // console.log("Name:", form.name.trim());
-                // console.log("Category:", form.category);
-                // console.log("Pricing:", pricing);
-                // console.log("Inventory:", inventory);
-                // console.log("Tags:", tags);
-                // console.log("Status:", form.status);
-                // console.log("=== END REQUEST ===");
 
                 const result = await createProduct(formData).unwrap();
 
@@ -242,16 +302,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 }
             }
         } catch (error: any) {
-            // console.error("=== ERROR RESPONSE ===");
-            // console.error("Full error:", error);
-            // console.error("Error data:", error?.data);
-            // console.error("Error message:", error?.data?.message);
-            // console.error("Validation errors:", error?.data?.errors);
-            // console.error("=== END ERROR ===");
-            
+
             const errorMessage = error?.data?.message || "Failed to save product. Please try again.";
             setServerError(errorMessage);
-            
+
             // Handle specific validation errors
             if (error?.data?.errors) {
                 const validationErrors: Record<string, string> = {};
@@ -263,6 +317,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 setErrors(validationErrors);
             }
         }
+
+
+
     };
 
     const isLoading = creating || updating;
@@ -277,30 +334,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                     {product ? "Update product information" : "Add a new product to your store"}
                 </p>
 
-                {/* Debug Info - Remove in production */}
-                {/* {!product && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <div className="flex items-start gap-2">
-                            <AlertCircle className="text-blue-600 mt-0.5" size={18} />
-                            <div className="text-sm">
-                                <p className="font-medium text-blue-900 mb-1">Backend Requirements:</p>
-                                <ul className="text-blue-700 space-y-1 text-xs">
-                                    <li>✓ Bulk price must be LESS than retail price</li>
-                                    <li>✓ At least 1 image required (max 5)</li>
-                                    <li>✓ Category ID must be valid</li>
-                                    <li>✓ Product name must be unique</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                )} */}
 
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* LEFT COLUMN - Name & Description */}
                     <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
                         <div>
                             <h3 className="text-base font-semibold text-gray-900 mb-4">Name & Description</h3>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -364,7 +404,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                         {/* Manage Stock Section */}
                         <div>
                             <h3 className="text-base font-semibold text-gray-900 mb-4">Manage Stock</h3>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -426,7 +466,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                         {/* Pricing Section */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="text-base font-semibold text-gray-900 mb-4">Pricing</h3>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -465,45 +505,106 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        BULK PRICING
-                                    </label>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs text-gray-600 mb-1">Price (₦) *</label>
-                                            <input
-                                                type="number"
-                                                name="bulkPrice"
-                                                value={form.bulkPrice}
-                                                onChange={handleChange}
-                                                disabled={isLoading}
-                                                placeholder="4500"
-                                                min="1"
-                                                step="0.01"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                                            />
-                                            {errors.bulkPrice && (
-                                                <p className="text-red-500 text-xs mt-1">{errors.bulkPrice}</p>
-                                            )}
-                                            <p className="text-xs text-gray-500 mt-1">Must be less than retail</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-600 mb-1">Min Qty</label>
-                                            <input
-                                                type="number"
-                                                name="bulkMinQty"
-                                                value={form.bulkMinQty}
-                                                onChange={handleChange}
-                                                disabled={isLoading}
-                                                placeholder="10"
-                                                min="1"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
 
+                                {/* BULK PRICING SECTION - UPDATED */}
+                                <div >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-base font-semibold text-gray-900">Bulk Pricing (Optional)</h3>
+                                        <button
+                                            type="button"
+                                            onClick={addBulkTier}
+                                            className="text-sm text-[#1D7B3C] hover:text-green-800 font-medium"
+                                        >
+                                            + Add Tier
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {bulkTiers.map((tier, index) => (
+                                            <div key={tier.id} className="">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <label className="text-sm font-medium text-gray-700">
+                                                        Tier {index + 1}
+                                                    </label>
+                                                    {bulkTiers.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeBulkTier(tier.id)}
+                                                            className="text-sm text-red-600 hover:text-red-800"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="col-span-2">
+                                                        <label className="block text-xs text-gray-600 mb-1">Tier Name</label>
+                                                        <input
+                                                            type="text"
+                                                            value={tier.name}
+                                                            onChange={(e) => updateBulkTier(tier.id, 'name', e.target.value)}
+                                                            placeholder="e.g., Wholesale, Large Order"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                                        />
+                                                        {errors[`bulkTier_${tier.id}_name`] && (
+                                                            <p className="text-red-500 text-xs mt-1">{errors[`bulkTier_${tier.id}_name`]}</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-xs text-gray-600 mb-1">Price (₦)</label>
+                                                        <input
+                                                            type="number"
+                                                            value={tier.price}
+                                                            onChange={(e) => updateBulkTier(tier.id, 'price', e.target.value)}
+                                                            placeholder="4500"
+                                                            min="1"
+                                                            step="0.01"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                                        />
+                                                        {errors[`bulkTier_${tier.id}_price`] && (
+                                                            <p className="text-red-500 text-xs mt-1">{errors[`bulkTier_${tier.id}_price`]}</p>
+                                                        )}
+                                                        <p className="text-xs text-gray-500 mt-1">Must be less than retail</p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-xs text-gray-600 mb-1">Min Quantity</label>
+                                                        <input
+                                                            type="number"
+                                                            value={tier.minQuantity}
+                                                            onChange={(e) => updateBulkTier(tier.id, 'minQuantity', e.target.value)}
+                                                            placeholder="10"
+                                                            min="1"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                                        />
+                                                        {errors[`bulkTier_${tier.id}_minQty`] && (
+                                                            <p className="text-red-500 text-xs mt-1">{errors[`bulkTier_${tier.id}_minQty`]}</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="col-span-2">
+                                                        <label className="block text-xs text-gray-600 mb-1">Unit</label>
+                                                        <input
+                                                            type="text"
+                                                            value={tier.unit}
+                                                            onChange={(e) => updateBulkTier(tier.id, 'unit', e.target.value)}
+                                                            placeholder="per kg"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {bulkTiers.length === 0 && (
+                                        <p className="text-sm text-gray-500 text-center py-4">
+                                            No bulk pricing tiers. Add one to enable bulk purchases.
+                                        </p>
+                                    )}
+                                </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Tags (comma-separated)
@@ -524,7 +625,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                         {/* Category Image Section */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="text-base font-semibold text-gray-900 mb-4">Product Images *</h3>
-                            
+
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                                 <div className="text-center">
                                     <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />

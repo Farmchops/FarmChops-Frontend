@@ -1,39 +1,27 @@
-// src/pages/ProductDetail.tsx
+// src/pages/ProductDetail.tsx - UPDATED for bulkTiers
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addItem } from "../../redux/features/cart/cartSlice";
 import { Heart, ArrowLeft, Star, Truck, Shield, RefreshCw } from "lucide-react";
 import cartImg from "../../assets/cart.svg";
-import { useGetProductBySlugQuery } from "@/redux/api/productApi";
-import { BulkBuying } from "./BulkBuying";
-
-
+import { useGetProductBySlugQuery } from "../../redux/api/productApi";
+import { BulkBuying } from "../../components/Product/BulkBuying";
 
 const ProductDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    // console.log('=== ProductDetail Debug ===');
-    // console.log('URL slug param:', slug);
-    // console.log('Fetching product with slug:', slug);
-
     const { data, isLoading, error } = useGetProductBySlugQuery(slug || "", {
         skip: !slug,
     });
 
-    // console.log('API Response:', data);
-    // console.log('Is Loading:', isLoading);
-    // console.log('Error:', error);
-    // console.log('=== End Debug ===');
-
     const product = data?.data;
 
     const [selectedImage, setSelectedImage] = useState(0);
-    const [showBulkModal, setShowBulkModal] = useState(false);
+    const [showBulkDrawer, setShowBulkDrawer] = useState(false);
     const [adding, setAdding] = useState(false);
-
 
     if (isLoading) {
         return (
@@ -62,7 +50,15 @@ const ProductDetail: React.FC = () => {
     }
 
     const isOutOfStock = product.status === "out_of_stock" || product.inventory.availableStock === 0;
-    const canBuyBulk = product.inventory.availableStock >= product.pricing.bulk.minQuantity && !isOutOfStock;
+
+    // Check if ANY bulk tier is available
+    const hasBulkTiers = product.pricing.bulkTiers && product.pricing.bulkTiers.length > 0;
+    const canBuyBulk = hasBulkTiers &&
+        product.pricing.bulkTiers?.some(tier =>
+            product.inventory.availableStock >= tier.minQuantity
+        ) &&
+        !isOutOfStock;
+
     const bulkSavings = product.bulkSavings?.percentage || 0;
 
     const handleRetailAddToCart = () => {
@@ -102,7 +98,6 @@ const ProductDetail: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Left Column - Images */}
                     <div className="space-y-4">
-                        {/* Main Image */}
                         <div className="bg-white rounded-lg overflow-hidden border">
                             <img
                                 src={product.images[selectedImage]}
@@ -111,7 +106,6 @@ const ProductDetail: React.FC = () => {
                             />
                         </div>
 
-                        {/* Thumbnail Images */}
                         {product.images.length > 1 && (
                             <div className="grid grid-cols-4 gap-2">
                                 {product.images.map((img, idx) => (
@@ -131,7 +125,7 @@ const ProductDetail: React.FC = () => {
                     {/* Right Column - Details */}
                     <div className="space-y-6">
                         {/* Badges */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                             {product.category && (
                                 <span className="bg-green-100 text-[#1D7B3C] px-3 py-1 rounded-full text-sm font-medium">
                                     {product.category.name}
@@ -145,6 +139,11 @@ const ProductDetail: React.FC = () => {
                             {product.isLowStock && !isOutOfStock && (
                                 <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
                                     Low Stock
+                                </span>
+                            )}
+                            {canBuyBulk && bulkSavings > 0 && (
+                                <span className="bg-[#1D7B3C] text-white px-3 py-1 rounded-full text-sm font-medium">
+                                    Save up to {bulkSavings}%
                                 </span>
                             )}
                         </div>
@@ -170,60 +169,73 @@ const ProductDetail: React.FC = () => {
                             <p className="text-gray-600">{product.description}</p>
                         </div>
 
-                        {/* Pricing Cards */}
+                        {/* Pricing Section */}
                         <div className="space-y-3">
-                            <h3 className="font-semibold text-gray-900">Choose Quantity Type</h3>
+                            <h3 className="font-semibold text-gray-900">Pricing Options</h3>
 
                             {/* Retail Price */}
                             <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-[#1D7B3C] transition-colors">
-                                <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-medium text-gray-900">Retail Price</p>
                                         <p className="text-sm text-gray-500">
-                                            Minimum {product.pricing.retail.minQuantity} {product.pricing.retail.unit}
+                                            Min: {product.pricing.retail.minQuantity} {product.pricing.retail.unit}
                                         </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-2xl font-bold text-gray-900">
                                             ₦{product.pricing.retail.price.toLocaleString()}
                                         </p>
-                                        <p className="text-sm text-gray-500">{product.pricing.retail.unit}</p>
+                                        <p className="text-sm text-gray-500">per {product.pricing.retail.unit}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Bulk Price */}
-                            {canBuyBulk && (
-                                <div className="border-2 border-[#1D7B3C] bg-green-50 rounded-lg p-4">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-medium text-[#1D7B3C]">Bulk Price</p>
-                                                {bulkSavings > 0 && (
-                                                    <span className="bg-[#1D7B3C] text-white px-2 py-0.5 rounded text-xs font-medium">
-                                                        SAVE {bulkSavings}%
-                                                    </span>
+                            {/* Bulk Tiers Display */}
+                            {hasBulkTiers && product.pricing.bulkTiers?.map((tier, index) => {
+                                const canUseTier = product.inventory.availableStock >= tier.minQuantity && !isOutOfStock;
+                                const tierSavings = product.pricing.retail.price - tier.price;
+                                const tierSavingsPercent = ((tierSavings / product.pricing.retail.price) * 100).toFixed(0);
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`border-2 rounded-lg p-4 transition-colors ${canUseTier
+                                            ? "border-[#1D7B3C] bg-green-50 hover:bg-green-100"
+                                            : "border-gray-200 bg-gray-50 opacity-60"
+                                            }`}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <p className={`font-medium ${canUseTier ? "text-[#1D7B3C]" : "text-gray-600"}`}>
+                                                        {tier.name}
+                                                    </p>
+                                                    {canUseTier && parseFloat(tierSavingsPercent) > 0 && (
+                                                        <span className="bg-[#1D7B3C] text-white px-2 py-0.5 rounded text-xs font-medium">
+                                                            SAVE {tierSavingsPercent}%
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-gray-600">
+                                                    Min: {tier.minQuantity} {tier.unit}
+                                                </p>
+                                                {!canUseTier && (
+                                                    <p className="text-xs text-red-600 mt-1">
+                                                        Insufficient stock for this tier
+                                                    </p>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-gray-600">
-                                                Minimum {product.pricing.bulk.minQuantity} {product.pricing.bulk.unit}
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-bold text-[#1D7B3C]">
-                                                ₦{product.pricing.bulk.price.toLocaleString()}
-                                            </p>
-                                            <p className="text-sm text-gray-600">{product.pricing.bulk.unit}</p>
+                                            <div className="text-right">
+                                                <p className={`text-2xl font-bold ${canUseTier ? "text-[#1D7B3C]" : "text-gray-600"}`}>
+                                                    ₦{tier.price.toLocaleString()}
+                                                </p>
+                                                <p className="text-sm text-gray-600">per {tier.unit}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    {bulkSavings > 0 && (
-                                        <p className="text-sm text-green-700 font-medium">
-                                            Save ₦{((product.pricing.retail.price - product.pricing.bulk.price) * product.pricing.bulk.minQuantity).toLocaleString()}
-                                            {" "}when you buy {product.pricing.bulk.minQuantity}+
-                                        </p>
-                                    )}
-                                </div>
-                            )}
+                                );
+                            })}
                         </div>
 
                         {/* Stock Info */}
@@ -231,7 +243,10 @@ const ProductDetail: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700">Availability</span>
                                 <span className={`font-medium ${isOutOfStock ? "text-red-600" : "text-green-600"}`}>
-                                    {isOutOfStock ? "Out of Stock" : `${product.inventory.availableStock} ${product.inventory.unit} in stock`}
+                                    {isOutOfStock
+                                        ? "Out of Stock"
+                                        : `${product.inventory.availableStock} ${product.inventory.unit} in stock`
+                                    }
                                 </span>
                             </div>
                         </div>
@@ -260,14 +275,14 @@ const ProductDetail: React.FC = () => {
                                     <button
                                         onClick={handleRetailAddToCart}
                                         disabled={adding || isOutOfStock}
-                                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-gray-600 hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-[#1D7B3C] hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Buy Retail
                                         <img src={cartImg} alt="cart" className="w-4 h-4" />
                                     </button>
                                     <button
-                                        onClick={() => setShowBulkModal(true)}
-                                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-[#1D7B3C] hover:bg-green-800 transition-colors"
+                                        onClick={() => setShowBulkDrawer(true)}
+                                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-[#1D7B3C] hover:bg-green-800 transition-colors border-2 border-[#1D7B3C]"
                                     >
                                         Buy Bulk
                                         <img src={cartImg} alt="cart" className="w-4 h-4" />
@@ -309,9 +324,9 @@ const ProductDetail: React.FC = () => {
                 </div>
             </div>
 
-            {/* Bulk Buying Modal */}
-            {showBulkModal && product && (
-                <BulkBuying product={product} onClose={() => setShowBulkModal(false)} />
+            {/* Bulk Buying Drawer - Slides in from right */}
+            {showBulkDrawer && (
+                <BulkBuying product={product} onClose={() => setShowBulkDrawer(false)} />
             )}
         </div>
     );

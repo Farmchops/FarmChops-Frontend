@@ -1,6 +1,5 @@
 // src/store/api/authApi.ts
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-// import { RootState } from '../index';
 import { logout, setCredentials } from '../features/auth/authSlice';
 import type {
     User,

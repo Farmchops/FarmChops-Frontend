@@ -21,7 +21,7 @@ const CartPage: React.FC = () => {
     0
   );
 
-  const handleUpdateQuantity = (id: number, quantity: number) => {
+  const handleUpdateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       dispatch(removeItem(id));
     } else {
