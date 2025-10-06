@@ -94,13 +94,136 @@
 
 
 
-// src/components/Product/FilterBar.tsx - Updated with API data
-import React from "react";
-import type { Category } from "../../types/category";
+// // src/components/Product/FilterBar.tsx - Updated with API data
+// import React from "react";
+// import type { Category } from "../../types/category";
 
-// import icon1 from "../../assets/productIcon/icon1.png";
-// import icon2 from "../../assets/productIcon/icon2.png";
-// import icon3 from "../../assets/productIcon/icon3.png";
+
+// interface FilterSidebarProps {
+//     categories: Category[];
+//     selectedCategory: string;
+//     onCategoryChange: (category: string) => void;
+//     priceRange: [number, number];
+//     onPriceRangeChange: (range: [number, number]) => void;
+//     stockFilter: string[];
+//     onStockFilterChange: (filter: string[]) => void;
+// }
+
+// export const FilterSidebar: React.FC<FilterSidebarProps> = ({
+//     categories,
+//     selectedCategory,
+//     onCategoryChange,
+//     priceRange,
+//     onPriceRangeChange,
+//     stockFilter,
+//     onStockFilterChange,
+// }) => {
+//     const toggleStockFilter = (value: string) => {
+//         if (stockFilter.includes(value)) {
+//             onStockFilterChange(stockFilter.filter((f) => f !== value));
+//         } else {
+//             onStockFilterChange([...stockFilter, value]);
+//         }
+//     };
+
+//     return (
+//         <aside className="h-full bg-white rounded-xl shadow-sm p-4 flex flex-col gap-6">
+//             {/* Categories */}
+//             <div>
+//                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
+//                     Category
+//                 </h3>
+//                 <ul className="space-y-2">
+//                     <li
+//                         onClick={() => onCategoryChange("all")}
+//                         className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === "all" ? "bg-green-50 text-[#1D7B3C] font-medium" : "text-[#1A1A1A]"
+//                             }`}
+//                     >
+//                         <span>All Products</span>
+//                         <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
+//                             <span className="text-[#253D4E] font-medium text-xs">
+//                                 {categories.reduce((sum, cat) => sum + cat.productCount, 0)}
+//                             </span>
+//                         </div>
+//                     </li>
+//                     {categories.map((cat) => (
+//                         <li
+//                             key={cat._id}
+//                             onClick={() => onCategoryChange(cat._id)}
+//                             className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === cat._id ? "bg-green-50 text-[#1D7B3C] font-medium" : "text-[#1A1A1A]"
+//                                 }`}
+//                         >
+//                             <div className="gap-2 flex items-center">
+
+//                                 {cat.image && (
+//                                     <img src={cat.image} alt={cat.name} className="w-6 h-6 rounded" />
+//                                 )}
+//                                 <span>{cat.name}</span>
+//                             </div>
+//                             <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
+//                                 <span className="text-[#253D4E] font-medium text-xs">{cat.productCount}</span>
+//                             </div>
+//                         </li>
+//                     ))}
+//                 </ul>
+//             </div>
+
+//             {/* Price Filter */}
+//             <div className="hidden">
+//                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
+//                     Price Range
+//                 </h3>
+//                 <div className="space-y-3">
+//                     <div className="flex items-center gap-2">
+//                         <input
+//                             type="number"
+//                             value={priceRange[0]}
+//                             onChange={(e) => onPriceRangeChange([parseInt(e.target.value) || 0, priceRange[1]])}
+//                             placeholder="Min"
+//                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+//                         />
+//                         <span className="text-gray-500">-</span>
+//                         <input
+//                             type="number"
+//                             value={priceRange[1]}
+//                             onChange={(e) => onPriceRangeChange([priceRange[0], parseInt(e.target.value) || 1000000])}
+//                             placeholder="Max"
+//                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+//                         />
+//                     </div>
+//                 </div>
+//             </div>
+
+//             {/* Stock Condition */}
+
+//         </aside>
+//     );
+// };
+
+
+
+
+
+
+
+
+
+// src/components/Product/FilterBar.tsx
+import React from "react";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from "@/components/ui/select"; // ✅ make sure Shadcn Select is installed
+
+interface Category {
+    _id: string;
+    name: string;
+    image?: string;
+    productCount: number;
+}
 
 interface FilterSidebarProps {
     categories: Category[];
@@ -129,23 +252,64 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         }
     };
 
+    const totalProducts = categories.reduce(
+        (sum, cat) => sum + cat.productCount,
+        0
+    );
+
     return (
-        <aside className="h-full bg-white rounded-xl shadow-sm p-4 flex flex-col gap-6">
+        <aside className="h-full md:bg-white rounded-xl shadow-sm p-4 flex flex-col gap-6">
             {/* Categories */}
             <div>
                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
                     Category
                 </h3>
-                <ul className="space-y-2">
+
+                {/* ✅ Mobile Dropdown */}
+                <div className="block md:hidden">
+                    <Select
+                        value={selectedCategory}
+                        onValueChange={(value) => onCategoryChange(value)}
+                    >
+                        <SelectTrigger className="w-full-  rounded-md text-sm">
+                            <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Products ({totalProducts})</SelectItem>
+                            {categories.map((cat) => (
+                                <SelectItem key={cat._id} value={cat._id}>
+                                    <div className="flex items-center gap-2">
+                                        {cat.image && (
+                                            <img
+                                                src={cat.image}
+                                                alt={cat.name}
+                                                className="w-5 h-5 rounded"
+                                            />
+                                        )}
+                                        <span>{cat.name}</span>
+                                        <span className="ml-auto text-xs text-gray-500">
+                                            ({cat.productCount})
+                                        </span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* ✅ Desktop List */}
+                <ul className="space-y-2 hidden lg:block">
                     <li
                         onClick={() => onCategoryChange("all")}
-                        className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === "all" ? "bg-green-50 text-[#1D7B3C] font-medium" : "text-[#1A1A1A]"
+                        className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === "all"
+                            ? "bg-green-50 text-[#1D7B3C] font-medium"
+                            : "text-[#1A1A1A]"
                             }`}
                     >
                         <span>All Products</span>
                         <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
                             <span className="text-[#253D4E] font-medium text-xs">
-                                {categories.reduce((sum, cat) => sum + cat.productCount, 0)}
+                                {totalProducts}
                             </span>
                         </div>
                     </li>
@@ -153,25 +317,33 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         <li
                             key={cat._id}
                             onClick={() => onCategoryChange(cat._id)}
-                            className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === cat._id ? "bg-green-50 text-[#1D7B3C] font-medium" : "text-[#1A1A1A]"
+                            className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === cat._id
+                                ? "bg-green-50 text-[#1D7B3C] font-medium"
+                                : "text-[#1A1A1A]"
                                 }`}
                         >
                             <div className="gap-2 flex items-center">
-
                                 {cat.image && (
-                                    <img src={cat.image} alt={cat.name} className="w-6 h-6 rounded" />
+                                    <img
+                                        src={cat.image}
+                                        alt={cat.name}
+                                        className="w-6 h-6 rounded"
+                                    />
                                 )}
                                 <span>{cat.name}</span>
                             </div>
                             <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
-                                <span className="text-[#253D4E] font-medium text-xs">{cat.productCount}</span>
+                                <span className="text-[#253D4E] font-medium text-xs">
+                                    {cat.productCount}
+                                </span>
                             </div>
                         </li>
                     ))}
                 </ul>
             </div>
 
-            {/* Price Filter */}
+            {/* Hidden for now — you can enable later */}
+
             <div className="hidden">
                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
                     Price Range
@@ -196,9 +368,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     </div>
                 </div>
             </div>
-
-            {/* Stock Condition Hidden */}
-            <div className="hidden"> 
+            <div className="hidden">
                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
                     Item Condition
                 </h3>

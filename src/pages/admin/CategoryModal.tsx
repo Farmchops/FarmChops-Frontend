@@ -18,6 +18,7 @@ type Props = {
     description: string;
     isActive?: boolean;
     imageFile?: File | null;
+    removeImage?: boolean; // Flag to indicate image should be removed
   }) => Promise<void>;
 };
 
@@ -30,10 +31,9 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shouldRemoveImage, setShouldRemoveImage] = useState(false); // Track if user wants to remove image
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  console.log(error)
 
   // Reset when modal opens / initial changes
   useEffect(() => {
@@ -44,6 +44,7 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
       setPreview(initial?.image ?? null);
       setFile(null);
       setError(null);
+      setShouldRemoveImage(false);
     }
   }, [initial, open]);
 
@@ -85,6 +86,7 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
       return;
     }
     setFile(candidate);
+    setShouldRemoveImage(false); // If adding new file, cancel removal flag
   }
 
   function onDrop(e: React.DragEvent) {
@@ -114,9 +116,8 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
         description: description.trim(),
         isActive,
         imageFile: file ?? null,
+        removeImage: shouldRemoveImage, // Pass the removal flag
       });
-      // parent expected to close modal on success; if not, close here:
-      // onClose();
     } catch (err: any) {
       setError(err?.message ?? "Failed to save category.");
     } finally {
@@ -127,8 +128,10 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
   function handleRemoveImage() {
     setFile(null);
     setPreview(null);
-    // Note: parent will receive imageFile === null on save — if your API needs an explicit flag to delete existing image,
-    // adjust the parent onSave implementation accordingly.
+    setShouldRemoveImage(true); // Mark for removal
+    if (inputRef.current) {
+      inputRef.current.value = ""; // Clear file input
+    }
   }
 
   return (
@@ -147,13 +150,12 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
             <h3 className="text-2xl font-semibold">
               {initial ? "Edit Category" : "Add New Category"}
             </h3>
-            {/* <p className="text-sm text-gray-500">Add a new product category to your store</p> */}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="hover:text-gray-700 ml-4"
+            className="hover:text-gray-700 ml-4 text-xl"
           >
             ✕
           </button>
@@ -179,15 +181,15 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
         />
 
         {/* Image dropzone */}
-        <label className="block text-sm font-medium  mb-2">Category Image</label>
+        <label className="block text-sm font-medium mb-2">Category Image</label>
 
         <div
           onDragOver={(e) => e.preventDefault()}
           onDragEnter={() => setDragActive(true)}
           onDragLeave={() => setDragActive(false)}
           onDrop={onDrop}
-          className={`mb-3 rounded border-2 border-dashed p-4 text-center ${dragActive ? "border-green-600 bg-green-50" : "border-gray-800 bg-white"
-            } `}
+          className={`mb-3 rounded border-2 border-dashed p-4 text-center transition-colors ${dragActive ? "border-green-600 bg-green-50" : "border-gray-300 bg-white hover:border-gray-400"
+            }`}
           style={{ cursor: "pointer" }}
           onClick={() => inputRef.current?.click()}
         >
@@ -204,60 +206,65 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
               <img
                 src={preview}
                 alt="preview"
-                className="w-28 h-28 object-cover rounded-full mb-2 border"
+                className="w-28 h-28 object-cover rounded mb-2 border"
               />
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => inputRef.current?.click()}
-                  className="px-3 py-1 text-sm border rounded"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    inputRef.current?.click();
+                  }}
+                  className="px-3 py-1 text-sm border rounded hover:bg-gray-50"
                 >
                   Replace
                 </button>
                 <button
                   type="button"
-                  onClick={handleRemoveImage}
-                  className="px-3 py-1 text-sm border rounded text-red-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveImage();
+                  }}
+                  className="px-3 py-1 text-sm border rounded text-red-600 hover:bg-red-50"
                 >
                   Remove
                 </button>
               </div>
             </div>
           ) : (
-            <div className="text-center">
-              <p className="mb-2 text-sm text-gray-600">Drop image here or</p>
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                className="underline text-sm"
+            <div className="text-center py-4">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400 mb-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Browse Files
-              </button>
-              <p className="mt-2 text-xs text-gray-400">JPG, PNG (Max 2MB)</p>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="mb-2 text-sm text-gray-600">Drop image here or click to browse</p>
+              <p className="text-xs text-gray-400">JPG, PNG, WEBP (Max 2MB)</p>
             </div>
           )}
         </div>
 
-        {/* Active toggle and error */}
-        {/* <div className="flex items-center justify-between mb-4">
-          <label className="inline-flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-            />
-            <span className="text-sm">Active</span>
-          </label>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-        </div> */}
+        {/* Error message */}
+        {error && (
+          <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
         {/* Actions */}
-        <div className="flex justify-between items-center gap-3 mt-4">
+        <div className="flex justify-end gap-3 mt-4">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border rounded text-sm"
+            className="px-4 py-2 border rounded text-sm hover:bg-gray-50"
             disabled={isSubmitting}
           >
             Cancel
@@ -265,7 +272,7 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
 
           <button
             type="submit"
-            className="px-4 py-2 bg-[#1D7B3C] text-white rounded text-sm disabled:opacity-60"
+            className="px-4 py-2 bg-[#1D7B3C] text-white rounded text-sm hover:bg-green-800 disabled:opacity-60 disabled:cursor-not-allowed"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Saving..." : "Save Category"}
@@ -275,4 +282,3 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
     </div>
   );
 }
-

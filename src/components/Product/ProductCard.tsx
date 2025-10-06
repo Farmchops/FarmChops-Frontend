@@ -122,13 +122,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
                     {/* Buttons */}
                     {canBuyBulk ? (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid md:grid-cols-2 w-fit gap-2">
                             <button
                                 onClick={handleRetailAddToCart}
                                 disabled={adding || isOutOfStock}
                                 className="flex items-center justify-center gap-1 px-2 py-2 rounded-md text-white text-xs bg-[#1D7B3C] hover:bg-green-700 transition disabled:opacity-50"
                             >
-                                {adding ? "Added" : "Retail"}
+                                {adding ? "Added" : "Add to cart"} <img src={cartImg} alt="cart" className="w-3 h-3" />
                             </button>
                             <button
                                 onClick={handleBulkClick}
@@ -141,7 +141,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         <button
                             onClick={handleRetailAddToCart}
                             disabled={adding || isOutOfStock}
-                            className={`w-full flex items-center justify-center gap-1 px-2 py-2 rounded-md text-white text-xs transition ${adding || isOutOfStock
+                            className={`flex items-center justify-center gap-1 px-2 py-2 rounded-md text-white text-xs transition ${adding || isOutOfStock
                                 ? "bg-gray-400 cursor-not-allowed"
                                 : "bg-[#1D7B3C] hover:bg-green-700"
                                 }`}

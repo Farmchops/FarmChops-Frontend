@@ -16,6 +16,7 @@ export interface User {
     wallet: {
         balance: number;
     };
+    gender? :string
 }
 
 export interface AuthState {
@@ -44,7 +45,7 @@ export interface ProfileUpdateRequest {
     firstName: string;
     lastName: string;
     phone: string;
-    address: string;
+    address?: string;
 }
 
 export interface ForgotPasswordRequest {

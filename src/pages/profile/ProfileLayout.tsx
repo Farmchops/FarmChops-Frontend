@@ -1,44 +1,42 @@
 // src/pages/profile/ProfileLayout.tsx
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { User, Package, Bell, Settings, CreditCard, LogOut } from "lucide-react";
+import {
+    User,
+    Package,
+    Bell,
+    Settings,
+    CreditCard,
+    LogOut,
+    Menu,
+    X,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
 import { useLogoutMutation } from "../../redux/api/authApi";
 import { logout as logoutAction } from "../../redux/features/auth/authSlice";
+import { useState } from "react";
+
 const ProfileLayout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-
-    // auth state
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const user = useSelector((state: RootState) => state.auth.user);
-
-
-    // logout mutation (uses your authApi logout endpoint)
-    const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
-    console.log(isLoggingOut)
-    // Defensive display name / initial logic
-    // const displayName = (user?.firstName || user?.email?.split("@")[0] || "User") as string;
-    // const avatarLetter = (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase();
+    const [logoutApi] = useLogoutMutation();
 
     const handleLogout = async () => {
         try {
             if (user?.email) {
-                // Try server logout; authApi has onQueryStarted to clear local state on success
                 await logoutApi({ email: user.email }).unwrap();
             } else {
-                // fallback to clearing local state
                 dispatch(logoutAction());
             }
-            // setShowProfileMenu(false);
             navigate("/");
         } catch (err) {
             console.error("Logout failed:", err);
-            // Ensure client clears state anyway
             dispatch(logoutAction());
             navigate("/");
         }
     };
-
 
     const menuItems = [
         { path: "personal-info", label: "Personal Information", icon: User },
@@ -48,65 +46,81 @@ const ProfileLayout = () => {
         { path: "settings", label: "Settings", icon: Settings },
     ];
 
+    const Sidebar = (
+        <aside className="w-64 bg-white border-r-2 border-[#CACED8] h-full flex-shrink-0">
+            <h1 className="text-xl font-bold text-gray-900 px-6 py-5">My Profile</h1>
+            <nav>
+                <ul className="py-2">
+                    {menuItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                            <li key={item.path}>
+                                <NavLink
+                                    to={item.path}
+                                    onClick={() => setIsSidebarOpen(false)} // close sidebar on click (mobile)
+                                    className={({ isActive }) =>
+                                        `flex items-center text-sm gap-3 px-6 py-3 transition-colors ${isActive
+                                            ? "bg-[#E5F7EB] border-[#1D7B3C] border-r-4"
+                                            : ""
+                                        }`
+                                    }
+                                >
+                                    <Icon size={18} className="text-[#1D7B3C]" />
+                                    <span className="text-[#808080]">{item.label}</span>
+                                </NavLink>
+                            </li>
+                        );
+                    })}
+                    <li>
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-6 py-3 transition-colors"
+                        >
+                            <LogOut size={18} className="text-[#1D7B3C]" />
+                            <span className="text-[#808080]">Logout</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+    );
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
+        <div className="min-h-screen">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row relative">
+                {/* ===== Mobile Header ===== */}
+                <header className="flex md:hidden items-center justify-end bg-white px-4 py-1">
+                    {/* <h1 className="text-lg font-semibold text-[#1D7B3C]">My Profile</h1> */}
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="p-2 rounded-md border border-gray-200"
+                    >
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </header>
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sidebar */}
-                    <aside className="lg:w-64 flex-shrink-0">
-                        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center text-lg font-semibold">
-                                    {user?.firstName?.charAt(0).toUpperCase() || "U"}
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-gray-900">{user?.firstName || "User"}</p>
-                                    <p className="text-sm text-gray-500">{user?.email}</p>
-                                </div>
-                            </div>
-                        </div>
+                {/* ===== Sidebar ===== */}
+                {/* Desktop */}
+                <div className="hidden min-h-screen md:block">{Sidebar}</div>
 
-                        <nav className="bg-white rounded-lg shadow-sm">
-                            <ul className="py-2">
-                                {menuItems.map((item) => {
-                                    const Icon = item.icon;
-                                    return (
-                                        <li key={item.path}>
-                                            <NavLink
-                                                to={item.path}
-                                                className={({ isActive }) =>
-                                                    `flex items-center gap-3 px-6 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive ? "bg-primary/10 text-primary border-r-4 border-primary" : ""
-                                                    }`
-                                                }
-                                            >
-                                                <Icon size={20} />
-                                                <span>{item.label}</span>
-                                            </NavLink>
-                                        </li>
-                                    );
-                                })}
-                                <li>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full flex items-center gap-3 px-6 py-3 text-red-600 hover:bg-red-50 transition-colors"
-                                    >
-                                        <LogOut size={20} />
-                                        <span>Logout</span>
-                                    </button>
-                                </li>
-                            </ul>
-                        </nav>
-                    </aside>
+                {/* Mobile (slide-in) */}
+                <div
+                    className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 md:hidden ${isSidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
+                        }`}
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
 
-                    {/* Main Content */}
-                    <main className="flex-1">
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <Outlet />
-                        </div>
-                    </main>
+                <div
+                    className={`fixed top-0 left-0 h-full w-64 bg-white border-r-2 border-[#CACED8] z-50 transform transition-transform duration-300 md:hidden ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                        }`}
+                >
+                    {Sidebar}
                 </div>
+
+                {/* ===== Main Content ===== */}
+                <main className="flex-1 px-4 md:p-8 ">
+                    <Outlet />
+                </main>
             </div>
         </div>
     );

@@ -27,7 +27,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
 
     const [bulkTiers, setBulkTiers] = useState<BulkTierForm[]>([
-        { id: '1', name: 'Bulk', price: '', unit: '', minQuantity: '' }
+        { id: '', name: '', price: '', unit: '', minQuantity: '' }
     ]);
 
     const [form, setForm] = useState({
@@ -36,13 +36,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         category: "",
         availableStock: "100",
         lowStockThreshold: "10",
-        unit: "kg",
+        unit: "",
         retailPrice: "",
-        retailUnit: "kg",
+        retailUnit: "",
         retailMinQty: "1",
         bulkPrice: "",
-        bulkUnit: "kg",
-        bulkMinQty: "10",
+        bulkUnit: "",
+        bulkMinQty: "",
         status: "active",
         tags: "",
     });
@@ -79,7 +79,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 unit: product.inventory?.unit || "",
                 retailPrice: product.pricing?.retail?.price?.toString() || "",
                 retailUnit: product.pricing?.retail?.unit || "",
-                retailMinQty: product.pricing?.retail?.minQuantity?.toString() || "",
+                retailMinQty: product.pricing?.retail?.minQuantity?.toString() || "1",
                 bulkPrice: product.pricing?.bulk?.price?.toString() || "",
                 bulkUnit: product.pricing?.bulk?.unit || "",
                 bulkMinQty: product.pricing?.bulk?.minQuantity?.toString() || "",
@@ -169,24 +169,29 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
             newErrors.retailPrice = "Valid retail price is required";
         }
 
-        // Validate each bulk tier
+        // Only validate bulk tiers if ANY field in that tier has a value
         bulkTiers.forEach((tier, index) => {
-            if (!tier.name.trim()) {
-                newErrors[`bulkTier_${tier.id}_name`] = `Tier ${index + 1} name is required`;
-            }
+            const hasAnyValue = tier.name.trim() || tier.price || tier.minQuantity || tier.unit.trim();
 
-            const tierPrice = parseFloat(tier.price);
-            if (!tier.price || tierPrice <= 0) {
-                newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be greater than 0`;
-            }
+            // Only validate if user started filling this tier
+            if (hasAnyValue) {
+                if (!tier.name.trim()) {
+                    newErrors[`bulkTier_${tier.id}_name`] = `Tier ${index + 1} name is required`;
+                }
 
-            // Bulk tier must be less than retail
-            if (retailPrice && tierPrice && tierPrice >= retailPrice) {
-                newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be less than retail`;
-            }
+                const tierPrice = parseFloat(tier.price);
+                if (!tier.price || tierPrice <= 0) {
+                    newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be greater than 0`;
+                }
 
-            if (!tier.minQuantity || parseInt(tier.minQuantity) <= 0) {
-                newErrors[`bulkTier_${tier.id}_minQty`] = `Tier ${index + 1} min quantity must be greater than 0`;
+                // Bulk tier must be less than retail
+                if (retailPrice && tierPrice && tierPrice >= retailPrice) {
+                    newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be less than retail`;
+                }
+
+                if (!tier.minQuantity || parseInt(tier.minQuantity) <= 0) {
+                    newErrors[`bulkTier_${tier.id}_minQty`] = `Tier ${index + 1} min quantity must be greater than 0`;
+                }
             }
         });
 
@@ -507,7 +512,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
 
 
                                 {/* BULK PRICING SECTION - UPDATED */}
-                                <div >
+                                <div className="border p-2 border-gray-300 rounded-lg">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-base font-semibold text-gray-900">Bulk Pricing (Optional)</h3>
                                         <button
