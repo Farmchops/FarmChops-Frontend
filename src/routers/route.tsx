@@ -40,7 +40,10 @@ import Sales from "../pages/admin/Sales";
 import AdminSettings from "../pages/admin/AdminSettings";
 import Help from "../pages/admin/Help";
 import Users from "../pages/admin/Users";
-
+import AdminSignup from "@/pages/admin/AdminSignUp";
+import AdminForgotPassword from "@/pages/admin/AdminForgotPassword";
+import AdminResetPassword from "@/pages/admin/AdminResetPassword";
+import AdminManagement from "@/pages/admin/AdminManagement";
 
 const router = createBrowserRouter([
     {
@@ -95,8 +98,13 @@ const router = createBrowserRouter([
         ],
     },
 
-    // Admin routes
+    // Admin Auth Routes (No protection needed)
     { path: "/admin/login", element: <AdminLogin /> },
+    { path: "/admin/signup", element: <AdminSignup /> },
+    { path: "/admin/forgot-password", element: <AdminForgotPassword /> },
+    { path: "/admin/reset-password", element: <AdminResetPassword /> },
+
+    // Admin Protected Routes
     {
         path: "/admin",
         element: (
@@ -106,16 +114,80 @@ const router = createBrowserRouter([
         ),
         children: [
             { index: true, element: <Navigate to="overview" replace /> },
+
+            // Overview - accessible to all authenticated admins
             { path: "overview", element: <Overview /> },
-            { path: "categories", element: <Categories /> },
-            { path: "products", element: <AdminProducts /> },
-            { path: "orders", element: <AdminOrders /> },
-            { path: "sales", element: <Sales /> },
-            { path: "users", element: <Users /> },
+
+            // Categories - requires manage_categories permission
+            {
+                path: "categories",
+                element: (
+                    <AdminRoute requiredPermission="manage_categories">
+                        <Categories />
+                    </AdminRoute>
+                ),
+            },
+
+            // Products - requires manage_products permission
+            {
+                path: "products",
+                element: (
+                    <AdminRoute requiredPermission="manage_products">
+                        <AdminProducts />
+                    </AdminRoute>
+                ),
+            },
+
+            // Orders - requires view_orders permission
+            {
+                path: "orders",
+                element: (
+                    <AdminRoute requiredPermission="view_orders">
+                        <AdminOrders />
+                    </AdminRoute>
+                ),
+            },
+
+            // Sales - requires view_financial_reports permission
+            {
+                path: "sales",
+                element: (
+                    <AdminRoute requiredPermission="view_financial_reports">
+                        <Sales />
+                    </AdminRoute>
+                ),
+            },
+
+            // Users - requires view_users permission
+            {
+                path: "users",
+                element: (
+                    <AdminRoute requiredPermission="view_users">
+                        <Users />
+                    </AdminRoute>
+                ),
+            },
+
+            // Admin Management - requires super admin (*)
+            {
+                path: "admins",
+                element: (
+                    <AdminRoute requiredPermission="manage_admins">
+                        <AdminManagement />
+                    </AdminRoute>
+                ),
+            },
+
+            // Settings - accessible to all authenticated admins
             { path: "settings", element: <AdminSettings /> },
+
+            // Help - accessible to all authenticated admins
             { path: "help", element: <Help /> },
         ],
     },
+
+    // Catch-all redirect
+    { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
 export default router;

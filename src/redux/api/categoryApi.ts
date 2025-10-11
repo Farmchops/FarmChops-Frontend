@@ -53,7 +53,7 @@ interface DeleteCategoryResponse {
 const baseQuery = fetchBaseQuery({
     baseUrl: 'https://api.farmchops.com/api',
     prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).auth.token;
+        const token = (getState() as RootState).adminAuth.token;
         if (token) {
             headers.set('authorization', `Bearer ${token}`);
         }

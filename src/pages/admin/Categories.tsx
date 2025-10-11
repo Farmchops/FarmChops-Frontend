@@ -83,7 +83,7 @@ export default function Categories() {
   if (isLoading) return <p>Loading...</p>;
 
   return (
-    <div className="p-6 mt-4 space-y-6">
+    <div className="py-6 mt-4 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Categories</h1>
         <button

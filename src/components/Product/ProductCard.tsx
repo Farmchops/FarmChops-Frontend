@@ -106,7 +106,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         {product.name}
                     </h3>
                     <p className="text-sm text-[#808080]">
-                        by <span className="font-medium text-[#1D7B3C]">FarmChops</span>
+                        {/* by <span className="font-medium text-[#1D7B3C]">FarmChops</span> */}
                     </p>
                 </div>
 

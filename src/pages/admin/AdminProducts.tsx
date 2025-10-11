@@ -111,7 +111,7 @@ const AdminProducts = () => {
 
   // Show List
   return (
-    <div className="md:p-6 p-2 mt-4 space-y-6">
+    <div className="py-6 mt-4 space-y-6">
       {/* Header + Add Button */}
       <div className="flex items-center justify-between">
         <div>
