@@ -19,7 +19,7 @@ const AdminProducts = () => {
   const [mode, setMode] = useState<"list" | "form">("list");
   const [editProduct, setEditProduct] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "out_of_stock">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "in_stock" | "out_of_stock">("all");
   const [sortBy, setSortBy] = useState<"name" | "price" | "stock">("name");
 
   const { data, isLoading, refetch } = useGetProductsQuery({ page, limit: 100 }); // Fetch more for client-side filtering
@@ -45,7 +45,13 @@ const AdminProducts = () => {
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter((p) => p.status === statusFilter);
+      filtered = filtered.filter((p) => {
+        const mappedStatus =
+          p.status === "active" ? "in_stock" :
+            p.status === "inactive" ? "out_of_stock" :
+              p.status; // keep as-is if already in_stock/out_of_stock
+        return mappedStatus === statusFilter;
+      });
     }
 
     // Sorting
@@ -181,15 +187,15 @@ const AdminProducts = () => {
             <div className="relative ">
               <Select
                 value={statusFilter}
-                onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive" | "out_of_stock")}
+                onValueChange={(v) => setStatusFilter(v as "all" | "in_stock" | "out_of_stock")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active Only</SelectItem>
-                  <SelectItem value="inactive">Inactive Only</SelectItem>
+                  <SelectItem value="in_stock">In Stock</SelectItem>
+                  {/* <SelectItem value="inactive">Inactive Only</SelectItem> */}
                   <SelectItem value="out_of_stock">Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
@@ -317,13 +323,18 @@ const AdminProducts = () => {
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status === "active"
                         ? "bg-green-100 text-green-800"
-                        : p.status === "out_of_stock"
-                          ? "bg-red-100 text-black"
-                          : "bg-gray-100 text-black"
+                        : p.status === "out_of_stock" || p.status === "inactive"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-700"
                         }`}
                     >
-                      {p.status === "out_of_stock" ? "Out of Stock" : p.status}
+                      {p.status === "active"
+                        ? "In Stock"
+                        : p.status === "out_of_stock" || p.status === "inactive"
+                          ? "Out of Stock"
+                          : "Unknown"}
                     </span>
+
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">

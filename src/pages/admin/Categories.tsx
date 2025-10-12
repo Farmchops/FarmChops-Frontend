@@ -133,12 +133,12 @@ export default function Categories() {
                 <td className="p-3">{c.productCount ?? 0}</td>
                 <td className="p-3">
                   <span
-                    className={`px - 2 py - 1 rounded text - xs ${c.isActive
+                    className={`px-2 py-1 rounded text - xs ${c.isActive
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
                       } `}
                   >
-                    {c.isActive ? "active" : "inactive"}
+                    {c.isActive ? "in stock" : "out of stock"}
                   </span>
                 </td>
                 {/* <td className="p-3 flex gap-2">
