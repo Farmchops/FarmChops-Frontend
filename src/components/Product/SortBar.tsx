@@ -112,7 +112,7 @@ export const SortBar: React.FC<SortBarProps> = ({
                         placeholder="Search products..."
                         value={searchTerm}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        className="w-full pr-10 pl-4 py-1 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C] focus:border-transparent placeholder:text-sm"
+                        className="w-full pr-10 pl-4 py-1 bg-white rounded-lg focus:outline-none  focus:border-transparent placeholder:text-sm"
                     />
                 </div>
 

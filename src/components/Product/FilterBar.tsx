@@ -287,7 +287,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             />
                                         )}
                                         <span>{cat.name}</span>
-                                        <span className="ml-auto text-xs text-gray-500">
+                                        <span className="ml-auto text-xs text-gray-500 hidden">
                                             ({cat.productCount})
                                         </span>
                                     </div>
@@ -307,8 +307,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                             }`}
                     >
                         <span>All Products</span>
-                        <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
-                            <span className="text-[#253D4E] font-medium text-xs">
+                        <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full hidden">
+                            <span className="text-[#253D4E] font-medium text-xs ">
                                 {totalProducts}
                             </span>
                         </div>
@@ -332,7 +332,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                 )}
                                 <span>{cat.name}</span>
                             </div>
-                            <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full">
+                            <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full hidden">
                                 <span className="text-[#253D4E] font-medium text-xs">
                                     {cat.productCount}
                                 </span>

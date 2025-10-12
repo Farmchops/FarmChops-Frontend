@@ -321,10 +321,7 @@ const AdminLogin = () => {
                 }
               }}
               disabled={isLoading}
-              className={`w-full py-2 px-3 border rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 transition-colors ${errors.email
-                  ? 'border-red-500 focus:border-red-500'
-                  : 'border-[#E6E6E6] focus:border-green-500'
-                }`}
+              className="w-full py-2 px-3 border rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 transition-colors "
             />
             {errors.email && (
               <p className="text-red-600 text-xs mt-1">{errors.email}</p>
@@ -346,10 +343,7 @@ const AdminLogin = () => {
                   }
                 }}
                 disabled={isLoading}
-                className={`w-full py-2 px-3 border rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 pr-10 transition-colors ${errors.password
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-[#E6E6E6] focus:border-green-500'
-                  }`}
+                className="w-full py-2 px-3 border rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 transition-colors "
               />
               <button
                 type="button"
@@ -420,7 +414,7 @@ const AdminLogin = () => {
           </p>
         </form>
       </div>
-      <Footer/>
+      <Footer />
     </section>
   );
 };

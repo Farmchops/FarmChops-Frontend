@@ -7,6 +7,7 @@ import ProductPageHero from "../components/Product/ProductPageHero";
 import type { Product } from "../types/product";
 import { useGetProductsQuery } from "@/redux/api/productApi";
 import { useGetCategoriesQuery } from "@/redux/api/categoryApi";
+import Footer from "@/components/Footer";
 
 export type { Product };
 
@@ -118,7 +119,7 @@ const Products: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex-1 flex flex-col gap-4 mb-16">
           {filteredProducts.length === 0 ? (
             <div className="bg-white rounded-lg p-12 text-center">
               <div className="text-gray-400 text-5xl mb-4">🔍</div>
@@ -130,6 +131,8 @@ const Products: React.FC = () => {
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

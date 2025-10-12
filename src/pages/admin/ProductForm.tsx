@@ -185,9 +185,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 }
 
                 // Bulk tier must be less than retail
-                if (retailPrice && tierPrice && tierPrice >= retailPrice) {
-                    newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be less than retail`;
-                }
+                // if (retailPrice && tierPrice && tierPrice >= retailPrice) {
+                //     newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be less than retail`;
+                // }
 
                 if (!tier.minQuantity || parseInt(tier.minQuantity) <= 0) {
                     newErrors[`bulkTier_${tier.id}_minQty`] = `Tier ${index + 1} min quantity must be greater than 0`;

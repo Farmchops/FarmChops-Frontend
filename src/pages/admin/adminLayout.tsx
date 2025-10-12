@@ -221,17 +221,17 @@ const AdminLayout = () => {
             return false;
         }
 
-        console.log(`Checking permission: ${permission}, User permissions: ${user.permissions}`);
+        // console.log(`Checking permission: ${permission}, User permissions: ${user.permissions}`);
 
         // Super admin has all permissions (*)
         if (user.permissions.includes("*")) {
-            console.log(`✓ User has wildcard (*) - granting access to ${permission}`);
+            // console.log(`✓ User has wildcard (*) - granting access to ${permission}`);
             return true;
         }
 
         // Check specific permission
         const has = user.permissions.includes(permission);
-        console.log(`Permission ${permission}: ${has ? "✓ GRANTED" : "✗ DENIED"}`);
+        // console.log(`Permission ${permission}: ${has ? "✓ GRANTED" : "✗ DENIED"}`);
         return has;
     };
 
@@ -290,11 +290,11 @@ const AdminLayout = () => {
     // Filter menu items based on user permissions
     const visibleMenuItems = menuItems.filter((item) => {
         const canView = hasPermission(item.permission);
-        console.log(`Menu Item "${item.label}" (permission: ${item.permission}): ${canView ? "VISIBLE" : "HIDDEN"}`);
+        // console.log(`Menu Item "${item.label}" (permission: ${item.permission}): ${canView ? "VISIBLE" : "HIDDEN"}`);
         return canView;
     });
 
-    console.log("Visible menu items:", visibleMenuItems.map(m => m.label));
+    // console.log("Visible menu items:", visibleMenuItems.map(m => m.label));
 
     // Get admin role display name
     const getAdminRoleDisplay = (role: string): string => {

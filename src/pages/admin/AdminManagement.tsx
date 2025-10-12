@@ -30,23 +30,7 @@ const AdminManagement = () => {
     const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-    console.log(hasSuperAdminPermission);
-
-    const handleAddAdmin = async (data: { fullName: string; email: string; adminRole: string }) => {
-        try {
-            setActionLoading("add");
-            // Call API to send invitation
-            console.log("Sending admin invitation:", data);
-            // Replace with actual API call: await sendAdminInvite(data).unwrap();
-            alert("Invitation sent to " + data.email);
-            refetch();
-        } catch (error) {
-            console.error("Failed to add admin:", error);
-            throw error;
-        } finally {
-            setActionLoading(null);
-        }
-    };
+    console.log(hasSuperAdminPermission());
 
     const handlePermissionsUpdate = async (data: { adminRole: string; permissions: string[] }) => {
         if (!selectedAdmin) return;
@@ -149,7 +133,7 @@ const AdminManagement = () => {
                         Manage all admin accounts and permissions
                     </p>
                 </div>
-                {hasSuperAdminPermission && (
+                {hasSuperAdminPermission() && (
                     <button
                         onClick={() => setShowAddAdminModal(true)}
                         className="bg-[#1D7B3C] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors hidden sm:block"
@@ -198,7 +182,7 @@ const AdminManagement = () => {
                                 <th className="p-3 text-left font-medium whitespace-nowrap">Email</th>
                                 <th className="p-3 text-left font-medium whitespace-nowrap">Role</th>
                                 <th className="p-3 text-left font-medium whitespace-nowrap">Status</th>
-                                {hasSuperAdminPermission && (
+                                {hasSuperAdminPermission() && (
                                     <th className="p-3 text-left font-medium whitespace-nowrap">Actions</th>
                                 )}
                             </tr>
@@ -237,7 +221,7 @@ const AdminManagement = () => {
                                             </span>
                                         )}
                                     </td>
-                                    {hasSuperAdminPermission && (
+                                    {hasSuperAdminPermission() && (
                                         <td className="p-3">
                                             <div className="flex items-center gap-2">
                                                 <button
@@ -293,8 +277,6 @@ const AdminManagement = () => {
             <AddAdminModal
                 isOpen={showAddAdminModal}
                 onClose={() => setShowAddAdminModal(false)}
-                onSubmit={handleAddAdmin}
-                isLoading={actionLoading === "add"}
             />
 
             {/* User Permissions Modal */}
