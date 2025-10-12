@@ -160,7 +160,7 @@ const Navbar: React.FC = () => {
             {/* Green pay bar */}
             <div className="bg-[#1D7B3C] text-white flex justify-end gap-8 py-2 text-xs md:text-[15px] pr-8 font-light">
                 <p className="hidden md:block">Deal of the Day</p>
-                <p>Pay for me</p>
+                <p>Pay Later</p>
                 <p>Bulk Buying</p>
                 <p>Become a vendor</p>
             </div>
