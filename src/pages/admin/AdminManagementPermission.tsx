@@ -345,13 +345,13 @@ export const AdminPermissionsModal: React.FC<AdminPermissionsModalProps> = ({
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between">
-                                                <div className="p-2 bg-[#D9D9D9]">
+                                                {/* <div className="p-2 bg-[#D9D9D9]">
                                                     <div className="w-5 h-5 rounded-full bg-[#1D7B3C] flex items-center justify-center">
                                                         <span className="text-lg font-semibold text-[#1D7B3C]">
                                                             {""}
                                                         </span>
                                                     </div>
-                                                </div>
+                                                </div> */}
 
                                                 <div>
                                                     <p
