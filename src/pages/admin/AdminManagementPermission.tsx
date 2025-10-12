@@ -268,8 +268,9 @@ export const AdminPermissionsModal: React.FC<AdminPermissionsModalProps> = ({
                     <div className="flex items-center gap-3 py-4 rounded-lg">
                         <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                             <span className="text-lg font-semibold text-[#1D7B3C]">
-                                {admin.firstName.charAt(0)}{admin.lastName.charAt(0)}
+                                {(admin.firstName?.charAt(0) || "")}{(admin.lastName?.charAt(0) || "")}
                             </span>
+
                         </div>
                         <div>
                             <p className="font-medium text-gray-900">

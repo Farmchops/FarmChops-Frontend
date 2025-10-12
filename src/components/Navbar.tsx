@@ -162,7 +162,7 @@ const Navbar: React.FC = () => {
                 <p className="hidden md:block">Deal of the Day</p>
                 <p>Pay for me</p>
                 <p>Bulk Buying</p>
-                <p>Pay later</p>
+                <p>Become a vendor</p>
             </div>
 
             {/* Overlay for mobile */}
