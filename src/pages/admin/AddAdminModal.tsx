@@ -33,7 +33,6 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
     const [sendInvite, { isLoading }] = useAdminSendInviteMutation();
 
     const [formData, setFormData] = useState({
-        fullName: "",
         email: "",
         adminRole: "inventory_officer",
     });
@@ -44,7 +43,7 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             setFormData({
-                fullName: "",
+                // fullName: "",
                 email: "",
                 adminRole: "inventory_officer",
             });
@@ -79,10 +78,10 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
         e.preventDefault();
 
         // Validate full name (for UI only)
-        if (!formData.fullName.trim()) {
-            setError("Full name is required.");
-            return;
-        }
+        // if (!formData.fullName.trim()) {
+        //     setError("Full name is required.");
+        //     return;
+        // }
 
         // Validate email
         if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -99,7 +98,7 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
 
             if (result.success) {
                 setSuccess(result.message || "Invitation sent successfully!");
-                setFormData({ fullName: "", email: "", adminRole: "inventory_officer" });
+                setFormData({ email: "", adminRole: "inventory_officer" });
 
                 // Close modal after 2 seconds
                 setTimeout(() => {
@@ -114,7 +113,7 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
             aria-modal="true"
             role="dialog"
             onClick={(e) => {
@@ -123,7 +122,7 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
         >
             <form
                 onSubmit={handleSubmit}
-                className="bg-white rounded-t-3xl sm:rounded-md shadow-xl w-full sm:max-w-md p-6 relative"
+                className="bg-white rounded-3xl sm:rounded-md shadow-xl w-full sm:max-w-md p-6 relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -146,7 +145,7 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
                 </div>
 
                 {/* Full Name - For UI reference only, not sent to backend */}
-                <div className="mb-4">
+                {/* <div className="mb-4">
                     <label className="block text-sm font-medium mb-1">Full Name *</label>
                     <input
                         type="text"
@@ -160,7 +159,7 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
                     <p className="text-xs text-gray-500 mt-1">
                         For your reference only
                     </p>
-                </div>
+                </div> */}
 
                 {/* Email */}
                 <div className="mb-4">
