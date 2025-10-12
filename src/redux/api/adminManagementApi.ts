@@ -106,6 +106,23 @@ export const adminManagementApi = createApi({
                 { type: 'AdminList', id: 'LIST' },
             ],
         }),
+
+
+        // Delete admin
+        deleteAdmin: builder.mutation<
+            ApiResponse<{ message: string }>,
+            string
+        >({
+            query: (id) => ({
+                url: `/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: 'Admin', id },
+                { type: 'AdminList', id: 'LIST' },
+            ],
+        }),
+
     }),
 });
 
@@ -115,4 +132,6 @@ export const {
     useUpdateAdminRoleMutation,
     useUpdateAdminPermissionsMutation,
     useUpdateAdminStatusMutation,
+    useDeleteAdminMutation
+    
 } = adminManagementApi;
