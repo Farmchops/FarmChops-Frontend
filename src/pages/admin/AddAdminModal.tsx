@@ -17,7 +17,7 @@ interface AddAdminModalProps {
 
 
 const adminRoles = [
-    { value: "super_admin", label: "Super Admin" },
+    { value: "admin", label: "Admin" },
     { value: "finance", label: "Finance" },
     { value: "inventory_officer", label: "Inventory Officer" },
     { value: "operations_officer", label: "Operations Officer" },
