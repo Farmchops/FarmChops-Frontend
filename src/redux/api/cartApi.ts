@@ -12,6 +12,9 @@ export interface CartItem {
     quantity: number;
     unit: string;
     priceType: 'retail' | 'bulk';
+    minQuantity?: number; // Added to track increment step
+    tierName?: string; // Added to differentiate bulk tiers
+
 }
 
 
@@ -30,16 +33,20 @@ export interface AddToCartRequest {
     quantity: number;
     unit: string;
     priceType: 'retail' | 'bulk';
+    minQuantity?: number; // Added to track increment step
+    tierName?: string; // Added to differentiate bulk tiers
 }
 
 export interface UpdateCartRequest {
     productId: string;
     quantity: number;
     priceType: 'retail' | 'bulk';
+    tierName?: string; // Added to identify which bulk tier to update
 }
 
 export interface RemoveFromCartRequest {
     priceType: 'retail' | 'bulk';
+    tierName?: string; // Added to identify which bulk tier to remove
 }
 
 
@@ -49,8 +56,8 @@ export interface ApiResponseCart {
 }
 
 const baseQuery = fetchBaseQuery({
-    // baseUrl: '/api',
-    baseUrl: "https://api.farmchops.com/api/",
+    baseUrl: '/api',
+    // baseUrl: "https://api.farmchops.com/api/",
     credentials: 'include', // ✅ CRITICAL: Sends cookies (for session)
     prepareHeaders: (headers, { getState }) => {
         // Send JWT if logged in

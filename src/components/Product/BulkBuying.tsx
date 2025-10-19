@@ -389,6 +389,8 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                 quantity: qty,
                 unit: selectedTier.unit,
                 priceType: "bulk",
+                minQuantity: selectedTier.minQuantity, // ✅ Added
+                tierName: selectedTier.name, // ✅ Added to differentiate tiers
             }).unwrap();
 
             // Close after successful add
