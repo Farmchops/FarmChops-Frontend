@@ -344,10 +344,10 @@ const CartPage: React.FC = () => {
         ) : (
           <div className="grid md:grid-cols-3 gap-8">
             {/* Left - Cart Table */}
-            <div className="md:col-span-2 border border-[#9FA5A3] rounded-lg overflow-hidden">
+            <div className="md:col-span-2 border border-[#9FA5A3] rounded-lg overflow-hidden bg-green-100">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="border-b border-[#9FA5A3] text-[#808080] uppercase bg-gray-50">
+                  <thead className="border-b border-[#9FA5A3] text-[#808080] uppercase ">
                     <tr className="text-xs md:text-sm font-light">
                       <th className="p-4">Product</th>
                       <th className="p-4">Price</th>

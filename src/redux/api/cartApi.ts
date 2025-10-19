@@ -49,7 +49,8 @@ export interface ApiResponseCart {
 }
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: '/api',
+    // baseUrl: '/api',
+    baseUrl: "https://api.farmchops.com/api/",
     credentials: 'include', // ✅ CRITICAL: Sends cookies (for session)
     prepareHeaders: (headers, { getState }) => {
         // Send JWT if logged in
