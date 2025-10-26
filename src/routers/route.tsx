@@ -44,6 +44,7 @@ import AdminSignup from "@/pages/admin/AdminSignUp";
 import AdminForgotPassword from "@/pages/admin/AdminForgotPassword";
 import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 import AdminManagement from "@/pages/admin/AdminManagement";
+import OrderSuccess from "@/components/Checkout/OrderSuccess";
 
 const router = createBrowserRouter([
     {
@@ -75,8 +76,18 @@ const router = createBrowserRouter([
             },
 
             // Protected routes
-            { path: "/checkout", element: <Checkout /> },
+            {
+                path: "/checkout",
+                element: (
+                    // <ProtectedRoute>
+                    <Checkout />
+                    // {/* </ProtectedRoute> */}
+                ),
+            },
             { path: "/thank-you", element: <Thanks /> },
+            { path: "/order/success", element: <OrderSuccess /> },
+            // { path: "/orders/:orderId", element: <OrderDetails /> },
+
 
             // Profile routes (Protected)
             {

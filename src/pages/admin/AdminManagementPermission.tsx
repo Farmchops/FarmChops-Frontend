@@ -116,7 +116,8 @@ interface AdminPermissionsModalProps {
 }
 
 const adminRoles = [
-    { value: ROLES.SUPER_ADMIN, label: "Super Admin" },
+    // { value: ROLES.SUPER_ADMIN, label: "Super Admin" },
+    { value: ROLES.ADMIN, label: "Admin" },
     { value: ROLES.INVENTORY_OFFICER, label: "Inventory Officer" },
     { value: ROLES.OPERATIONS_OFFICER, label: "Operations Officer" },
     { value: ROLES.LOGISTICS, label: "Logistics" },

@@ -1,6 +1,8 @@
 // src/pages/auth/Login.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
 import { useSelector } from "react-redux";
 import Footer from "../../components/Footer";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
@@ -19,19 +21,45 @@ export default function Login() {
     const [error, setError] = useState<string>("");
     const [showPassword, setShowPassword] = useState(false);
 
+    const location = useLocation();
+    const from = (location.state as any)?.from?.pathname || "/"; // Default to home
+
+
+    // useEffect(() => {
+    //     // Redirect if already authenticated
+    //     if (isAuthenticated) {
+    //         navigate(profileComplete ? "/products" : "/complete-profile");
+    //     }
+
+    //     // Load remembered email
+    //     const savedEmail = localStorage.getItem("rememberedEmail");
+    //     if (savedEmail) {
+    //         setEmail(savedEmail);
+    //         setRemember(true);
+    //     }
+    // }, [isAuthenticated, profileComplete, navigate]);
+
+
     useEffect(() => {
-        // Redirect if already authenticated
         if (isAuthenticated) {
-            navigate(profileComplete ? "/products" : "/complete-profile");
+            // Redirect user back to their intended page after login
+            if (profileComplete) {
+                navigate(from, { replace: true });
+            } else {
+                navigate("/complete-profile", { replace: true });
+            }
         }
 
-        // Load remembered email
         const savedEmail = localStorage.getItem("rememberedEmail");
         if (savedEmail) {
             setEmail(savedEmail);
             setRemember(true);
         }
-    }, [isAuthenticated, profileComplete, navigate]);
+    }, [isAuthenticated, profileComplete, navigate, from]);
+
+
+
+
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -115,7 +143,7 @@ export default function Login() {
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute text-xs right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                         >
-                            {showPassword ? <EyeOff className="font-light"/> : <Eye className="font-light"/>}
+                            {showPassword ? <EyeOff className="font-light" /> : <Eye className="font-light" />}
                             {/* You can swap emojis with <Eye /> and <EyeOff /> from lucide-react */}
                         </button>
                     </div>
@@ -154,7 +182,8 @@ export default function Login() {
                     <p className="mt-4 text-center text-sm">
                         Don't have an account?{" "}
                         <span
-                            onClick={() => !isLoading && navigate("/register")}
+                            // onClick={() => !isLoading && navigate("/register")}
+                            onClick={() => !isLoading && navigate("/register", { state: { from } })}
                             className="text-green-700 font-semibold cursor-pointer hover:underline"
                         >
                             Create Account

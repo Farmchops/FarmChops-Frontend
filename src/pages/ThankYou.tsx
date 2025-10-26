@@ -1,11 +1,9 @@
-import React from 'react'
-
-const Thanks:React.FC  = () => {
+const ThankYou = () => {
   return (
     <div>
-      Thakns
+      
     </div>
   )
 }
 
-export default Thanks
+export default ThankYou

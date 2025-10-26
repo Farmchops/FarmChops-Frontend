@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { alertService } from "@/lib/alertService";
 
 
 const AdminProducts = () => {
@@ -70,21 +71,58 @@ const AdminProducts = () => {
     return filtered;
   }, [allProducts, searchTerm, statusFilter, sortBy]);
 
+  // const handleDelete = async (id: string, name: string) => {
+  //   if (!window.confirm(`Are you sure you want to delete "${name}"?`)) {
+  //     return;
+  //   }
+  //   try {
+  //     const result = await deleteProduct(id).unwrap();
+  //     if (result.success) {
+  //       alertService.show({
+  //         type: "success",
+  //         title: "Product Deletion",
+  //         message: "Product deleted successfully!"
+  //       });
+  //       // alert("Product deleted successfully!");
+  //       refetch();
+  //     }
+  //   } catch (error: any) {
+  //     alertService.show({
+  //       type: "error",
+  //       title: "Product Deletion",
+  //       message: "Failed to delete product"
+  //     });
+  //     console.log(error)
+  //     // alert(error?.data?.message || "Failed to delete product");
+  //   }
+  // };
   const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${name}"?`)) {
-      return;
-    }
-
-    try {
-      const result = await deleteProduct(id).unwrap();
-      if (result.success) {
-        alert("Product deleted successfully!");
-        refetch();
-      }
-    } catch (error: any) {
-      alert(error?.data?.message || "Failed to delete product");
-    }
+    alertService.show({
+      type: "confirm",
+      title: "Confirm Deletion",
+      message: `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          const result = await deleteProduct(id).unwrap();
+          if (result.success) {
+            alertService.show({
+              type: "success",
+              title: "Product Deleted",
+              message: "Product deleted successfully!",
+            });
+            refetch();
+          }
+        } catch (error: any) {
+          alertService.show({
+            type: "error",
+            title: "Product Deletion Failed",
+            message: error?.data?.message || "Failed to delete product",
+          });
+        }
+      },
+    });
   };
+
 
   if (isLoading) {
     return (

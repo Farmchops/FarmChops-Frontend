@@ -55,6 +55,7 @@ export interface ApiResponseCart {
     cart: Cart
 }
 
+
 const baseQuery = fetchBaseQuery({
     // baseUrl: '/api',
     baseUrl: "https://api.farmchops.com/api/",

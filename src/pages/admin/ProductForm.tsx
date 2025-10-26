@@ -4,6 +4,7 @@ import { Upload, X } from "lucide-react";
 import { useGetCategoriesQuery } from "@/redux/api/categoryApi";
 import { useCreateProductMutation, useUpdateProductMutation } from "@/redux/api/productApi";
 import type { BulkTier, ProductStatus } from "@/types/product";
+import { alertService } from "@/lib/alertService";
 
 interface ProductFormProps {
     product?: any;
@@ -261,7 +262,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 }).unwrap();
 
                 if (result.success) {
-                    alert("Product updated successfully!");
+                    // alert("Product updated successfully!");
+                    alertService.show({
+                        type: "success",
+                        title: "Product Updated",
+                        message: "Product saved successfully!"
+                    });
                     onSuccess();
                 }
             }
@@ -302,7 +308,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 const result = await createProduct(formData).unwrap();
 
                 if (result.success) {
-                    alert("Product created successfully!");
+                    // alert("Product created successfully!");
+                    alertService.show({
+                        type: "success",
+                        title: "Product Created",
+                        message: "Product saved successfully!"
+                    });
                     onSuccess();
                 }
             }

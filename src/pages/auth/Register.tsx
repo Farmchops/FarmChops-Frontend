@@ -1,6 +1,6 @@
 // src/pages/auth/Register.tsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Footer from "../../components/Footer";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { useSignupMutation } from "../../redux/api/authApi";
@@ -15,6 +15,9 @@ type ErrorMessages = Record<string, string>;
 export default function Register() {
     const navigate = useNavigate();
     const [signup, { isLoading }] = useSignupMutation();
+
+    const location = useLocation();
+    const from = (location.state as any)?.from?.pathname || "/";
 
     const [formData, setFormData] = useState<RegisterFormData>({
         email: "",
@@ -63,7 +66,7 @@ export default function Register() {
 
             if (result.success) {
                 // Navigate to verification page with email
-                navigate("/verify-email", { state: { email: formData.email } });
+                navigate("/verify-email", { state: { email: formData.email, from } });
             } else {
                 setServerError(result.message);
             }

@@ -7,6 +7,7 @@ import {
 } from "@/redux/api/categoryApi";
 import CategoryModal from "./CategoryModal"; // ✅ import modal
 import { Pencil, Trash2 } from "lucide-react";
+import { alertService } from "@/lib/alertService";
 
 type Category = {
   id?: string;
@@ -75,9 +76,31 @@ export default function Categories() {
 
   async function handleDelete(id?: string) {
     if (!id) return;
-    if (confirm("Delete this category?")) {
-      await deleteCategory(id);
-    }
+
+    alertService.show({
+      type: "confirm",
+      title: "Confirm Deletion",
+      message: "Are you sure you want to delete this category?",
+      onConfirm: async () => {
+        try {
+          const result = await deleteCategory(id).unwrap();
+
+          if (result.success) {
+            alertService.show({
+              type: "success",
+              title: "Category Deleted",
+              message: "The category was deleted successfully.",
+            });
+          }
+        } catch (error: any) {
+          alertService.show({
+            type: "error",
+            title: "Failed to Delete",
+            message: error?.data?.message || "Something went wrong while deleting the category.",
+          });
+        }
+      },
+    });
   }
 
   if (isLoading) return <p>Loading...</p>;
