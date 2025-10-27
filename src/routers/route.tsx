@@ -79,15 +79,14 @@ const router = createBrowserRouter([
             {
                 path: "/checkout",
                 element: (
-                    // <ProtectedRoute>
-                    <Checkout />
-                    // {/* </ProtectedRoute> */}
+                    <ProtectedRoute>
+                        <Checkout />
+                    </ProtectedRoute>
                 ),
             },
             { path: "/thank-you", element: <Thanks /> },
             { path: "/order/success", element: <OrderSuccess /> },
             // { path: "/orders/:orderId", element: <OrderDetails /> },
-
 
             // Profile routes (Protected)
             {
@@ -198,7 +197,15 @@ const router = createBrowserRouter([
     },
 
     // Catch-all redirect
-    { path: "*", element: <Navigate to="/" replace /> },
+    // { path: "*", element: <Navigate to="/" replace /> },
+    {
+        path: "*",
+        element: <div className="text-center py-20">
+            <h1 className="text-2xl font-semibold">404 — Page Not Found</h1>
+            <a href="/" className="text-blue-500 underline mt-4 block">Go Home</a>
+        </div>,
+    },
+
 ]);
 
 export default router;

@@ -395,7 +395,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                 <img src={cartImg} alt="cart" className="w-3 h-3" />
                             </button> */}
                             <div className="relative inline-block">
-                                <div className="w-fit gap-2-">
+                                <div className="w-fit ">
 
 
                                     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
@@ -404,7 +404,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                                 className="flex items-center justify-center gap-1 pb-1  transition"
                                                 aria-expanded={dropdownOpen}
                                             >
-                                                Option
+                                                Options
                                                 {dropdownOpen ? (
                                                     <ChevronUp size={16} className="text-gray-600 transition-transform duration-200" />
                                                 ) : (
@@ -421,7 +421,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                             <div className="p-3- border-none border-b- border-gray-100-">
                                                 <div className="flex items-center justify-between">
                                                     <DropdownMenuLabel className="text-sm font-semibold">
-                                                        Bulk
+                                                        Bulk options
                                                     </DropdownMenuLabel>
                                                     <button
                                                         onClick={() => setDropdownOpen(false)}
