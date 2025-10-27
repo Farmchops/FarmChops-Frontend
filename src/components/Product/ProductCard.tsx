@@ -259,6 +259,8 @@ import { useNavigate } from "react-router-dom";
 import type { Product } from "../../types/product";
 import cartImg from "../../assets/cart.svg";
 import { BulkBuying } from "./BulkBuying";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
 
 import {
     DropdownMenu,
@@ -370,7 +372,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </div>
 
                 {/* Price & Buttons */}
-                <div className="px-3 pb-2 space-y-2">
+                <div className="px-3 space-y-2">
                     {/* Price Display */}
                     <div className="flex items-baseline gap-2">
                         <p className="text-sm md:text-base font-semibold text-[#1A1A1A]">
@@ -384,16 +386,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     {/* Buttons */}
                     {canBuyBulk ? (
                         <div>
-                            <button
+                            {/* <button
                                 onClick={handleRetailAddToCart}
                                 disabled={adding || isOutOfStock}
                                 className="flex items-center justify-center gap-1 px-2 py-2 rounded-md text-white text-xs bg-[#1D7B3C] hover:bg-green-700 transition disabled:opacity-50"
                             >
                                 {adding ? "Added" : "Add to cart"}{" "}
                                 <img src={cartImg} alt="cart" className="w-3 h-3" />
-                            </button>
+                            </button> */}
                             <div className="relative inline-block">
-                                <div className="w-fit gap-2">
+                                <div className="w-fit gap-2-">
 
 
                                     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
@@ -403,6 +405,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                                 aria-expanded={dropdownOpen}
                                             >
                                                 Option
+                                                {dropdownOpen ? (
+                                                    <ChevronUp size={16} className="text-gray-600 transition-transform duration-200" />
+                                                ) : (
+                                                    <ChevronDown size={16} className="text-gray-600 transition-transform duration-200" />
+                                                )}
                                             </button>
                                         </DropdownMenuTrigger>
 
@@ -458,6 +465,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                     </DropdownMenu>
                                 </div>
                             </div>
+
+                            <button
+                                onClick={handleRetailAddToCart}
+                                disabled={adding || isOutOfStock}
+                                className="flex items-center justify-center gap-1 px-2 py-2 rounded-md text-white text-xs bg-[#1D7B3C] hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                                {adding ? "Added" : "Add to cart"}{" "}
+                                <img src={cartImg} alt="cart" className="w-3 h-3" />
+                            </button>
+
                         </div>
 
                     ) : (
