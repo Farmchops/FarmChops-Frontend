@@ -401,7 +401,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                                         <DropdownMenuTrigger asChild>
                                             <button
-                                                className="flex items-center justify-center gap-1 px-2 py-2  transition"
+                                                className="flex items-center justify-center gap-1 pb-1  transition"
                                                 aria-expanded={dropdownOpen}
                                             >
                                                 Option
