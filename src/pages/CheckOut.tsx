@@ -1,5 +1,5 @@
 // src/pages/Checkout.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetCartQuery } from "@/redux/api/cartApi";
 import {
@@ -11,6 +11,68 @@ import CartHero from "@/components/Cart/CartHero";
 import Footer from "@/components/Footer";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+
+const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
+
+const loadGoogleMapsScript = (apiKey?: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        if (!apiKey) {
+            reject(new Error("Google Maps API key not provided"));
+            return;
+        }
+
+        // avoid loading twice
+        if ((window as any).google && (window as any).google.maps) {
+            resolve();
+            return;
+        }
+
+        const existing = document.getElementById("google-maps-script");
+        if (existing) {
+            existing.addEventListener("load", () => resolve());
+            existing.addEventListener("error", () => reject(new Error("Google Maps script failed to load")));
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.id = "google-maps-script";
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&libraries=places&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Google Maps script failed to load"));
+        document.head.appendChild(script);
+    });
+};
+
+// Helper to read address components returned by Places API
+const parseAddressComponents = (place: any) => {
+    // default empty values
+    const components: { [k: string]: string } = {
+        street_number: "",
+        route: "",
+        locality: "", // city
+        sublocality: "",
+        administrative_area_level_1: "", // state
+        country: "",
+        postal_code: "",
+    };
+
+    if (!place || !place.address_components) return components;
+
+    place.address_components.forEach((c: any) => {
+        const types = c.types;
+        if (types.includes("street_number")) components.street_number = c.long_name;
+        if (types.includes("route")) components.route = c.long_name;
+        if (types.includes("locality")) components.locality = c.long_name;
+        if (types.includes("sublocality") || types.includes("sublocality_level_1")) components.sublocality = c.long_name;
+        if (types.includes("administrative_area_level_1")) components.administrative_area_level_1 = c.long_name;
+        if (types.includes("country")) components.country = c.long_name;
+        if (types.includes("postal_code")) components.postal_code = c.long_name;
+    });
+
+    return components;
+};
 
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
@@ -31,6 +93,9 @@ const Checkout: React.FC = () => {
         notes: "",
     });
 
+    const addressRef = useRef<HTMLInputElement | null>(null);
+    const autocompleteRef = useRef<any>(null);
+
     const [paymentMethod, setPaymentMethod] = useState<"paystack" | "pay_later">("paystack");
     const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -48,11 +113,70 @@ const Checkout: React.FC = () => {
     }, [cart, navigate]);
 
 
+    // Initialize Google Autocomplete
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                await loadGoogleMapsScript(GOOGLE_API_KEY);
+                if (!mounted) return;
+
+                if (addressRef.current && (window as any).google && !autocompleteRef.current) {
+                    const google = (window as any).google;
+                    // create autocomplete bound to the address input
+                    autocompleteRef.current = new google.maps.places.Autocomplete(addressRef.current, {
+                        types: ["address"], // restrict to address results
+                        componentRestrictions: { country: ['ng'] }, // restrict to Nigeria
+                    });
+
+                    // When user selects an address
+                    autocompleteRef.current.addListener("place_changed", () => {
+                        const place = autocompleteRef.current.getPlace();
+                        if (!place || !place.formatted_address) {
+                            return;
+                        }
+
+                        // parse components to city/state
+                        const parsed = parseAddressComponents(place);
+
+                        // Build a reasonable address string
+                        const formattedAddress = place.formatted_address;
+
+                        setFormData(prev => ({
+                            ...prev,
+                            address: formattedAddress,
+                            city: parsed.locality || parsed.sublocality || prev.city,
+                            state: parsed.administrative_area_level_1 || prev.state,
+                        }));
+
+                        // Reset previously calculated delivery info (user must re-calc)
+                        setCheckoutData(null);
+                        setShowDeliveryInfo(false);
+                    });
+                }
+            } catch (err) {
+                console.warn("Google Maps script load failed:", err);
+            }
+        })();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value,
+            [name]: value,
         });
+
+        // If address, city, or state changes, reset delivery calculation
+        if (name === "address" || name === "city" || name === "state") {
+            setCheckoutData(null);
+            setShowDeliveryInfo(false);
+        }
     };
 
 
@@ -200,14 +324,16 @@ const Checkout: React.FC = () => {
                                     <input
                                         type="text"
                                         name="address"
+                                        ref={addressRef}
                                         value={formData.address}
                                         onChange={handleInputChange}
-                                        placeholder="E.g., Victoria Island, Lagos, Nigeria"
+                                        placeholder="Start typing your address..."
+                                        autoComplete="off"
                                         className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                         required
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Include street, city, and state (e.g., "123 Main St, Victoria Island, Lagos")
+                                        Start typing and select from suggestions (e.g., "Victoria Island, Lagos")
                                     </p>
                                 </div>
 
@@ -346,6 +472,7 @@ const Checkout: React.FC = () => {
                             {!showDeliveryInfo ? (
                                 // Step 1: Calculate Delivery Button
                                 <button
+                                    type="button"
                                     onClick={handleCalculateDelivery}
                                     disabled={isProcessing}
                                     className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -355,6 +482,7 @@ const Checkout: React.FC = () => {
                             ) : (
                                 // Step 2: Place Order Button
                                 <button
+                                    type="button"
                                     onClick={handlePlaceOrder}
                                     disabled={isProcessing}
                                     className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
