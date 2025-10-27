@@ -1,6 +1,6 @@
 // src/pages/CartPage.tsx
 import React from "react";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import CartHero from "../components/Cart/CartHero";
@@ -118,6 +118,7 @@ const CartPage: React.FC = () => {
           </div>
           {cart.length > 0 && (
             <button
+              type="button"
               onClick={handleClearCart}
               className="text-sm text-red-600 hover:text-red-800"
             >
@@ -144,6 +145,7 @@ const CartPage: React.FC = () => {
             <h3 className="mt-4 text-xl font-medium text-gray-900">Your cart is empty</h3>
             <p className="mt-2 text-gray-500">Start shopping to add items to your cart</p>
             <button
+              type="button"
               onClick={() => navigate("/products")}
               className="mt-6 px-6 py-3 bg-[#1D7B3C] text-white rounded-lg hover:bg-green-700"
             >
@@ -162,7 +164,9 @@ const CartPage: React.FC = () => {
                       <th className="p-4">Price</th>
                       <th className="p-4">Quantity</th>
                       <th className="p-4">Subtotal</th>
-                      <th className="p-4"></th>
+                      <th className="p-4">
+                        <span className="sr-only">Actions</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -199,11 +203,14 @@ const CartPage: React.FC = () => {
                           <td className="p-4">
                             <div className="flex items-center gap-2">
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleQuantityChange(item, "subtract");
                                 }}
                                 disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
+                                title="Decrease quantity"
+                                aria-label="Decrease quantity"
                                 className="p-1 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Minus size={14} />
@@ -212,11 +219,14 @@ const CartPage: React.FC = () => {
                                 {item.quantity}
                               </span>
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleQuantityChange(item, "add");
                                 }}
                                 disabled={isUpdating || isRemoving}
+                                title="Increase quantity"
+                                aria-label="Increase quantity"
                                 className="p-1 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Plus size={14} />
@@ -230,23 +240,14 @@ const CartPage: React.FC = () => {
 
                           <td className="p-4">
                             <button
+                              type="button"
                               onClick={() => handleRemoveItem(item.productId, item.priceType)}
                               disabled={isRemoving}
-                              className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                              title="Remove item from cart"
+                              aria-label="Remove item from cart"
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
+                              <Trash2 size={18} />
                             </button>
                           </td>
                         </tr>
@@ -259,6 +260,7 @@ const CartPage: React.FC = () => {
               {/* Actions below table */}
               <div className="flex justify-between items-center p-4">
                 <button
+                  type="button"
                   onClick={() => navigate("/products")}
                   className="px-4 py-2 hover:bg-gray-100 transition"
                 >
@@ -286,6 +288,7 @@ const CartPage: React.FC = () => {
               </div>
 
               <button
+                type="button"
                 onClick={handleCheckout}
                 className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium"
               >

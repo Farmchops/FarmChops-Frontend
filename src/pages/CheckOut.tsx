@@ -45,8 +45,20 @@ const loadGoogleMapsScript = (apiKey?: string): Promise<void> => {
     });
 };
 
+// Google Maps type interfaces
+interface GoogleAddressComponent {
+    long_name: string;
+    short_name: string;
+    types: string[];
+}
+
+interface GooglePlace {
+    formatted_address?: string;
+    address_components?: GoogleAddressComponent[];
+}
+
 // Helper to read address components returned by Places API
-const parseAddressComponents = (place: any) => {
+const parseAddressComponents = (place: GooglePlace) => {
     // default empty values
     const components: { [k: string]: string } = {
         street_number: "",
@@ -60,7 +72,7 @@ const parseAddressComponents = (place: any) => {
 
     if (!place || !place.address_components) return components;
 
-    place.address_components.forEach((c: any) => {
+    place.address_components.forEach((c: GoogleAddressComponent) => {
         const types = c.types;
         if (types.includes("street_number")) components.street_number = c.long_name;
         if (types.includes("route")) components.route = c.long_name;
@@ -99,7 +111,7 @@ const Checkout: React.FC = () => {
     const [paymentMethod, setPaymentMethod] = useState<"paystack" | "pay_later">("paystack");
     const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [showDeliveryInfo, setShowDeliveryInfo] = useState(false);
+    const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
 
     const cart = cartData?.cart;
     const totalItems = cartData?.cart?.totalItems || 0;
@@ -116,52 +128,105 @@ const Checkout: React.FC = () => {
     // Initialize Google Autocomplete
     useEffect(() => {
         let mounted = true;
-        (async () => {
+
+        const initAutocomplete = async () => {
             try {
+                console.log("🔄 Loading Google Maps script...");
                 await loadGoogleMapsScript(GOOGLE_API_KEY);
+
                 if (!mounted) return;
 
-                if (addressRef.current && (window as any).google && !autocompleteRef.current) {
-                    const google = (window as any).google;
-                    // create autocomplete bound to the address input
-                    autocompleteRef.current = new google.maps.places.Autocomplete(addressRef.current, {
-                        types: ["address"], // restrict to address results
-                        componentRestrictions: { country: ['ng'] }, // restrict to Nigeria
-                    });
+                // Small delay to ensure ref is attached
+                await new Promise(resolve => setTimeout(resolve, 100));
 
-                    // When user selects an address
-                    autocompleteRef.current.addListener("place_changed", () => {
-                        const place = autocompleteRef.current.getPlace();
-                        if (!place || !place.formatted_address) {
-                            return;
-                        }
-
-                        // parse components to city/state
-                        const parsed = parseAddressComponents(place);
-
-                        // Build a reasonable address string
-                        const formattedAddress = place.formatted_address;
-
-                        setFormData(prev => ({
-                            ...prev,
-                            address: formattedAddress,
-                            city: parsed.locality || parsed.sublocality || prev.city,
-                            state: parsed.administrative_area_level_1 || prev.state,
-                        }));
-
-                        // Reset previously calculated delivery info (user must re-calc)
-                        setCheckoutData(null);
-                        setShowDeliveryInfo(false);
-                    });
+                if (!addressRef.current) {
+                    console.error("❌ Address input ref not found");
+                    return;
                 }
+
+                const googleMaps = (window as typeof window & { google?: { maps?: { places?: unknown } } }).google;
+
+                if (!googleMaps?.maps?.places) {
+                    console.error("❌ Google Maps Places library not loaded");
+                    return;
+                }
+
+                if (autocompleteRef.current) {
+                    console.log("⚠️ Autocomplete already initialized");
+                    return;
+                }
+
+                console.log("✅ Initializing autocomplete...");
+
+                // create autocomplete bound to the address input
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                autocompleteRef.current = new (googleMaps.maps.places as any).Autocomplete(addressRef.current, {
+                    types: ["geocode"], // More flexible than "address"
+                    componentRestrictions: { country: 'ng' },
+                    fields: ['formatted_address', 'address_components', 'geometry', 'place_id']
+                });
+
+                console.log("✅ Autocomplete initialized successfully");
+
+                // When user selects an address
+                autocompleteRef.current.addListener("place_changed", async () => {
+                    const place = autocompleteRef.current.getPlace();
+                    console.log("📍 Place selected:", place);
+
+                    if (!place || !place.formatted_address) {
+                        console.warn("⚠️ No formatted address");
+                        return;
+                    }
+
+                    // parse components to city/state
+                    const parsed = parseAddressComponents(place);
+
+                    const updatedFormData = {
+                        name: formData.name,
+                        phone: formData.phone,
+                        address: place.formatted_address,
+                        city: parsed.locality || parsed.sublocality || formData.city,
+                        state: parsed.administrative_area_level_1 || formData.state,
+                        notes: formData.notes,
+                    };
+
+                    setFormData(updatedFormData);
+
+                    // Auto-calculate delivery fee after address selection
+                    if (updatedFormData.name && updatedFormData.phone && updatedFormData.address) {
+                        console.log("🔄 Auto-calculating delivery fee...");
+                        setIsCalculatingDelivery(true);
+
+                        try {
+                            const checkoutResponse = await checkout({
+                                name: updatedFormData.name,
+                                phone: updatedFormData.phone,
+                                address: updatedFormData.address,
+                                notes: updatedFormData.notes,
+                            }).unwrap();
+
+                            if (checkoutResponse.success && checkoutResponse.data) {
+                                setCheckoutData(checkoutResponse.data);
+                                console.log("✅ Delivery fee calculated:", checkoutResponse.data.delivery.fee);
+                            }
+                        } catch (error) {
+                            console.error("❌ Auto-delivery calculation failed:", error);
+                        } finally {
+                            setIsCalculatingDelivery(false);
+                        }
+                    }
+                });
             } catch (err) {
-                console.warn("Google Maps script load failed:", err);
+                console.error("❌ Google Maps autocomplete failed:", err);
             }
-        })();
+        };
+
+        initAutocomplete();
 
         return () => {
             mounted = false;
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -172,16 +237,15 @@ const Checkout: React.FC = () => {
             [name]: value,
         });
 
-        // If address, city, or state changes, reset delivery calculation
+        // If address changes, reset delivery calculation
         if (name === "address" || name === "city" || name === "state") {
             setCheckoutData(null);
-            setShowDeliveryInfo(false);
         }
     };
 
-
-    // Step 1: Calculate Delivery Fee
-    const handleCalculateDelivery = async () => {
+    // Place Order - Create Order and Process Payment
+    const handlePlaceOrder = async () => {
+        // Validation
         if (!formData.name || !formData.phone || !formData.address) {
             alert("Please fill in all required fields (Name, Phone, Address)");
             return;
@@ -190,31 +254,43 @@ const Checkout: React.FC = () => {
         setIsProcessing(true);
 
         try {
-            const checkoutResponse = await checkout({
-                name: formData.name,
-                phone: formData.phone,
-                address: formData.address,
-                notes: formData.notes,
-            }).unwrap();
+            // If delivery not calculated yet, calculate it now
+            if (!checkoutData) {
+                console.log("🔄 Calculating delivery fee before order placement...");
+                const checkoutResponse = await checkout({
+                    name: formData.name,
+                    phone: formData.phone,
+                    address: formData.address,
+                    notes: formData.notes,
+                }).unwrap();
 
-            if (checkoutResponse.success && checkoutResponse.data) {
+                if (!checkoutResponse.success || !checkoutResponse.data) {
+                    throw new Error("Failed to calculate delivery fee");
+                }
+
                 setCheckoutData(checkoutResponse.data);
-                setShowDeliveryInfo(true); // ✅ reveal "Place Order"
+
+                // Continue with the calculated data
+                await createOrderWithDeliveryFee(checkoutResponse.data);
+            } else {
+                // Use existing delivery calculation
+                await createOrderWithDeliveryFee(checkoutData);
             }
-        } catch (error: any) {
-            console.error("Delivery calculation failed:", error);
-            alert(error?.data?.message || "Failed to calculate delivery fee. Please try again.");
+        } catch (error) {
+            console.error("Order placement failed:", error);
+            const errorMessage = error && typeof error === 'object' && 'message' in error
+                ? String(error.message)
+                : "Order placement failed. Please try again.";
+            alert(errorMessage);
         } finally {
             setIsProcessing(false);
         }
     };
 
-
-    // Step 2: Create Order and Process Payment
-    const handlePlaceOrder = async () => {
-        if (!checkoutData) {
-            alert("Please calculate delivery fee first");
-            return;
+    // Helper function to create order with delivery fee
+    const createOrderWithDeliveryFee = async (deliveryData: CheckoutResponse['data']) => {
+        if (!deliveryData) {
+            throw new Error("Delivery data not available");
         }
 
         // Extract city and state
@@ -229,32 +305,27 @@ const Checkout: React.FC = () => {
             }
         }
 
-        try {
-            const orderResponse = await createOrder({
-                deliveryInfo: {
-                    address: formData.address,
-                    city: city,
-                    state: state,
-                    phoneNumber: formData.phone,
-                },
-                paymentMethod,
-                deliveryFee: checkoutData.delivery.fee,
-            }).unwrap();
+        const orderResponse = await createOrder({
+            deliveryInfo: {
+                address: formData.address,
+                city: city,
+                state: state,
+                phoneNumber: formData.phone,
+            },
+            paymentMethod,
+            deliveryFee: deliveryData.delivery.fee,
+        }).unwrap();
 
-            if (orderResponse.success && orderResponse.data) {
-                const { order, payment } = orderResponse.data;
+        if (orderResponse.success && orderResponse.data) {
+            const { order, payment } = orderResponse.data;
 
-                if (paymentMethod === "paystack" && payment) {
-                    // Redirect to Paystack
-                    window.location.href = payment.authorizationUrl;
-                } else if (paymentMethod === "pay_later") {
-                    // Redirect to order details page
-                    navigate(`/orders/${order._id}`);
-                }
+            if (paymentMethod === "paystack" && payment) {
+                // Redirect to Paystack
+                window.location.href = payment.authorizationUrl;
+            } else if (paymentMethod === "pay_later") {
+                // Redirect to order details page
+                navigate(`/orders/${order._id}`);
             }
-        } catch (error: any) {
-            console.error("Order creation failed:", error);
-            alert(error?.data?.message || error?.message || "Order creation failed. Please try again.");
         }
     };
 
@@ -294,34 +365,39 @@ const Checkout: React.FC = () => {
                             <h3 className="text-lg font-semibold mb-4">Delivery Information</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Full Name *</label>
+                                    <label htmlFor="checkout-name" className="block text-sm font-medium mb-2">Full Name *</label>
                                     <input
+                                        id="checkout-name"
                                         type="text"
                                         name="name"
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         placeholder="Enter your full name"
+                                        autoComplete="name"
                                         className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Phone Number *</label>
+                                    <label htmlFor="checkout-phone" className="block text-sm font-medium mb-2">Phone Number *</label>
                                     <input
+                                        id="checkout-phone"
                                         type="tel"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleInputChange}
                                         placeholder="+234 812 345 6789"
+                                        autoComplete="tel"
                                         className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Delivery Address *</label>
+                                    <label htmlFor="checkout-address" className="block text-sm font-medium mb-2">Delivery Address *</label>
                                     <input
+                                        id="checkout-address"
                                         type="text"
                                         name="address"
                                         ref={addressRef}
@@ -339,40 +415,46 @@ const Checkout: React.FC = () => {
 
                                 {/* Optional: Separate city/state fields */}
                                 <div className="grid md:grid-cols-2 gap-4 hidden">
-                                    <div >
-                                        <label className="block text-sm font-medium mb-2">City (Optional)</label>
+                                    <div>
+                                        <label htmlFor="checkout-city" className="block text-sm font-medium mb-2">City (Optional)</label>
                                         <input
+                                            id="checkout-city"
                                             type="text"
                                             name="city"
                                             value={formData.city}
                                             onChange={handleInputChange}
                                             placeholder="e.g., Lagos"
+                                            autoComplete="address-level2"
                                             className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">State (Optional)</label>
+                                        <label htmlFor="checkout-state" className="block text-sm font-medium mb-2">State (Optional)</label>
                                         <input
+                                            id="checkout-state"
                                             type="text"
                                             name="state"
                                             value={formData.state}
                                             onChange={handleInputChange}
                                             placeholder="e.g., Lagos"
+                                            autoComplete="address-level1"
                                             className="w-full px-4 py-3 border- border-gray-300 rounded-lg focus:outline-none   bg-white- placeholder:text-sm text-sm bg-green-50"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">
+                                    <label htmlFor="checkout-notes" className="block text-sm font-medium mb-2">
                                         Delivery Notes (Optional)
                                     </label>
                                     <textarea
+                                        id="checkout-notes"
                                         name="notes"
                                         value={formData.notes}
                                         onChange={handleInputChange}
                                         rows={3}
                                         placeholder="E.g., Please deliver between 2-4 PM"
+                                        autoComplete="off"
                                         className="w-full px-4 py-3 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                     />
                                 </div>
@@ -416,14 +498,20 @@ const Checkout: React.FC = () => {
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span>Shipping:</span>
-                                    <span className="">
-                                        {checkoutData ? `₦${checkoutData.delivery.fee.toLocaleString()}` : "To be calculated..."}
+                                    <span className="font-medium">
+                                        {isCalculatingDelivery ? (
+                                            <span className="text-gray-400">Calculating...</span>
+                                        ) : checkoutData ? (
+                                            <span className="text-green-600">₦{checkoutData.delivery.fee.toLocaleString()}</span>
+                                        ) : (
+                                            <span className="text-gray-400">Enter address</span>
+                                        )}
                                     </span>
                                 </div>
-                                {checkoutData && (
-                                    <div className="text-xs text-gray-500">
-                                        <p>Distance: {checkoutData.delivery.distanceText}</p>
-                                        <p>Duration: {checkoutData.delivery.durationText}</p>
+                                {checkoutData && !isCalculatingDelivery && (
+                                    <div className="text-xs text-gray-500 animate-fade-in">
+                                        <p>📍 Distance: {checkoutData.delivery.distanceText}</p>
+                                        <p>🕒 Duration: {checkoutData.delivery.durationText}</p>
                                     </div>
                                 )}
                                 <div className="flex justify-between font-bold text-lg border-t border-[#9FA5A3]/30 pt-3 mt-3">
@@ -469,27 +557,14 @@ const Checkout: React.FC = () => {
                                 </div>
                             </div>
 
-                            {!showDeliveryInfo ? (
-                                // Step 1: Calculate Delivery Button
-                                <button
-                                    type="button"
-                                    onClick={handleCalculateDelivery}
-                                    disabled={isProcessing}
-                                    className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isProcessing ? "Calculating..." : "Calculate Delivery"}
-                                </button>
-                            ) : (
-                                // Step 2: Place Order Button
-                                <button
-                                    type="button"
-                                    onClick={handlePlaceOrder}
-                                    disabled={isProcessing}
-                                    className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isProcessing ? "Processing..." : "Place Order"}
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                onClick={handlePlaceOrder}
+                                disabled={isProcessing || isCalculatingDelivery}
+                                className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : "Place Order"}
+                            </button>
 
 
                             <p className="text-xs text-gray-500 text-center mt-4">
