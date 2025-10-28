@@ -7,10 +7,25 @@ import {
     useCreateOrderMutation,
 } from "@/redux/api/orderApi";
 import type { CheckoutResponse } from "@/types/orders";
+
+
+// Google Maps types (for TypeScript)
+interface GoogleMapsAutocomplete {
+    getPlace: () => GooglePlaceResult;
+    addListener: (event: string, callback: () => void) => void;
+}
+
+interface GooglePlaceResult {
+    formatted_address?: string;
+    address_components?: GoogleAddressComponent[];
+    geometry?: unknown;
+    place_id?: string;
+}
 import CartHero from "@/components/Cart/CartHero";
 import Footer from "@/components/Footer";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+import { HybridAddressInput } from "@/components/Checkout/HybridAddressInput";
 
 const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
 
@@ -22,7 +37,12 @@ const loadGoogleMapsScript = (apiKey?: string): Promise<void> => {
         }
 
         // avoid loading twice
-        if ((window as any).google && (window as any).google.maps) {
+        const windowWithGoogle = window as typeof window & {
+            google?: {
+                maps?: unknown;
+            };
+        };
+        if (windowWithGoogle.google?.maps) {
             resolve();
             return;
         }
@@ -106,7 +126,7 @@ const Checkout: React.FC = () => {
     });
 
     const addressRef = useRef<HTMLInputElement | null>(null);
-    const autocompleteRef = useRef<any>(null);
+    const autocompleteRef = useRef<GoogleMapsAutocomplete | null>(null);
 
     const [paymentMethod, setPaymentMethod] = useState<"paystack" | "pay_later">("paystack");
     const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
@@ -159,8 +179,18 @@ const Checkout: React.FC = () => {
                 console.log("✅ Initializing autocomplete...");
 
                 // create autocomplete bound to the address input
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                autocompleteRef.current = new (googleMaps.maps.places as any).Autocomplete(addressRef.current, {
+                // Using type assertion since Google Maps is loaded dynamically
+                const googleWindow = window as typeof window & {
+                    google: {
+                        maps: {
+                            places: {
+                                Autocomplete: new (element: HTMLInputElement, options: unknown) => GoogleMapsAutocomplete;
+                            };
+                        };
+                    };
+                };
+
+                autocompleteRef.current = new googleWindow.google.maps.places.Autocomplete(addressRef.current, {
                     types: ["geocode"], // More flexible than "address"
                     componentRestrictions: { country: 'ng' },
                     fields: ['formatted_address', 'address_components', 'geometry', 'place_id']
@@ -170,7 +200,8 @@ const Checkout: React.FC = () => {
 
                 // When user selects an address
                 autocompleteRef.current.addListener("place_changed", async () => {
-                    const place = autocompleteRef.current.getPlace();
+                    const place = autocompleteRef.current?.getPlace();
+                    if (!place) return;
                     console.log("📍 Place selected:", place);
 
                     if (!place || !place.formatted_address) {
@@ -288,7 +319,7 @@ const Checkout: React.FC = () => {
     };
 
     // Helper function to create order with delivery fee
-    const createOrderWithDeliveryFee = async (deliveryData: CheckoutResponse['data']) => {
+    const createOrderWithDeliveryFee = async (deliveryData: CheckoutResponse) => {
         if (!deliveryData) {
             throw new Error("Delivery data not available");
         }
@@ -396,21 +427,49 @@ const Checkout: React.FC = () => {
 
                                 <div>
                                     <label htmlFor="checkout-address" className="block text-sm font-medium mb-2">Delivery Address *</label>
-                                    <input
-                                        id="checkout-address"
-                                        type="text"
-                                        name="address"
-                                        ref={addressRef}
+                                    <HybridAddressInput
                                         value={formData.address}
-                                        onChange={handleInputChange}
-                                        placeholder="Start typing your address..."
-                                        autoComplete="off"
-                                        className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
-                                        required
+                                        onAddressChange={(address) => {
+                                            setFormData(prev => ({ ...prev, address }));
+                                            setCheckoutData(null); // Reset delivery calculation
+                                        }}
+                                        onAddressSelect={async (addressDetails) => {
+                                            // Update form with selected address details
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                address: addressDetails.fullAddress,
+                                                city: addressDetails.city || prev.city,
+                                                state: addressDetails.state || prev.state,
+                                            }));
+
+                                            // Auto-calculate delivery if all required fields are filled
+                                            if (formData.name && formData.phone && addressDetails.fullAddress) {
+                                                console.log("🔄 Auto-calculating delivery fee...");
+                                                setIsCalculatingDelivery(true);
+
+                                                try {
+                                                    const checkoutResponse = await checkout({
+                                                        name: formData.name,
+                                                        phone: formData.phone,
+                                                        address: addressDetails.fullAddress,
+                                                        notes: formData.notes,
+                                                    }).unwrap();
+
+                                                    if (checkoutResponse.success && checkoutResponse.data) {
+                                                        setCheckoutData(checkoutResponse.data);
+                                                        console.log("✅ Delivery fee calculated:", checkoutResponse.data.delivery.fee);
+                                                    }
+                                                } catch (error) {
+                                                    console.error("❌ Auto-delivery calculation failed:", error);
+                                                } finally {
+                                                    setIsCalculatingDelivery(false);
+                                                }
+                                            }
+                                        }}
+                                        googleApiKey={GOOGLE_API_KEY}
+                                        customApiEndpoint="/api/addresses/search"
+                                        placeholder="Search: Wuse 2, Gwarinpa, Jabi, etc..."
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Start typing and select from suggestions (e.g., "Victoria Island, Lagos")
-                                    </p>
                                 </div>
 
                                 {/* Optional: Separate city/state fields */}
