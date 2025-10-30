@@ -1,5 +1,6 @@
 // src/pages/Products.tsx - Main Product Page with API
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FilterSidebar } from "../components/Product/FilterBar";
 import { SortBar } from "../components/Product/SortBar";
 import { ProductGrid } from "../components/Product/ProductGrid";
@@ -12,8 +13,17 @@ import Footer from "@/components/Footer";
 export type { Product };
 
 const Products: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Read category from URL parameter on mount
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get("category");
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [searchParams]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [stockFilter, setStockFilter] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("latest");
