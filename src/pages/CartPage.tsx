@@ -169,9 +169,9 @@ const CartPage: React.FC = () => {
                   return (
                     <div key={`${item.productId}-${item.priceType}`} className="border-b border-gray-100 last:border-0">
                       <div className="p-4">
-                        <div className="flex w-full items-start md:items-center">
+                        <div className="flex flex-col md:flex-row w-full items-start md:items-center">
                           {/* Product Info - Takes remaining space */}
-                          <div className="flex-1 flex items-center">
+                          <div className="flex-1 flex items-center w-full md:w-auto">
                             <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                               <img
                                 src={item.image}
@@ -179,18 +179,27 @@ const CartPage: React.FC = () => {
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <div className="ml-4">
+                            <div className="ml-4 flex-1">
                               <h3 className="font-medium text-gray-900">{item.name}</h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
+                              
+                              {/* Mobile Price and Quantity */}
+                              <div className="mt-2 flex items-center justify-between md:hidden">
+                                <div>
+                                  <span className="font-medium">₦{item.price.toLocaleString()}</span>
+                                  <span className="ml-2 text-sm text-gray-500">× {displayQuantity}</span>
+                                </div>
+                                <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
+                              </div>
                             </div>
                           </div>
 
-                          {/* Price - Only on desktop */}
+                          {/* Desktop Price */}
                           <div className="hidden md:block w-32 text-center">
                             <span className="font-medium">₦{item.price.toLocaleString()}</span>
                           </div>
 
-                          {/* Quantity */}
+                          {/* Desktop Quantity */}
                           <div className="hidden md:block w-40">
                             <div className="flex items-center justify-center border border-gray-200 rounded-lg overflow-hidden">
                               <button
@@ -219,7 +228,7 @@ const CartPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Subtotal */}
+                          {/* Desktop Subtotal */}
                           <div className="hidden md:flex items-center w-32 justify-end pr-4">
                             <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
                           </div>
