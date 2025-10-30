@@ -27,17 +27,18 @@ const CartPage: React.FC = () => {
     type: "add" | "subtract"
   ) => {
     const currentQty = item.quantity;
-    const minQuantity = item.minQuantity || 1;
-    const changeBy = minQuantity;
+    // For bulk items, we're using multipliers (1, 2, 3...), so increment by 1
+    // For retail items, also increment by 1
+    const changeBy = 1;
 
-    let newQty = type === "add" ? currentQty + changeBy : currentQty - changeBy;
+    const newQty = type === "add" ? currentQty + changeBy : currentQty - changeBy;
 
-    if (newQty < minQuantity) {
-      newQty = minQuantity;
+    // If quantity goes below 1, remove the item
+    if (newQty < 1) {
       try {
         await removeFromCart({
           productId: item.productId,
-          body: { priceType: item.priceType },
+          body: { priceType: item.priceType, tierName: item.tierName },
         }).unwrap();
       } catch (error) {
         console.error("Failed to remove item:", error);
@@ -50,17 +51,18 @@ const CartPage: React.FC = () => {
         productId: item.productId,
         quantity: newQty,
         priceType: item.priceType,
+        tierName: item.tierName,
       }).unwrap();
     } catch (error) {
       console.error("Failed to update quantity:", error);
     }
   };
 
-  const handleRemoveItem = async (productId: string, priceType: "retail" | "bulk") => {
+  const handleRemoveItem = async (productId: string, priceType: "retail" | "bulk", tierName?: string) => {
     try {
       await removeFromCart({
         productId,
-        body: { priceType },
+        body: { priceType, tierName },
       }).unwrap();
     } catch (error) {
       console.error("Failed to remove item:", error);
@@ -211,7 +213,7 @@ const CartPage: React.FC = () => {
                                         e.stopPropagation();
                                         handleQuantityChange(item, "subtract");
                                       }}
-                                      disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
+                                      disabled={isUpdating || isRemoving || item.quantity <= 1}
                                       className="flex-1 px-3 py-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                       aria-label="Decrease quantity"
                                     >
@@ -237,7 +239,7 @@ const CartPage: React.FC = () => {
                                 {/* Remove Button */}
                                 <div className="pt-2">
                                   <button
-                                    onClick={() => handleRemoveItem(item.productId, item.priceType)}
+                                    onClick={() => handleRemoveItem(item.productId, item.priceType, item.tierName)}
                                     className="w-full py-2 px-4 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200 flex items-center justify-center space-x-2"
                                     disabled={isRemoving}
                                   >
@@ -262,7 +264,7 @@ const CartPage: React.FC = () => {
                                   e.stopPropagation();
                                   handleQuantityChange(item, "subtract");
                                 }}
-                                disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
+                                disabled={isUpdating || isRemoving || item.quantity <= 1}
                                 className="px-3 py-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Minus size={16} />
@@ -291,7 +293,7 @@ const CartPage: React.FC = () => {
                           {/* Remove button - Desktop only (mobile version is now in the product info section) */}
                           <div className="hidden md:block ml-4">
                             <button
-                              onClick={() => handleRemoveItem(item.productId, item.priceType)}
+                              onClick={() => handleRemoveItem(item.productId, item.priceType, item.tierName)}
                               className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
                               disabled={isRemoving}
                               aria-label="Remove item"
