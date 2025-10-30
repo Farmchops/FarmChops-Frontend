@@ -14,9 +14,8 @@ export interface CartItem {
     priceType: 'retail' | 'bulk';
     minQuantity?: number; // Added to track increment step
     tierName?: string; // Added to differentiate bulk tiers
-
+    multiplier?: number; // Added to handle bulk quantity multipliers
 }
-
 
 export interface Cart {
     items: CartItem[];
@@ -35,6 +34,7 @@ export interface AddToCartRequest {
     priceType: 'retail' | 'bulk';
     minQuantity?: number; // Added to track increment step
     tierName?: string; // Added to differentiate bulk tiers
+    multiplier?: number; // Added to handle bulk quantity multipliers
 }
 
 export interface UpdateCartRequest {
