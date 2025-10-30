@@ -163,16 +163,14 @@ const CartPage: React.FC = () => {
               {/* Cart Items */}
               <div>
                 {cart.map((item) => {
-                  const minQuantity = item.minQuantity || 1;
                   const itemSubtotal = item.price * item.quantity;
 
-                  // Display quantity as whole number multiplier for bulk items
-                  const displayQuantity = item.priceType === 'bulk' && minQuantity > 1
-                    ? Math.round(item.quantity / minQuantity)
-                    : item.quantity;
+                  // Since we're now storing multipliers (1, 2, 3...) directly as quantity,
+                  // we display the quantity as-is without any division
+                  const displayQuantity = item.quantity;
 
                   return (
-                    <div key={`${item.productId}-${item.priceType}`} className="border-b border-gray-100 last:border-0">
+                    <div key={`${item.productId}-${item.priceType}-${item.tierName || 'default'}`} className="border-b border-gray-100 last:border-0">
                       <div className="p-4">
                         <div className="flex flex-col md:flex-row w-full items-start md:items-center">
                           {/* Product Info - Takes remaining space */}
