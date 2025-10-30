@@ -97,7 +97,8 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
         if (!selectedTier) return;
 
         const multiplier = tierMultipliers[selectedTier.name];
-        const isRetailTier = selectedTier.name === retailTier.name;
+        // Check if the selected tier is NOT in the bulk tiers array (making it retail)
+        const isRetailTier = !hasBulkTiers || !product.pricing.bulkTiers?.some(t => t.name === selectedTier.name);
 
         try {
             await addToCart({
