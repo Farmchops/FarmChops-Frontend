@@ -18,27 +18,22 @@ const CartPage: React.FC = () => {
   const [removeFromCart, { isLoading: isRemoving }] = useRemoveFromCartMutation();
   const [clearCart] = useClearCartMutation();
 
-
   const cart = cartData?.cart?.items || [];
   const totalItems = cartData?.cart?.totalItems || 0;
   const totalAmount = cartData?.cart?.totalAmount || 0;
 
-  // EXACT SAME LOGIC AS BULKBUYING
   const handleQuantityChange = async (
     item: any,
     type: "add" | "subtract"
   ) => {
     const currentQty = item.quantity;
-    const minQuantity = item.minQuantity || 1; // Get from item or default to 1
+    const minQuantity = item.minQuantity || 1;
     const changeBy = minQuantity;
 
-    console.log(minQuantity)
     let newQty = type === "add" ? currentQty + changeBy : currentQty - changeBy;
 
-    // Prevent going below minQuantity
     if (newQty < minQuantity) {
       newQty = minQuantity;
-      // If we're trying to go below minimum, remove the item instead
       try {
         await removeFromCart({
           productId: item.productId,
@@ -50,7 +45,6 @@ const CartPage: React.FC = () => {
       return;
     }
 
-    // Update the cart with new quantity
     try {
       await updateCartItem({
         productId: item.productId,
@@ -155,45 +149,57 @@ const CartPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             {/* Left - Cart Items */}
-            <div className="md:col-span-2 space-y-4">
-              {cart.map((item) => {
-                const multiplier = item.multiplier || 1;
-                const itemSubtotal = item.price * multiplier * item.quantity;
-                const minQuantity = item.minQuantity || 1;
-                const displayQuantity = item.priceType === 'bulk' ? item.quantity / minQuantity : item.quantity;
+            <div className="md:col-span-2 bg-white rounded-xl shadow-sm overflow-hidden">
+              {/* Table Header */}
+              <div className="hidden md:grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200">
+                <div className="col-span-5 font-medium text-gray-600">Product</div>
+                <div className="col-span-2 font-medium text-gray-600 text-center">Price</div>
+                <div className="col-span-3 font-medium text-gray-600 text-center">Quantity</div>
+                <div className="col-span-2 font-medium text-gray-600 text-right">Subtotal</div>
+              </div>
+              
+              {/* Cart Items */}
+              <div>
+                {cart.map((item) => {
+                  const multiplier = item.multiplier || 1;
+                  const itemSubtotal = item.price * multiplier * item.quantity;
+                  const minQuantity = item.minQuantity || 1;
+                  const displayQuantity = item.priceType === 'bulk' ? item.quantity / minQuantity : item.quantity;
 
-                return (
-                  <div key={`${item.productId}-${item.priceType}`} className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-medium text-gray-900 line-clamp-2">{item.name}</h3>
-                            <button
-                              onClick={() => handleRemoveItem(item.productId, item.priceType)}
-                              className="text-gray-400 hover:text-red-600 p-1 -m-1"
-                              disabled={isRemoving}
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                          
-                          <div className="mt-1 text-sm text-gray-600">
-                            {item.unit} • <span className="capitalize">{item.priceType}</span>
-                          </div>
-                          
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="text-lg font-semibold text-gray-900">
-                              ₦{item.price.toLocaleString()}
+                  return (
+                    <div key={`${item.productId}-${item.priceType}`} className="border-b border-gray-100 last:border-0">
+                      <div className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                          {/* Product Info - Mobile & Desktop */}
+                          <div className="col-span-5 flex items-center">
+                            <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
-                            
+                            <div className="ml-4">
+                              <h3 className="font-medium text-gray-900">{item.name}</h3>
+                              <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
+                              <button
+                                onClick={() => handleRemoveItem(item.productId, item.priceType)}
+                                className="md:hidden mt-1 flex items-center text-red-600 text-sm font-medium"
+                                disabled={isRemoving}
+                              >
+                                <Trash2 size={16} className="mr-1" /> Remove
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Price - Hidden on mobile, shown in product info */}
+                          <div className="hidden md:block col-span-2 text-center">
+                            <span className="font-medium">₦{item.price.toLocaleString()}</span>
+                          </div>
+
+                          {/* Quantity */}
+                          <div className="col-span-3 flex items-center justify-between md:justify-center">
+                            <div className="md:hidden text-sm text-gray-600">Quantity</div>
                             <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                               <button
                                 onClick={(e) => {
@@ -201,7 +207,7 @@ const CartPage: React.FC = () => {
                                   handleQuantityChange(item, "subtract");
                                 }}
                                 disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
-                                className="px-3 py-1.5 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-3 py-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Minus size={16} />
                               </button>
@@ -214,24 +220,38 @@ const CartPage: React.FC = () => {
                                   handleQuantityChange(item, "add");
                                 }}
                                 disabled={isUpdating || isRemoving}
-                                className="px-3 py-1.5 text-gray-600 hover:bg-gray-50"
+                                className="px-3 py-2 text-gray-600 hover:bg-gray-50"
                               >
                                 <Plus size={16} />
                               </button>
                             </div>
                           </div>
-                          
-                          <div className="mt-2 text-right font-medium text-gray-900">
-                            Subtotal: ₦{itemSubtotal.toLocaleString()}
+
+                          {/* Subtotal */}
+                          <div className="col-span-2 flex items-center justify-between md:justify-end">
+                            <div className="md:hidden text-sm text-gray-600">Subtotal</div>
+                            <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
+                          </div>
+
+                          {/* Remove button - Desktop only */}
+                          <div className="hidden md:block col-span-1 text-right">
+                            <button
+                              onClick={() => handleRemoveItem(item.productId, item.priceType)}
+                              className="text-gray-400 hover:text-red-600 p-1 -m-1"
+                              disabled={isRemoving}
+                              aria-label="Remove item"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
               
-              <div className="mt-6">
+              <div className="p-4">
                 <button
                   onClick={() => navigate("/products")}
                   className="w-full px-6 py-3 text-[#1D7B3C] font-medium border-2 border-[#1D7B3C] rounded-xl hover:bg-gray-50 transition-colors"
@@ -262,9 +282,8 @@ const CartPage: React.FC = () => {
 
               <button
                 onClick={handleCheckout}
-                className="w-full mt-6 bg-[#1D7B3C] text-white py-3.5 rounded-xl hover:bg-green-700 transition-colors font-medium"
               >
-                Proceed to Checkout
+                Continue Shopping
               </button>
 
               <p className="text-xs text-center text-gray-500 mt-4">
@@ -274,7 +293,6 @@ const CartPage: React.FC = () => {
           </div>
         )}
       </section>
-
       <Footer />
     </div>
   );
