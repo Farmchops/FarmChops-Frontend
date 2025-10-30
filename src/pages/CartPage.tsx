@@ -1,5 +1,5 @@
 // src/pages/CartPage.tsx
-import React from "react";
+import React, { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
@@ -17,6 +17,7 @@ const CartPage: React.FC = () => {
   const [updateCartItem, { isLoading: isUpdating }] = useUpdateCartItemMutation();
   const [removeFromCart, { isLoading: isRemoving }] = useRemoveFromCartMutation();
   const [clearCart] = useClearCartMutation();
+  const [showClearModal, setShowClearModal] = useState(false);
 
   const cart = cartData?.cart?.items || [];
   const totalItems = cartData?.cart?.totalItems || 0;
@@ -70,12 +71,11 @@ const CartPage: React.FC = () => {
   };
 
   const handleClearCart = async () => {
-    if (window.confirm("Are you sure you want to clear your cart?")) {
-      try {
-        await clearCart().unwrap();
-      } catch (error) {
-        console.error("Failed to clear cart:", error);
-      }
+    try {
+      await clearCart().unwrap();
+      setShowClearModal(false);
+    } catch (error) {
+      console.error("Failed to clear cart:", error);
     }
   };
 
@@ -115,7 +115,7 @@ const CartPage: React.FC = () => {
           {cart.length > 0 && (
             <button
               type="button"
-              onClick={handleClearCart}
+              onClick={() => setShowClearModal(true)}
               className="text-sm font-medium text-red-600 hover:text-red-800"
             >
               Clear All
@@ -346,6 +346,34 @@ const CartPage: React.FC = () => {
         )}
       </section>
       <Footer />
+
+      {/* Clear Cart Confirmation Modal */}
+      {showClearModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Clear Cart?</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to remove all items from your cart? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearCart}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Clear Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
