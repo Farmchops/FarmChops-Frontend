@@ -106,13 +106,13 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-[#F9F9F9] min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <CartHero />
-      <section className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
+      <section className="max-w-6xl mx-auto px-2 sm:px-4 py-4 md:py-8">
+        <div className="mb-4 md:mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-medium text-[#1A1A1A]">My Cart</h2>
-            <p className="text-sm text-[#666666] mt-1">
+            <h2 className="text-2xl font-semibold text-gray-900">My Cart</h2>
+            <p className="text-sm text-gray-600 mt-1">
               {totalItems} {totalItems === 1 ? 'Item' : 'Items'} in your cart
             </p>
           </div>
@@ -120,7 +120,7 @@ const CartPage: React.FC = () => {
             <button
               type="button"
               onClick={handleClearCart}
-              className="text-sm text-[#E74C3C] hover:text-red-800"
+              className="text-sm font-medium text-red-600 hover:text-red-800"
             >
               Clear All
             </button>
@@ -153,9 +153,9 @@ const CartPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {/* Cart Items */}
-            <div className="space-y-4 md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+            {/* Left - Cart Items */}
+            <div className="md:col-span-2 space-y-4">
               {cart.map((item) => {
                 const multiplier = item.multiplier || 1;
                 const itemSubtotal = item.price * multiplier * item.quantity;
@@ -163,64 +163,66 @@ const CartPage: React.FC = () => {
                 const displayQuantity = item.priceType === 'bulk' ? item.quantity / minQuantity : item.quantity;
 
                 return (
-                  <div key={`${item.productId}-${item.priceType}`} className="bg-white rounded-lg p-4 shadow-sm">
-                    <div className="flex gap-4">
-                      <div className="w-24 h-24 flex-shrink-0">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <h3 className="font-medium text-[#1A1A1A]">{item.name}</h3>
-                          <button
-                            onClick={() => handleRemoveItem(item.productId, item.priceType)}
-                            className="text-[#999999] hover:text-red-600"
-                            disabled={isRemoving}
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                  <div key={`${item.productId}-${item.priceType}`} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                        
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="text-sm text-[#666666]">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start">
+                            <h3 className="font-medium text-gray-900 line-clamp-2">{item.name}</h3>
+                            <button
+                              onClick={() => handleRemoveItem(item.productId, item.priceType)}
+                              className="text-gray-400 hover:text-red-600 p-1 -m-1"
+                              disabled={isRemoving}
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                          
+                          <div className="mt-1 text-sm text-gray-600">
                             {item.unit} • <span className="capitalize">{item.priceType}</span>
                           </div>
-                          <div className="font-medium text-[#1A1A1A]">
-                            ₦{item.price.toLocaleString()}
+                          
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="text-lg font-semibold text-gray-900">
+                              ₦{item.price.toLocaleString()}
+                            </div>
+                            
+                            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(item, "subtract");
+                                }}
+                                disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
+                                className="px-3 py-1.5 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Minus size={16} />
+                              </button>
+                              <span className="w-8 text-center font-medium text-gray-900">
+                                {displayQuantity}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(item, "add");
+                                }}
+                                disabled={isUpdating || isRemoving}
+                                className="px-3 py-1.5 text-gray-600 hover:bg-gray-50"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center border border-[#E0E0E0] rounded-md overflow-hidden">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuantityChange(item, "subtract");
-                              }}
-                              disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
-                              className="px-3 py-1 text-[#666666] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Minus size={16} />
-                            </button>
-                            <span className="w-8 text-center font-medium text-[#1A1A1A]">
-                              {displayQuantity}
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuantityChange(item, "add");
-                              }}
-                              disabled={isUpdating || isRemoving}
-                              className="px-3 py-1 text-[#666666] hover:bg-gray-100"
-                            >
-                              <Plus size={16} />
-                            </button>
-                          </div>
-                          <div className="font-semibold text-[#1A1A1A]">
-                            ₦{itemSubtotal.toLocaleString()}
+                          
+                          <div className="mt-2 text-right font-medium text-gray-900">
+                            Subtotal: ₦{itemSubtotal.toLocaleString()}
                           </div>
                         </div>
                       </div>
@@ -232,27 +234,27 @@ const CartPage: React.FC = () => {
               <div className="mt-6">
                 <button
                   onClick={() => navigate("/products")}
-                  className="w-full md:w-auto px-6 py-3 border border-[#1D7B3C] text-[#1D7B3C] rounded-lg hover:bg-green-50 transition-colors"
+                  className="w-full px-6 py-3 text-[#1D7B3C] font-medium border-2 border-[#1D7B3C] rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   Continue Shopping
                 </button>
               </div>
             </div>
 
-            {/* Order Summary */}
-            <div className="bg-white rounded-lg shadow-sm p-6 h-fit sticky top-4">
-              <h3 className="text-lg font-medium text-[#1A1A1A] mb-4">Order Summary</h3>
+            {/* Order Summary - Sticky on mobile */}
+            <div className="bg-white rounded-xl shadow-sm p-6 h-fit md:sticky md:top-4">
+              <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between text-[#666666]">
+                <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
                   <span className="font-medium">₦{totalAmount.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-[#666666]">
+                <div className="flex justify-between text-gray-600">
                   <span>Delivery Fee</span>
-                  <span className="text-[#1D7B3C] font-medium">Free</span>
+                  <span className="text-green-600 font-medium">Free</span>
                 </div>
-                <div className="h-px bg-[#E0E0E0] my-4"></div>
-                <div className="flex justify-between text-base font-medium text-[#1A1A1A]">
+                <div className="h-px bg-gray-200 my-3"></div>
+                <div className="flex justify-between text-base font-semibold text-gray-900">
                   <span>Total</span>
                   <span>₦{totalAmount.toLocaleString()}</span>
                 </div>
@@ -260,12 +262,12 @@ const CartPage: React.FC = () => {
 
               <button
                 onClick={handleCheckout}
-                className="w-full mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                className="w-full mt-6 bg-[#1D7B3C] text-white py-3.5 rounded-xl hover:bg-green-700 transition-colors font-medium"
               >
                 Proceed to Checkout
               </button>
 
-              <p className="text-xs text-center text-[#999999] mt-4">
+              <p className="text-xs text-center text-gray-500 mt-4">
                 Tax included and shipping calculated at checkout
               </p>
             </div>
