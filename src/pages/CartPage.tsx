@@ -171,7 +171,8 @@ const CartPage: React.FC = () => {
                   </thead>
                   <tbody>
                     {cart.map((item) => {
-                      const itemSubtotal = item.price * item.quantity;
+                      const multiplier = item.multiplier || 1;
+                      const itemSubtotal = item.price * multiplier * item.quantity;
                       const minQuantity = item.minQuantity || 1;
 
                       return (
@@ -216,7 +217,7 @@ const CartPage: React.FC = () => {
                                 <Minus size={14} />
                               </button>
                               <span className="w-10 text-center font-medium">
-                                {item.quantity}
+                                {item.priceType === 'bulk' ? item.quantity / minQuantity : item.quantity}
                               </span>
                               <button
                                 type="button"

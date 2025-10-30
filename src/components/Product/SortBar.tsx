@@ -97,50 +97,58 @@ export const SortBar: React.FC<SortBarProps> = ({
     onSortChange,
 }) => {
     return (
-        <div className="flex flex-col sm:flex-row justify-between items-center p-4 md:px-8 bg-green-50 gap-4">
-            {/* Filter Button (Mobile) */}
-            <button className="px-3 py-2 rounded-full bg-[#1D7B3C] text-white text-sm font-light hover:bg-[#20571E] transition md:flex gap-2 hidden ">
-                Filter <img src={filter} alt="filter icon" className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center border border-gray-300 ">
-                {/* Search */}
-                <div className="relative  sm:w-64">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        className="w-full pr-10 pl-4 py-1 bg-white rounded-lg focus:outline-none  focus:border-transparent placeholder:text-sm"
-                    />
+        <div className="bg-green-50 p-4 md:px-8">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+                {/* Left side - aligned with sidebar (25% width on large screens) */}
+                <div className="lg:w-1/4 flex items-center">
+                    {/* Filter Button (Mobile) */}
+                    <button type="button" className="px-3 py-2 rounded-full bg-[#1D7B3C] text-white text-sm font-light hover:bg-[#20571E] transition flex gap-2">
+                        Filter <img src={filter} alt="filter icon" className="w-4 h-4" />
+                    </button>
                 </div>
 
+                {/* Right side - aligned with products grid (75% width on large screens) */}
+                <div className="flex-1 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    {/* Search and Sort - left aligned */}
+                    <div className="flex items-stretch border border-gray-300 rounded-lg overflow-hidden bg-white">
+                        {/* Search */}
+                        <div className="relative w-48 sm:w-64">
+                            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search products..."
+                                value={searchTerm}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                className="w-full h-full pr-10 pl-4 py-2 bg-white focus:outline-none placeholder:text-sm border-none"
+                            />
+                        </div>
 
+                        {/* Divider */}
+                        <div className="w-px bg-gray-300"></div>
 
-                {/* Sort Dropdown with shadcn Select */}
-                <div className="flex items-center gap-2">
-                    <span className="text-[#808080] text-sm hidden">Sort by:</span>
-                    <Select value={sortBy} onValueChange={onSortChange}>
-                        <SelectTrigger className="w-[180px] bg-white">
-                            <SelectValue placeholder="Select sort" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="latest">Latest</SelectItem>
-                            <SelectItem value="price-low">Price: Low to High</SelectItem>
-                            <SelectItem value="price-high">Price: High to Low</SelectItem>
-                            <SelectItem value="name">Name: A-Z</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        {/* Sort Dropdown with shadcn Select */}
+                        <div className="flex items-center">
+                            <Select value={sortBy} onValueChange={onSortChange}>
+                                <SelectTrigger className="w-[140px] sm:w-[180px] bg-white border-none h-full rounded-none focus:ring-0">
+                                    <SelectValue placeholder="Latest" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="latest">Latest</SelectItem>
+                                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                                    <SelectItem value="name">Name: A-Z</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Results Count */}
+                    <p className="text-[#666666] text-sm whitespace-nowrap">
+                        <span className="text-[#1A1A1A] font-medium">{totalResults}</span>{" "}
+                        Results Found
+                    </p>
                 </div>
             </div>
-
-
-            {/* Results Count */}
-            <p className="text-[#666666] text-sm">
-                <span className="text-[#1A1A1A] font-medium">{totalResults}</span>{" "}
-                Results Found
-            </p>
         </div>
     )
 }
