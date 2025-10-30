@@ -169,9 +169,9 @@ const CartPage: React.FC = () => {
                   return (
                     <div key={`${item.productId}-${item.priceType}`} className="border-b border-gray-100 last:border-0">
                       <div className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                        <div className="grid grid-cols-12 gap-4 items-center">
                           {/* Product Info - Mobile & Desktop */}
-                          <div className="col-span-5 flex items-center">
+                          <div className="col-span-6 md:col-span-5 flex items-center">
                             <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                               <img
                                 src={item.image}
@@ -228,16 +228,16 @@ const CartPage: React.FC = () => {
                           </div>
 
                           {/* Subtotal */}
-                          <div className="col-span-2 flex items-center justify-between md:justify-end">
+                          <div className="col-span-3 md:col-span-2 flex items-center justify-between md:justify-end">
                             <div className="md:hidden text-sm text-gray-600">Subtotal</div>
                             <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
                           </div>
 
-                          {/* Remove button - Desktop only */}
-                          <div className="hidden md:block col-span-1 text-right">
+                          {/* Remove button - Desktop */}
+                          <div className="col-span-1 text-right">
                             <button
                               onClick={() => handleRemoveItem(item.productId, item.priceType)}
-                              className="text-gray-400 hover:text-red-600 p-1 -m-1"
+                              className="text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors"
                               disabled={isRemoving}
                               aria-label="Remove item"
                             >
