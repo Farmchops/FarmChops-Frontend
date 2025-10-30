@@ -316,17 +316,13 @@ const CartPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Order Summary - Sticky on mobile */}
+            {/* Cart Summary - Sticky on mobile */}
             <div className="bg-white rounded-xl shadow-sm p-6 h-fit md:sticky md:top-4">
-              <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+              <h3 className="text-lg font-semibold mb-4">Cart Summary</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
                   <span className="font-medium">₦{totalAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Delivery Fee</span>
-                  <span className="text-green-600 font-medium">Free</span>
                 </div>
                 <div className="h-px bg-gray-200 my-3"></div>
                 <div className="flex justify-between text-base font-semibold text-gray-900">
@@ -337,8 +333,9 @@ const CartPage: React.FC = () => {
 
               <button
                 onClick={handleCheckout}
+                className="w-full mt-6 px-6 py-3 bg-[#1D7B3C] text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
               >
-                Continue Shopping
+                Proceed to Checkout
               </button>
 
               <p className="text-xs text-center text-gray-500 mt-4">

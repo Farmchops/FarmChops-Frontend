@@ -100,10 +100,13 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
         // Check if the selected tier is NOT in the bulk tiers array (making it retail)
         const isRetailTier = !hasBulkTiers || !product.pricing.bulkTiers?.some(t => t.name === selectedTier.name);
 
+        // Format the tier name to include quantity (e.g., "Bucket of Mango (14 pieces)")
+        const formattedTierName = formatTierName(selectedTier);
+
         try {
             await addToCart({
                 productId: product._id,
-                name: isRetailTier ? product.name : `${product.name} (${selectedTier.name})`,
+                name: isRetailTier ? product.name : `${product.name} (${formattedTierName})`,
                 image: product.images[0],
                 price: selectedTier.price,
                 quantity: multiplier, // Use multiplier as quantity (1, 2, 3...)
