@@ -302,7 +302,7 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                 <Toast
                     message={`${product.name} added to cart successfully!`}
                     onClose={() => setShowToast(false)}
-                    duration={4000}
+                    duration={5000} // Increased from 4000ms to 5000ms (5 seconds)
                 />
             )}
         </div>
