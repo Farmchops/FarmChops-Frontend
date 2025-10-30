@@ -179,6 +179,17 @@ const CartPage: React.FC = () => {
                                 className="w-full h-full object-cover"
                               />
                             </div>
+                            {/* Mobile Trash Icon - Top Right */}
+                            <div className="md:hidden ml-auto">
+                              <button
+                                onClick={() => handleRemoveItem(item.productId, item.priceType)}
+                                className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
+                                disabled={isRemoving}
+                                aria-label="Remove item"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                             <div className="ml-4 flex-1">
                               <h3 className="font-medium text-gray-900">{item.name}</h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
@@ -259,8 +270,8 @@ const CartPage: React.FC = () => {
                             <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
                           </div>
 
-                          {/* Remove button - Visible on all screen sizes */}
-                          <div className="ml-4">
+                          {/* Remove button - Desktop only (mobile version is now in the product info section) */}
+                          <div className="hidden md:block ml-4">
                             <button
                               onClick={() => handleRemoveItem(item.productId, item.priceType)}
                               className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
