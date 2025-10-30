@@ -169,9 +169,9 @@ const CartPage: React.FC = () => {
                   return (
                     <div key={`${item.productId}-${item.priceType}`} className="border-b border-gray-100 last:border-0">
                       <div className="p-4">
-                        <div className="grid grid-cols-12 gap-4 items-center">
-                          {/* Product Info - Mobile & Desktop */}
-                          <div className="col-span-6 md:col-span-5 flex items-center">
+                        <div className="flex w-full items-start md:items-center">
+                          {/* Product Info - Takes remaining space */}
+                          <div className="flex-1 flex items-center">
                             <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                               <img
                                 src={item.image}
@@ -192,15 +192,14 @@ const CartPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Price - Hidden on mobile, shown in product info */}
-                          <div className="hidden md:block col-span-2 text-center">
+                          {/* Price - Only on desktop */}
+                          <div className="hidden md:block w-32 text-center">
                             <span className="font-medium">₦{item.price.toLocaleString()}</span>
                           </div>
 
                           {/* Quantity */}
-                          <div className="col-span-3 flex items-center justify-between md:justify-center">
-                            <div className="md:hidden text-sm text-gray-600">Quantity</div>
-                            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                          <div className="hidden md:block w-40">
+                            <div className="flex items-center justify-center border border-gray-200 rounded-lg overflow-hidden">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -228,13 +227,12 @@ const CartPage: React.FC = () => {
                           </div>
 
                           {/* Subtotal */}
-                          <div className="col-span-3 md:col-span-2 flex items-center justify-between md:justify-end">
-                            <div className="md:hidden text-sm text-gray-600">Subtotal</div>
+                          <div className="hidden md:flex items-center w-32 justify-end pr-4">
                             <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
                           </div>
 
                           {/* Remove button - Desktop */}
-                          <div className="col-span-1 text-right">
+                          <div className="ml-4">
                             <button
                               onClick={() => handleRemoveItem(item.productId, item.priceType)}
                               className="text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors"
