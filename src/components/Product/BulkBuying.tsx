@@ -96,18 +96,20 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
     const handleAddToCart = async () => {
         if (!selectedTier) return;
 
+        const multiplier = tierMultipliers[selectedTier.name];
+        const isRetailTier = selectedTier.name === retailTier.name;
+
         try {
             await addToCart({
                 productId: product._id,
-                name: hasBulkTiers ? `${product.name} (${selectedTier.name})` : product.name,
+                name: isRetailTier ? product.name : `${product.name} (${selectedTier.name})`,
                 image: product.images[0],
                 price: selectedTier.price,
-                quantity: 1, // Always set quantity to 1 for the cart item
+                quantity: multiplier, // Use multiplier as quantity (1, 2, 3...)
                 unit: selectedTier.unit,
-                priceType: hasBulkTiers ? "bulk" : "retail",
+                priceType: isRetailTier ? "retail" : "bulk",
                 minQuantity: selectedTier.minQuantity,
                 tierName: selectedTier.name,
-                multiplier: tierMultipliers[selectedTier.name] // Store multiplier separately
             }).unwrap();
 
             // Show success toast and then cart sidebar
