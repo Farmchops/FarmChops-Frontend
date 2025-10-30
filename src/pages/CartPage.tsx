@@ -183,11 +183,37 @@ const CartPage: React.FC = () => {
                               <h3 className="font-medium text-gray-900">{item.name}</h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
                               
-                              {/* Mobile Price and Quantity */}
+                              {/* Mobile Price, Quantity Controls, and Subtotal */}
                               <div className="mt-2 flex items-center justify-between md:hidden">
-                                <div>
+                                <div className="flex items-center">
                                   <span className="font-medium">₦{item.price.toLocaleString()}</span>
-                                  <span className="ml-2 text-sm text-gray-500">× {displayQuantity}</span>
+                                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden ml-3">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleQuantityChange(item, "subtract");
+                                      }}
+                                      disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
+                                      className="px-2 py-1 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      aria-label="Decrease quantity"
+                                    >
+                                      <Minus size={14} />
+                                    </button>
+                                    <span className="w-6 text-center text-sm font-medium text-gray-900">
+                                      {displayQuantity}
+                                    </span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleQuantityChange(item, "add");
+                                      }}
+                                      disabled={isUpdating || isRemoving}
+                                      className="px-2 py-1 text-gray-600 hover:bg-gray-50"
+                                      aria-label="Increase quantity"
+                                    >
+                                      <Plus size={14} />
+                                    </button>
+                                  </div>
                                 </div>
                                 <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
                               </div>
