@@ -180,7 +180,14 @@ const CartPage: React.FC = () => {
                               />
                             </div>
                             <div className="ml-4 flex-1">
-                              <h3 className="font-medium text-gray-900">{item.name}</h3>
+                              <h3 className="font-medium text-gray-900">
+                                {item.name}
+                                {item.priceType === 'bulk' && (
+                                  <span className="text-gray-500 ml-1">
+                                    ({item.quantity} {item.quantity === 1 ? 'piece' : 'pieces'})
+                                  </span>
+                                )}
+                              </h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
                               
                               {/* Mobile Layout */}
