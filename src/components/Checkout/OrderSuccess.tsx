@@ -134,8 +134,8 @@ const OrderSuccess: React.FC = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="space-y-3">
-                                        <button
+                                <div className="space-y-3">
+                    <button
                         onClick={() => navigate("/profile/orders")}
                         className="w-full px-6 py-3 bg-[#1D7B3C] text-white rounded-lg hover:bg-green-700 transition font-medium"
                     >
@@ -143,18 +143,12 @@ const OrderSuccess: React.FC = () => {
                     </button>
                     <button
                         onClick={() => navigate("/products")}
-                        className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
-                    >
-                        Continue Shopping
-                    </button>
-
-                    <button
-                        onClick={() => navigate("/products")}
                         className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
                     >
                         Continue Shopping
                     </button>
                 </div>
+
 
                 {/* What's Next */}
                 <div className="mt-8 pt-6 border-t">
