@@ -11,8 +11,8 @@ const OrderSuccess: React.FC = () => {
 
     const [verificationState, setVerificationState] = useState<"verifying" | "success" | "error">("verifying");
     const [orderNumber, setOrderNumber] = useState<string>("");
-    const [orderId, setOrderId] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
+
 
     useEffect(() => {
         const reference = searchParams.get("reference") || searchParams.get("trxref");
@@ -30,11 +30,11 @@ const OrderSuccess: React.FC = () => {
         try {
             const response = await verifyPayment(reference).unwrap();
 
-            if (response.success && response.data) {
+                        if (response.success && response.data) {
                 setVerificationState("success");
                 setOrderNumber(response.data.order.orderNumber);
-                setOrderId(response.data.order._id);
             } else {
+
                 setVerificationState("error");
                 setErrorMessage("Payment verification failed");
             }
@@ -135,18 +135,19 @@ const OrderSuccess: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                    <button
-                        onClick={() => navigate(`/profile/orders/${orderId}`)}
+                                        <button
+                        onClick={() => navigate("/profile/orders")}
                         className="w-full px-6 py-3 bg-[#1D7B3C] text-white rounded-lg hover:bg-green-700 transition font-medium"
                     >
-                        View Order Details
+                        View My Orders
                     </button>
                     <button
-                        onClick={() => navigate("/profile/orders")}
+                        onClick={() => navigate("/products")}
                         className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
                     >
-                        View All Orders
+                        Continue Shopping
                     </button>
+
                     <button
                         onClick={() => navigate("/products")}
                         className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"

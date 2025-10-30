@@ -7,7 +7,8 @@ import {
   CheckCircle,
   XCircle,
   Truck,
-  ChevronRight,
+    
+
   Calendar,
   MapPin,
   CreditCard,
@@ -208,18 +209,17 @@ const OrderHistory = () => {
 
         {/* Orders List */}
         <div className="space-y-4">
-          {filteredOrders.map((order) => (
+                    {filteredOrders.map((order) => (
             <div
               key={order._id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate(`/orders/${order._id}`)}
+              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
             >
               <div className="p-6">
                 {/* Order Header */}
                 <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {order.orderNumber}
                       </h3>
                       {getStatusBadge(order.orderStatus)}
@@ -244,39 +244,53 @@ const OrderHistory = () => {
                   </div>
                 </div>
 
+
+
                 {/* Order Items Preview */}
                 <div className="border-t pt-4 mb-4">
-                  <div className="space-y-2">
-                    {order.items.slice(0, 2).map((item, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <img
-                          src={item.product.images[0]}
-                          alt={item.productName}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900 text-sm">
-                            {item.productName}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            Qty: {item.quantity} × ₦{item.unitPrice.toLocaleString()}
+                                    <div className="space-y-2">
+                                        {order.items.slice(0, 2).map((item, index) => {
+                      const productObj = item.product && typeof item.product === 'object' ? (item.product as any) : null;
+                                            const imgSrc = Array.isArray(productObj?.images) && productObj.images.length > 0
+                        ? productObj.images[0]
+                        : 'https://via.placeholder.com/48';
+
+                      const displayName = (productObj?.name || item.productName || 'Product');
+                      return (
+                        <div key={index} className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
+                            {imgSrc ? (
+                              <img src={imgSrc} alt={displayName} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-xs text-gray-500">No image</span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900 text-sm">
+                              {displayName}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              Qty: {item.quantity} × ₦{(item.unitPrice / 100).toLocaleString()}
+                            </p>
+                          </div>
+                          <p className="font-medium text-gray-900">
+                            ₦{(item.totalPrice / 100).toLocaleString()}
                           </p>
                         </div>
-                        <p className="font-medium text-gray-900">
-                          ₦{item.totalPrice.toLocaleString()}
-                        </p>
-                      </div>
-                    ))}
-                    {order.items.length > 2 && (
+                      );
+                    })}
+
+                                        {order.items.length > 2 && (
                       <p className="text-sm text-gray-500 pl-15">
                         +{order.items.length - 2} more {order.items.length - 2 === 1 ? "item" : "items"}
                       </p>
                     )}
+
                   </div>
                 </div>
 
                 {/* Delivery Info */}
-                <div className="flex items-start justify-between border-t pt-4">
+                                <div className="flex items-start justify-between border-t pt-4">
                   <div className="flex items-start gap-2 text-sm text-gray-600">
                     <MapPin size={16} className="mt-0.5 flex-shrink-0" />
                     <div>
@@ -285,18 +299,8 @@ const OrderHistory = () => {
                       <p>{order.deliveryInfo.city}</p>
                     </div>
                   </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/orders/${order._id}`);
-                    }}
-                    className="flex items-center gap-1 text-[#1D7B3C] hover:text-green-700 font-medium text-sm"
-                  >
-                    View Details
-                    <ChevronRight size={16} />
-                  </button>
                 </div>
+
               </div>
             </div>
           ))}

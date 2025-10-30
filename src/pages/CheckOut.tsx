@@ -275,7 +275,7 @@ const Checkout: React.FC = () => {
     };
 
     // Place Order - Create Order and Process Payment
-    const handlePlaceOrder = async () => {
+        const handlePlaceOrder = async () => {
         // Validation
         if (!formData.name || !formData.phone || !formData.address) {
             alert("Please fill in all required fields (Name, Phone, Address)");
@@ -307,11 +307,9 @@ const Checkout: React.FC = () => {
                 // Use existing delivery calculation
                 await createOrderWithDeliveryFee(checkoutData);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Order placement failed:", error);
-            const errorMessage = error && typeof error === 'object' && 'message' in error
-                ? String(error.message)
-                : "Order placement failed. Please try again.";
+            const errorMessage = error?.data?.message || error?.message || "Order placement failed. Please try again.";
             alert(errorMessage);
         } finally {
             setIsProcessing(false);
@@ -319,33 +317,49 @@ const Checkout: React.FC = () => {
     };
 
     // Helper function to create order with delivery fee
-    const createOrderWithDeliveryFee = async (deliveryData: CheckoutResponse) => {
+        const createOrderWithDeliveryFee = async (deliveryData: CheckoutResponse) => {
         if (!deliveryData) {
             throw new Error("Delivery data not available");
         }
 
-        // Extract city and state
-        let city = formData.city;
-        let state = formData.state;
+        // Extract city and state robustly
+        let city = (formData.city || "").trim();
+        let state = (formData.state || "").trim();
 
         if (!city || !state) {
-            const addressParts = formData.address.split(",").map(part => part.trim());
-            if (addressParts.length >= 3) {
-                city = city || addressParts[addressParts.length - 3];
-                state = state || addressParts[addressParts.length - 2];
+            const parts = formData.address.split(",").map(p => p.trim()).filter(Boolean);
+            if (parts.length >= 2) {
+                const last = parts[parts.length - 1];
+                const prev = parts[parts.length - 2];
+                // If last token is 'Nigeria', assume state is prev and city is also prev if unknown
+                if (/nigeria/i.test(last)) {
+                    state = state || prev;
+                    city = city || prev;
+                } else {
+                    // Fallback: use last as state and prev as city
+                    state = state || last;
+                    city = city || prev;
+                }
             }
         }
 
-        const orderResponse = await createOrder({
+        if (!city || !state) {
+            throw new Error("Delivery information (city/state) could not be determined. Please include city and state in the address.");
+        }
+
+                const orderResponse = await createOrder({
             deliveryInfo: {
                 address: formData.address,
-                city: city,
-                state: state,
+                city,
+                state,
                 phoneNumber: formData.phone,
             },
             paymentMethod,
-            deliveryFee: deliveryData.delivery.fee,
+            deliveryFee: deliveryData.delivery.fee ?? 0,
+            notes: formData.notes || undefined,
         }).unwrap();
+
+
 
         if (orderResponse.success && orderResponse.data) {
             const { order, payment } = orderResponse.data;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/types/order.ts
 import type { PaginationMeta } from "./api";
 
@@ -133,6 +134,7 @@ export interface Order {
     totalItems: number;
     summary: OrderSummary;
     id: string;
+    notes?: string; // buyer note from checkout
     payLaterInfo?: {
         isPaid: boolean;
         repaymentTransaction: any[];
@@ -142,6 +144,7 @@ export interface Order {
         participants: any[];
     };
 }
+
 
 // Checkout Request
 export interface CheckoutRequest {
@@ -183,7 +186,9 @@ export interface CreateOrderRequest {
     deliveryInfo: DeliveryInfo;
     paymentMethod: PaymentMethod;
     deliveryFee: number;
+    notes?: string; // pass buyer's note so backend can persist it
 }
+
 
 // Create Order Response
 export interface CreateOrderResponse {

@@ -14,8 +14,7 @@ import type {
 
 const baseQuery = fetchBaseQuery({
     baseUrl: '/api',
-    // baseUrl: 'https://api.farmchops.com/api',
-    credentials: 'include',
+    credentials: 'include', // keep session cookies for cart/order flows (same-origin)
     prepareHeaders: (headers, { getState }) => {
         const token = (getState() as RootState).auth.token;
         if (token) {
