@@ -161,10 +161,13 @@ const CartPage: React.FC = () => {
               {/* Cart Items */}
               <div>
                 {cart.map((item) => {
-                  const multiplier = item.multiplier || 1;
-                  const itemSubtotal = item.price * multiplier * item.quantity;
                   const minQuantity = item.minQuantity || 1;
-                  const displayQuantity = item.priceType === 'bulk' ? item.quantity / minQuantity : item.quantity;
+                  const itemSubtotal = item.price * item.quantity;
+
+                  // Display quantity as whole number multiplier for bulk items
+                  const displayQuantity = item.priceType === 'bulk' && minQuantity > 1
+                    ? Math.round(item.quantity / minQuantity)
+                    : item.quantity;
 
                   return (
                     <div key={`${item.productId}-${item.priceType}`} className="border-b border-gray-100 last:border-0">
@@ -182,7 +185,6 @@ const CartPage: React.FC = () => {
                             <div className="ml-4 flex-1">
                               <h3 className="font-medium text-gray-900">
                                 {item.name}
-                                {item.priceType === 'bulk' && ` (${item.quantity} ${item.quantity === 1 ? 'piece' : 'pieces'})`}
                               </h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
                               
