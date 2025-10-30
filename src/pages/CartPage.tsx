@@ -179,38 +179,40 @@ const CartPage: React.FC = () => {
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            {/* Mobile Trash Icon - Top Right */}
-                            <div className="md:hidden ml-auto">
-                              <button
-                                onClick={() => handleRemoveItem(item.productId, item.priceType)}
-                                className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
-                                disabled={isRemoving}
-                                aria-label="Remove item"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            </div>
                             <div className="ml-4 flex-1">
                               <h3 className="font-medium text-gray-900">{item.name}</h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
                               
-                              {/* Mobile Price, Quantity Controls, and Subtotal */}
-                              <div className="mt-2 flex items-center justify-between md:hidden">
-                                <div className="flex items-center">
-                                  <span className="font-medium">₦{item.price.toLocaleString()}</span>
-                                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden ml-3">
+                              {/* Mobile Layout */}
+                              <div className="mt-2 space-y-2 md:hidden">
+                                {/* Price and Subtotal */}
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <span className="text-sm text-gray-500">Unit Price:</span>
+                                    <span className="ml-2 font-medium">₦{item.price.toLocaleString()}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm text-gray-500">Subtotal</div>
+                                    <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
+                                  </div>
+                                </div>
+                                
+                                {/* Quantity Controls */}
+                                <div className="flex items-center justify-between pt-2">
+                                  <span className="text-sm font-medium">Quantity:</span>
+                                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden w-32">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleQuantityChange(item, "subtract");
                                       }}
                                       disabled={isUpdating || isRemoving || item.quantity <= minQuantity}
-                                      className="px-2 py-1 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className="flex-1 px-3 py-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                       aria-label="Decrease quantity"
                                     >
-                                      <Minus size={14} />
+                                      <Minus size={16} />
                                     </button>
-                                    <span className="w-6 text-center text-sm font-medium text-gray-900">
+                                    <span className="flex-1 text-center font-medium text-gray-900">
                                       {displayQuantity}
                                     </span>
                                     <button
@@ -219,14 +221,25 @@ const CartPage: React.FC = () => {
                                         handleQuantityChange(item, "add");
                                       }}
                                       disabled={isUpdating || isRemoving}
-                                      className="px-2 py-1 text-gray-600 hover:bg-gray-50"
+                                      className="flex-1 px-3 py-2 text-gray-600 hover:bg-gray-50"
                                       aria-label="Increase quantity"
                                     >
-                                      <Plus size={14} />
+                                      <Plus size={16} />
                                     </button>
                                   </div>
                                 </div>
-                                <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
+                                
+                                {/* Remove Button */}
+                                <div className="pt-2">
+                                  <button
+                                    onClick={() => handleRemoveItem(item.productId, item.priceType)}
+                                    className="w-full py-2 px-4 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200 flex items-center justify-center space-x-2"
+                                    disabled={isRemoving}
+                                  >
+                                    <Trash2 size={16} />
+                                    <span>Remove Item</span>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
