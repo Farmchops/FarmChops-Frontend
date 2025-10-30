@@ -182,13 +182,6 @@ const CartPage: React.FC = () => {
                             <div className="ml-4">
                               <h3 className="font-medium text-gray-900">{item.name}</h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
-                              <button
-                                onClick={() => handleRemoveItem(item.productId, item.priceType)}
-                                className="md:hidden mt-1 flex items-center text-red-600 text-sm font-medium"
-                                disabled={isRemoving}
-                              >
-                                <Trash2 size={16} className="mr-1" /> Remove
-                              </button>
                             </div>
                           </div>
 
@@ -231,11 +224,11 @@ const CartPage: React.FC = () => {
                             <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
                           </div>
 
-                          {/* Remove button - Desktop */}
+                          {/* Remove button - Visible on all screen sizes */}
                           <div className="ml-4">
                             <button
                               onClick={() => handleRemoveItem(item.productId, item.priceType)}
-                              className="text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors"
+                              className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
                               disabled={isRemoving}
                               aria-label="Remove item"
                             >
