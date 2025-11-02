@@ -23,6 +23,7 @@ const adminRoles = [
     { value: "operations_officer", label: "Operations Officer" },
     { value: "logistics", label: "Logistics" },
     { value: "customer_support", label: "Customer Support" },
+    { value: "rider", label: "Rider" },
 ];
 
 export const AddAdminModal: React.FC<AddAdminModalProps> = ({
@@ -106,8 +107,9 @@ export const AddAdminModal: React.FC<AddAdminModalProps> = ({
                     if (onSuccess) onSuccess();
                 }, 2000);
             }
-        } catch (err: any) {
-            setError(err?.data?.message || "Failed to send invitation.");
+        } catch (caughtError) {
+            const apiMessage = (caughtError as { data?: { message?: string } })?.data?.message;
+            setError(apiMessage || "Failed to send invitation.");
         }
     };
 

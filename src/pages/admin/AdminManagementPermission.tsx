@@ -19,7 +19,8 @@ const ROLES = {
     LOGISTICS: 'logistics',
     CUSTOMER_SUPPORT: 'customer_support',
     FINANCE: 'finance',
-    ADMIN: 'admin' // General admin role
+    ADMIN: 'admin', // General admin role
+    RIDER: 'rider'
 }
 
 const PERMISSIONS = {
@@ -104,8 +105,12 @@ const ROLE_PERMISSIONS = {
         PERMISSIONS.MANAGE_PRODUCTS,
         PERMISSIONS.MANAGE_CATEGORIES,
         PERMISSIONS.VIEW_ORDERS
-    ]
+    ],
+
+    [ROLES.RIDER]: []
 };
+
+const rolesWithBackendManagedPermissions = new Set<string>([ROLES.RIDER]);
 
 interface AdminPermissionsModalProps {
     isOpen: boolean;
@@ -123,6 +128,7 @@ const adminRoles = [
     { value: ROLES.LOGISTICS, label: "Logistics" },
     { value: ROLES.CUSTOMER_SUPPORT, label: "Customer Support" },
     { value: ROLES.FINANCE, label: "Finance" },
+    { value: ROLES.RIDER, label: "Rider" },
 ];
 
 const allPermissions = [
@@ -207,22 +213,27 @@ export const AdminPermissionsModal: React.FC<AdminPermissionsModalProps> = ({
             try {
                 await onSubmit({ adminRole: selectedRole, permissions: [PERMISSIONS.ALL] });
                 handleClose();
-            } catch (err: any) {
-                setError(err?.message || "Failed to update admin.");
+            } catch (caughtError) {
+                const message = (caughtError as { message?: string })?.message;
+                setError(message || "Failed to update admin.");
             }
             return;
         }
 
-        if (selectedPermissions.length === 0) {
+        if (!rolesWithBackendManagedPermissions.has(selectedRole) && selectedPermissions.length === 0) {
             setError("Please select at least one permission.");
             return;
         }
 
         try {
-            await onSubmit({ adminRole: selectedRole, permissions: selectedPermissions });
+            const permissionsToSend = rolesWithBackendManagedPermissions.has(selectedRole)
+                ? selectedPermissions
+                : selectedPermissions;
+            await onSubmit({ adminRole: selectedRole, permissions: permissionsToSend });
             handleClose();
-        } catch (err: any) {
-            setError(err?.message || "Failed to update admin.");
+        } catch (caughtError) {
+            const message = (caughtError as { message?: string })?.message;
+            setError(message || "Failed to update admin.");
         }
     };
 
