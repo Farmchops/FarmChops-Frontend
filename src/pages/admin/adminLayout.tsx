@@ -179,7 +179,8 @@ import {
     Menu,
     X,
     Shapes,
-    UserCog
+    UserCog,
+    Truck
 } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -201,6 +202,7 @@ const AdminLayout = () => {
 
     // Admin auth state
     const user = useSelector((state: RootState) => state.adminAuth.user);
+    const isRider = user?.adminRole === "rider";
 
     const handleLogout = async () => {
         try {
@@ -236,56 +238,77 @@ const AdminLayout = () => {
     };
 
     // Menu items with their required permissions
-    const menuItems: MenuItem[] = [
-        {
-            path: "overview",
-            label: "Overview",
-            icon: LayoutDashboard,
-            permission: null,
-        },
-        {
-            path: "categories",
-            label: "Categories",
-            icon: Shapes,
-            permission: "manage_categories",
-        },
-        {
-            path: "products",
-            label: "Products",
-            icon: Package,
-            permission: "manage_products",
-        },
-        {
-            path: "orders",
-            label: "Orders",
-            icon: ShoppingCart,
-            permission: "view_orders",
-        },
-        {
-            path: "sales",
-            label: "Sales",
-            icon: TrendingUp,
-            permission: "view_financial_reports",
-        },
-        {
-            path: "users",
-            label: "Users",
-            icon: Users,
-            permission: "view_users",
-        },
-        {
-            path: "admins",
-            label: "Admin Management",
-            icon: UserCog,
-            permission: "manage_admins",
-        },
-        {
-            path: "settings",
-            label: "Settings",
-            icon: Settings,
-            permission: null,
-        },
-    ];
+    const menuItems: MenuItem[] = isRider
+        ? [
+            {
+                path: "overview",
+                label: "Overview",
+                icon: LayoutDashboard,
+                permission: null,
+            },
+            {
+                path: "rider/orders",
+                label: "Assigned Deliveries",
+                icon: Truck,
+                permission: null,
+            },
+            {
+                path: "settings",
+                label: "Settings",
+                icon: Settings,
+                permission: null,
+            },
+        ]
+        : [
+            {
+                path: "overview",
+                label: "Overview",
+                icon: LayoutDashboard,
+                permission: null,
+            },
+            {
+                path: "categories",
+                label: "Categories",
+                icon: Shapes,
+                permission: "manage_categories",
+            },
+            {
+                path: "products",
+                label: "Products",
+                icon: Package,
+                permission: "manage_products",
+            },
+            {
+                path: "orders",
+                label: "Orders",
+                icon: ShoppingCart,
+                permission: "view_orders",
+            },
+            {
+                path: "sales",
+                label: "Sales",
+                icon: TrendingUp,
+                permission: "view_financial_reports",
+            },
+            {
+                path: "users",
+                label: "Users",
+                icon: Users,
+                permission: "view_users",
+            },
+            {
+                path: "admins",
+                label: "Admin Management",
+                icon: UserCog,
+                permission: "manage_admins",
+            },
+            {
+                path: "settings",
+                label: "Settings",
+                icon: Settings,
+                permission: null,
+            },
+        ];
 
     // Filter menu items based on user permissions
     const visibleMenuItems = menuItems.filter((item) => {
@@ -306,6 +329,7 @@ const AdminLayout = () => {
             logistics: "Logistics Manager",
             customer_support: "Customer Support",
             admin: "Admin",
+            rider: "Rider",
         };
         return roleMap[role] || role;
     };

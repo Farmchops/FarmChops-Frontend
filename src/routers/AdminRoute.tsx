@@ -6,9 +6,10 @@ import { Navigate } from "react-router-dom";
 interface AdminRouteProps {
     children: React.ReactNode;
     requiredPermission?: string;
+    allowedRoles?: string[];
 }
 
-const AdminRoute = ({ children, requiredPermission }: AdminRouteProps) => {
+const AdminRoute = ({ children, requiredPermission, allowedRoles }: AdminRouteProps) => {
     const user = useSelector((state: RootState) => state.adminAuth.user);
     const token = useSelector((state: RootState) => state.adminAuth.token);
 
@@ -20,6 +21,16 @@ const AdminRoute = ({ children, requiredPermission }: AdminRouteProps) => {
     // Check if admin is active
     if (user.isActive === false) {
         return <Navigate to="/admin/login" replace />;
+    }
+
+    if (allowedRoles && allowedRoles.length) {
+        const { adminRole, permissions } = user;
+        const hasWildcardAccess = Array.isArray(permissions) && permissions.includes("*");
+        const isAllowedRole = allowedRoles.includes(adminRole);
+
+        if (!hasWildcardAccess && !isAllowedRole) {
+            return <Navigate to="/admin/overview" replace />;
+        }
     }
 
     // Check for specific permission if required
