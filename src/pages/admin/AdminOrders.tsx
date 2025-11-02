@@ -24,6 +24,7 @@ import {
 	type AdminOrder,
 	type GetOrdersQueryArgs,
 } from "@/redux/api/adminOrdersApi";
+import { useGetAdminRidersQuery, type RiderDirectoryEntry } from "@/redux/api/adminRidersApi";
 import {
 	ORDER_STATUS_LIST,
 	ORDER_ACTION_CONFIG,
@@ -134,17 +135,51 @@ const OrderActionModal = ({
 }: OrderActionModalProps) => {
 	const [values, setValues] = useState<ActionFormValues>({});
 	const [localError, setLocalError] = useState<string | null>(null);
+	const [riderSearch, setRiderSearch] = useState("");
+
+	const requires = actionConfig?.requires ?? {};
+	const riderQueryArgs = open && requires.riderId ? { status: "active" as const, limit: 100 } : skipToken;
+	const {
+		data: ridersResponse,
+		isLoading: ridersLoading,
+		isFetching: ridersFetching,
+		error: ridersError,
+		refetch: refetchRiders,
+	} = useGetAdminRidersQuery(riderQueryArgs);
+
+	const riders = useMemo<RiderDirectoryEntry[]>(() => {
+		if (!ridersResponse) return [];
+		const payload = (ridersResponse as { data?: { riders?: unknown } }).data;
+		if (Array.isArray((ridersResponse as { riders?: unknown }).riders)) {
+			return (ridersResponse as { riders: RiderDirectoryEntry[] }).riders;
+		}
+		if (payload && Array.isArray(payload.riders)) {
+			return payload.riders as RiderDirectoryEntry[];
+		}
+		if (Array.isArray(payload)) {
+			return payload as RiderDirectoryEntry[];
+		}
+		return [] as RiderDirectoryEntry[];
+	}, [ridersResponse]);
+
+	const filteredRiders = useMemo(() => {
+		const term = riderSearch.trim().toLowerCase();
+		if (!term) return riders;
+		return riders.filter((rider) => {
+			const name = `${rider.firstName ?? ""} ${rider.lastName ?? ""}`.trim().toLowerCase();
+			return name.includes(term) || rider.email?.toLowerCase().includes(term) || rider.phone?.toLowerCase().includes(term);
+		});
+	}, [riders, riderSearch]);
 
 	useEffect(() => {
 		if (open) {
 			setValues({});
 			setLocalError(null);
+			setRiderSearch("");
 		}
 	}, [open, actionConfig?.action]);
 
 	if (!open || !actionConfig) return null;
-
-	const requires = actionConfig.requires ?? {};
 
 	const handleSubmit = () => {
 		if (requires.note && !values.note?.trim()) {
@@ -216,12 +251,62 @@ const OrderActionModal = ({
 							<label className="block text-xs font-medium text-gray-600">{actionConfig.riderLabel ?? "Assign rider"}</label>
 							<input
 								type="text"
-								className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
-								placeholder={actionConfig.riderLabel ?? "Enter rider ID"}
-								value={values.riderId ?? ""}
-								onChange={(event) => setValues((prev) => ({ ...prev, riderId: event.target.value }))}
+								className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
+								placeholder="Search rider by name, email, or phone"
+								value={riderSearch}
+								onChange={(event) => setRiderSearch(event.target.value)}
 							/>
-							<p className="text-xs text-gray-500">Provide the unique rider identifier from the logistics roster.</p>
+							<div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+								{ridersLoading ? (
+									<div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+										<Loader2 className="h-4 w-4 animate-spin" />
+										Fetching riders...
+									</div>
+								) : filteredRiders.length ? (
+									<select
+										value={values.riderId ?? ""}
+										onChange={(event) => setValues((prev) => ({ ...prev, riderId: event.target.value }))}
+										className="w-full rounded border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1D7B3C]/40"
+									>
+										<option value="">Select rider</option>
+										{filteredRiders.map((rider) => {
+											const fullName = `${rider.firstName ?? ""} ${rider.lastName ?? ""}`.trim() || rider.email || rider.phone || "Unnamed rider";
+											return (
+												<option key={rider._id} value={rider._id} disabled={rider.isOnDelivery}>
+													{fullName}
+													{rider.isOnDelivery ? " — On delivery" : ""}
+												</option>
+											);
+										})}
+									</select>
+								) : (
+									<div className="flex flex-col items-start gap-2 text-xs text-gray-600">
+										<span>No riders found. Adjust your search or refresh.</span>
+										<button
+											type="button"
+											onClick={() => refetchRiders()}
+											className="inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white"
+										>
+											<RefreshCcw className="h-3 w-3" />
+											Refresh
+										</button>
+									</div>
+								)}
+							</div>
+							{ridersFetching ? (
+								<p className="text-xs text-gray-500">Updating list...</p>
+							) : null}
+							{ridersError ? (
+								<p className="text-xs text-red-600">Failed to load riders. Please retry.</p>
+							) : null}
+							{values.riderId ? (
+								<p className="text-xs text-gray-500">
+									Rider ID: {values.riderId}
+									{filteredRiders.find((rider) => rider._id === values.riderId)?.isOnDelivery ? " • Currently marked as busy" : ""}
+								</p>
+							) : (
+								<p className="text-xs text-gray-500">Select an available rider from the directory.</p>
+							)}
 						</div>
 					)}
 
@@ -629,7 +714,10 @@ const AdminOrders = () => {
 		isFetching: isOrderActionsFetching,
 		refetch: refetchOrderActions,
 	} = useGetOrderActionsQuery(selectedOrderId ?? skipToken);
-	const serverActions = orderActionsResponse?.data?.actions ?? [];
+	const serverActions = useMemo(
+		() => orderActionsResponse?.data?.actions ?? [],
+		[orderActionsResponse]
+	);
 
 	const orders = useMemo<AdminOrder[]>(() => {
 		const payload = ordersResponse?.data;

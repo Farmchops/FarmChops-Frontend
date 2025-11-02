@@ -17,6 +17,7 @@ import { cartApi } from './api/cartApi';
 import { orderApi } from './api/orderApi';
 import { adminOrdersApi } from './api/adminOrdersApi';
 import { riderOrdersApi } from './api/riderOrdersApi';
+import { adminRidersApi } from './api/adminRidersApi';
 
 
 export const store = configureStore({
@@ -37,7 +38,8 @@ export const store = configureStore({
         [cartApi.reducerPath]: cartApi.reducer,
                 [orderApi.reducerPath]: orderApi.reducer,
         [adminOrdersApi.reducerPath]: adminOrdersApi.reducer,
-        [riderOrdersApi.reducerPath]: riderOrdersApi.reducer
+    [riderOrdersApi.reducerPath]: riderOrdersApi.reducer,
+    [adminRidersApi.reducerPath]: adminRidersApi.reducer
 
     },
     middleware: (getDefaultMiddleware) =>
@@ -50,7 +52,8 @@ export const store = configureStore({
             cartApi.middleware,
             orderApi.middleware,
             adminOrdersApi.middleware,
-            riderOrdersApi.middleware
+            riderOrdersApi.middleware,
+            adminRidersApi.middleware
 
         ),
 });
