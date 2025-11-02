@@ -233,19 +233,6 @@ const OrderActionModal = ({
 						</div>
 					)}
 
-					{requires.reason && (
-						<div className="space-y-2">
-							<label className="block text-xs font-medium text-gray-600">{actionConfig.reasonLabel ?? "Reason"}</label>
-							<input
-								type="text"
-								className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
-								placeholder={actionConfig.reasonPlaceholder ?? "Enter reason"}
-								value={values.reason ?? ""}
-								onChange={(event) => setValues((prev) => ({ ...prev, reason: event.target.value }))}
-							/>
-						</div>
-					)}
-
 					{requires.riderId && (
 						<div className="space-y-2">
 							<label className="block text-xs font-medium text-gray-600">{actionConfig.riderLabel ?? "Assign rider"}</label>
@@ -278,6 +265,8 @@ const OrderActionModal = ({
 												</option>
 											);
 										})}
+
+
 									</select>
 								) : (
 									<div className="flex flex-col items-start gap-2 text-xs text-gray-600">
@@ -310,22 +299,6 @@ const OrderActionModal = ({
 						</div>
 					)}
 
-					{requires.handoverCode && (
-						<div className="space-y-2">
-							<label className="block text-xs font-medium text-gray-600">{actionConfig.handoverLabel ?? "Customer handover code"}</label>
-							<input
-								type="text"
-								className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
-								placeholder="Enter the code shared with the customer"
-								value={values.handoverCode ?? ""}
-								onChange={(event) => setValues((prev) => ({ ...prev, handoverCode: event.target.value }))}
-							/>
-							{order?.handoverCodeMasked ? (
-								<p className="text-xs text-gray-500">Masked hint: {order.handoverCodeMasked}</p>
-							) : null}
-						</div>
-					)}
-
 					{requires.proof && (
 						<div className="space-y-2">
 							<label className="block text-xs font-medium text-gray-600">{actionConfig.proofLabel ?? "Proof (optional)"}</label>
@@ -343,7 +316,24 @@ const OrderActionModal = ({
 						</div>
 					)}
 
-					{localError ? <p className="text-xs text-red-600">{localError}</p> : null}
+					{requires.handoverCode && (
+						<div className="space-y-2">
+							<label className="block text-xs font-medium text-gray-600">{actionConfig.handoverLabel ?? "Customer handover code"}</label>
+							<input
+								type="text"
+								className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
+								placeholder="Enter the code shared with the customer"
+								value={values.handoverCode ?? ""}
+								onChange={(event) => setValues((prev) => ({ ...prev, handoverCode: event.target.value }))}
+							/>
+							{order?.handoverCodeMasked ? (
+								<p className="text-xs text-gray-500">Masked hint: {order.handoverCodeMasked}</p>
+							) : null}
+						</div>
+					)}
+
+
+		{localError ? <p className="text-xs text-red-600">{localError}</p> : null}
 					{error ? <p className="text-xs text-red-600">{error}</p> : null}
 				</div>
 

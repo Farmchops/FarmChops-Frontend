@@ -11,7 +11,7 @@ import {
     Truck,
     X,
 } from "lucide-react";
-import { useConfirmDeliveryMutation, useGetAssignedOrdersQuery } from "@/redux/api/riderOrdersApi";
+import { useConfirmDeliveryMutation, useGetAssignedOrdersQuery, type RiderAssignedOrdersResponse } from "@/redux/api/riderOrdersApi";
 import type { Order } from "@/types/orders";
 import { getAccentClass, ORDER_STATUS_CONFIG } from "@/utils/orderWorkflow";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -19,7 +19,6 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 interface DeliveryConfirmationValues {
     handoverCode: string;
     note?: string;
-    proofFiles: File[];
 }
 
 interface ConfirmDeliveryDialogProps {
@@ -80,7 +79,6 @@ const parseErrorMessage = (error: unknown): string => {
 const emptyConfirmationValues: DeliveryConfirmationValues = {
     handoverCode: "",
     note: "",
-    proofFiles: [],
 };
 
 const ConfirmDeliveryDialog = ({
@@ -163,21 +161,6 @@ const ConfirmDeliveryDialog = ({
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-medium text-gray-600">Proof of delivery (optional)</label>
-                        <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            multiple
-                            className="mt-1 block w-full text-xs text-gray-600"
-                            onChange={(event) => {
-                                const files = Array.from(event.target.files ?? []);
-                                setValues((previous) => ({ ...previous, proofFiles: files }));
-                            }}
-                        />
-                        <p className="mt-1 text-xs text-gray-500">Photos or signed documents help customer support verify deliveries faster.</p>
-                    </div>
-
                     {localError ? <p className="text-xs text-red-600">{localError}</p> : null}
                     {error ? <p className="text-xs text-red-600">{error}</p> : null}
                 </div>
@@ -228,18 +211,44 @@ const RiderDashboard = () => {
             return (data as unknown as { orders: Order[] }).orders;
         }
 
-        if (Array.isArray((data as unknown as { data?: { orders?: Order[] } }).data?.orders)) {
-            return ((data as unknown as { data?: { orders?: Order[] } }).data?.orders) ?? [];
-        }
-
-        if (Array.isArray((data as unknown as { data?: Order[] }).data)) {
-            return (data as unknown as { data: Order[] }).data;
+        const innerData = (data as unknown as { data?: RiderAssignedOrdersResponse | Order[] }).data;
+        if (innerData) {
+            if (Array.isArray((innerData as RiderAssignedOrdersResponse).orders)) {
+                return ((innerData as RiderAssignedOrdersResponse).orders) ?? [];
+            }
+            if (Array.isArray(innerData)) {
+                return innerData as Order[];
+            }
         }
 
         return [] as Order[];
     }, [data]);
 
+    const riderMeta = useMemo(() => {
+        if (!data) {
+            return undefined as RiderAssignedOrdersResponse["meta"] | undefined;
+        }
+
+        const maybeResponse = data as unknown as RiderAssignedOrdersResponse | undefined;
+        if (maybeResponse?.meta) {
+            return maybeResponse.meta;
+        }
+
+        const innerData = (data as unknown as { data?: RiderAssignedOrdersResponse }).data;
+        return innerData?.meta;
+    }, [data]);
+
     const totals = useMemo(() => {
+        if (riderMeta) {
+            const awaitingPickup = riderMeta.awaitingPickup ?? 0;
+            const enRoute = riderMeta.enRoute ?? 0;
+            const delivered = riderMeta.deliveredToday ?? 0;
+            const totalAssigned = riderMeta.totalAssigned ?? awaitingPickup + enRoute;
+            const other = Math.max(totalAssigned - awaitingPickup - enRoute, 0);
+
+            return { awaitingPickup, enRoute, delivered, other };
+        }
+
         return orders.reduce(
             (summary, order) => {
                 switch (order.orderStatus) {
@@ -261,7 +270,7 @@ const RiderDashboard = () => {
             },
             { awaitingPickup: 0, enRoute: 0, delivered: 0, other: 0 }
         );
-    }, [orders]);
+    }, [orders, riderMeta]);
 
     useEffect(() => {
         if (error) {
@@ -281,8 +290,9 @@ const RiderDashboard = () => {
                 orderId: confirmDialogOrder._id,
                 handoverCode: values.handoverCode,
                 note: values.note,
-                proofFiles: values.proofFiles,
             }).unwrap();
+
+            await refetch();
 
             setFeedback({
                 type: "success",
@@ -311,7 +321,7 @@ const RiderDashboard = () => {
                 <button
                     type="button"
                     onClick={() => refetch()}
-                    className="inline-flex items-center gap-2 self-start rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="mt-2 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:self-end sm:ml-auto"
                 >
                     <RefreshCcw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                     Refresh
