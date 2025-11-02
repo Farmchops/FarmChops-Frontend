@@ -2,7 +2,21 @@
 // src/types/order.ts
 import type { PaginationMeta } from "./api";
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type StageOwnerRole = 'operations' | 'processing' | 'packaging' | 'logistics' | 'rider' | 'support' | 'supervisor';
+
+export type OrderStatus =
+    | 'pending'
+    | 'ready_for_processing'
+    | 'processing'
+    | 'packed'
+    | 'ready_for_dispatch'
+    | 'awaiting_pickup'
+    | 'en_route'
+    | 'delivered'
+    | 'completed'
+    | 'cancelled'
+    | 'failed_delivery';
+
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentMethod = 'paystack' | 'pay_later';
 
@@ -23,12 +37,21 @@ export interface OrderItem {
 }
 
 // Status History
+export interface StatusHistoryActor {
+    id: string;
+    name: string;
+    role: StageOwnerRole | string;
+}
+
 export interface StatusHistory {
     status: OrderStatus;
     timestamp: string;
-    note: string;
-    _id: string;
-    id: string;
+    note?: string;
+    updatedBy?: StatusHistoryActor;
+    role?: StageOwnerRole | string;
+    metadata?: Record<string, unknown> | null;
+    _id?: string;
+    id?: string;
 }
 
 // Delivery Info
@@ -123,11 +146,23 @@ export interface Order {
     paymentMethod: PaymentMethod;
     paymentStatus: PaymentStatus;
     orderStatus: OrderStatus;
+    currentStageOwnerRole?: StageOwnerRole | string;
     paymentReference: string;
     paymentProvider: string;
     providerResponse: PaymentProviderResponse | null;
     deliveryInfo: DeliveryInfo;
     statusHistory: StatusHistory[];
+    blockers?: Array<{ code: string; message: string; severity?: 'info' | 'warning' | 'critical'; data?: Record<string, unknown> }>;
+    assignedRider?: {
+        id: string;
+        name: string;
+        phone?: string;
+    } | null;
+    handoverCodeIssuedAt?: string | null;
+    handoverCodeMasked?: string | null;
+    handoverCodeActive?: boolean;
+    handoverCodeExpiresAt?: string | null;
+    handoverVerifiedAt?: string | null;
     createdAt: string;
     updatedAt: string;
     orderNumber: string;

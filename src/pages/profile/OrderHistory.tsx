@@ -3,18 +3,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Truck,
-    
-
-  Calendar,
-  MapPin,
-  CreditCard,
-  Search,
-  Filter
+	Package,
+	Clock,
+	CheckCircle,
+	XCircle,
+	Truck,
+	Calendar,
+	MapPin,
+	CreditCard,
+	Search,
+	Filter,
 } from "lucide-react";
 import { useGetOrderHistoryQuery } from "@/redux/api/orderApi";
 import type { OrderStatus, PaymentStatus } from "@/types/orders";
@@ -38,23 +36,32 @@ const OrderHistory = () => {
 
   // Get status badge styling
   const getStatusBadge = (status: OrderStatus) => {
-    const statusConfig = {
-      pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock },
-      processing: { bg: "bg-blue-100", text: "text-blue-800", icon: Package },
-      shipped: { bg: "bg-purple-100", text: "text-purple-800", icon: Truck },
-      delivered: { bg: "bg-green-100", text: "text-[#1D7B3C]", icon: CheckCircle },
-      cancelled: { bg: "bg-red-100", text: "text-red-800", icon: XCircle },
-    };
+  const statusStyles: Record<OrderStatus, { bg: string; text: string; icon: typeof Clock }> = {
+    pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock },
+    ready_for_processing: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock },
+    processing: { bg: "bg-blue-100", text: "text-blue-800", icon: Package },
+    packed: { bg: "bg-blue-100", text: "text-blue-800", icon: Package },
+    ready_for_dispatch: { bg: "bg-purple-100", text: "text-purple-800", icon: Truck },
+    awaiting_pickup: { bg: "bg-purple-100", text: "text-purple-800", icon: Truck },
+    en_route: { bg: "bg-purple-100", text: "text-purple-800", icon: Truck },
+    delivered: { bg: "bg-green-100", text: "text-[#1D7B3C]", icon: CheckCircle },
+    completed: { bg: "bg-green-100", text: "text-[#1D7B3C]", icon: CheckCircle },
+    cancelled: { bg: "bg-red-100", text: "text-red-800", icon: XCircle },
+    failed_delivery: { bg: "bg-red-100", text: "text-red-800", icon: XCircle },
+  };
 
-    const config = statusConfig[status] || statusConfig.pending;
-    const Icon = config.icon;
+  const config = statusStyles[status] ?? statusStyles.pending;
+  const Icon = config.icon;
 
-    return (
-      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        <Icon size={14} />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
+  return (
+    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+      <Icon size={14} />
+      {status
+        .split("_")
+        .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(" ")}
+    </span>
+  );
   };
 
   // Get payment status badge

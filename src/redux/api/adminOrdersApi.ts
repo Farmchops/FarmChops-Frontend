@@ -2,58 +2,48 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../store';
 import type { ApiResponse } from '@/types/api';
+import type { Order, OrderStatus, StageOwnerRole } from '@/types/orders';
+import type { OrderWorkflowAction } from '@/utils/orderWorkflow';
 
-// Types for admin orders (kept minimal for list view; extend as needed)
-export type AdminOrderStatus =
-  | 'pending'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-  | string; // fallback for any additional statuses
-
-export interface AdminOrderItem {
-  product: string;
-  productName?: string;
-  quantity: number;
-  unitPrice?: number;
-  totalPrice?: number;
-}
-
-export interface AdminOrder {
-  _id: string;
-  orderNumber: string;
-  user?: string | { _id: string; firstName?: string; lastName?: string; email?: string };
-  items?: AdminOrderItem[];
-  subtotal?: number;
-  deliveryFee?: number;
-  totalAmount?: number; // may be in kobo
-  summary?: { totalAmountInNaira?: number };
-  paymentMethod?: string;
-  paymentStatus?: string;
-  orderStatus: AdminOrderStatus;
-  providerResponse?: any;
-  deliveryInfo?: { address?: string; city?: string; phoneNumber?: string };
-  createdAt: string;
-  updatedAt?: string;
-  id?: string;
-}
+export type AdminOrder = Order;
 
 export interface AdminOrdersListResponse {
   orders: AdminOrder[];
-  total?: number; // total number of orders
-  page?: number; // current page
-  pageSize?: number; // items per page
+  total?: number;
+  page?: number;
+  pageSize?: number;
 }
 
+export interface OrderActionsPayload {
+  actions: OrderWorkflowAction[];
+}
+
+export interface GetOrdersQueryArgs {
+  status?: OrderStatus | string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  ownerRole?: StageOwnerRole | string;
+  sort?: string;
+  date?: string;
+}
+
+export interface TriggerOrderActionArgs {
+  id: string;
+  action: OrderWorkflowAction;
+  payload?: Record<string, unknown> | FormData;
+}
+
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'https://api.farmchops.com/api',
+  baseUrl: API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).adminAuth.token;
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
-    headers.set('content-type', 'application/json');
+    headers.set('accept', 'application/json');
     return headers;
   },
 });
@@ -61,44 +51,69 @@ const baseQuery = fetchBaseQuery({
 export const adminOrdersApi = createApi({
   reducerPath: 'adminOrdersApi',
   baseQuery,
-  tagTypes: ['AdminOrders', 'AdminOrder'],
+  tagTypes: ['AdminOrders', 'AdminOrder', 'OrderActions'],
   endpoints: (builder) => ({
-    // GET /admin/orders
-    getOrders: builder.query<ApiResponse<AdminOrdersListResponse> | ApiResponse<AdminOrder[]>, void>({
-      query: () => '/admin/orders',
+    getOrders: builder.query<ApiResponse<AdminOrdersListResponse>, GetOrdersQueryArgs | void>({
+      query: (args) => {
+        const params: Record<string, string | number> = {};
+        if (args && args.status) params.status = args.status;
+        if (args && typeof args.page === 'number') params.page = args.page;
+        if (args && typeof args.limit === 'number') params.limit = args.limit;
+        if (args && args.search) params.search = args.search;
+        if (args && args.ownerRole) params.ownerRole = args.ownerRole;
+        if (args && args.sort) params.sort = args.sort;
+        if (args && args.date) params.date = args.date;
+
+        return {
+          url: '/admin/orders',
+          params: Object.keys(params).length ? params : undefined,
+        };
+      },
       providesTags: (result) => {
-        const orders = (result as any)?.data?.orders ?? (result as any)?.data ?? [];
+        const payload = (result as ApiResponse<AdminOrdersListResponse>)?.data;
+        const orders = Array.isArray(payload)
+          ? payload
+          : payload?.orders ?? [];
         return orders.length
           ? [
-              ...orders.map((o: AdminOrder) => ({ type: 'AdminOrder' as const, id: o._id })),
-              { type: 'AdminOrders', id: 'LIST' },
+              ...orders.map((o) => ({ type: 'AdminOrder' as const, id: o._id })),
+              { type: 'AdminOrders' as const, id: 'LIST' },
             ]
-          : [{ type: 'AdminOrders', id: 'LIST' }];
+          : [{ type: 'AdminOrders' as const, id: 'LIST' }];
       },
     }),
 
-    // GET /admin/orders/:id
     getOrderById: builder.query<ApiResponse<{ order: AdminOrder }>, string>({
       query: (id) => `/admin/orders/${id}`,
       providesTags: (_res, _err, id) => [{ type: 'AdminOrder', id }],
     }),
 
-    // PATCH /admin/orders/:id/status
-    updateOrderStatus: builder.mutation<
-      ApiResponse<{ order: AdminOrder }>,
-      { id: string; status: string; note?: string }
-    >({
-      query: ({ id, status, note }) => ({
-        url: `/admin/orders/${id}/status`,
-        method: 'PATCH',
-        body: { status, note },
-      }),
+    getOrderActions: builder.query<ApiResponse<OrderActionsPayload>, string>({
+      query: (id) => `/admin/orders/${id}/actions`,
+      providesTags: (_result, _error, id) => [{ type: 'OrderActions', id }],
+    }),
+
+    triggerOrderAction: builder.mutation<ApiResponse<{ order: AdminOrder }>, TriggerOrderActionArgs>({
+      query: ({ id, action, payload }) => {
+        const body = payload instanceof FormData ? payload : (payload ?? {});
+        return {
+          url: `/admin/orders/${id}/actions/${action}`,
+          method: 'PATCH',
+          body,
+        };
+      },
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'AdminOrder', id },
         { type: 'AdminOrders', id: 'LIST' },
-      ]
+        { type: 'OrderActions', id },
+      ],
     }),
   }),
 });
 
-export const { useGetOrdersQuery, useGetOrderByIdQuery, useUpdateOrderStatusMutation } = adminOrdersApi;
+export const {
+  useGetOrdersQuery,
+  useGetOrderByIdQuery,
+  useGetOrderActionsQuery,
+  useTriggerOrderActionMutation,
+} = adminOrdersApi;
