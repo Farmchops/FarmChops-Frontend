@@ -61,6 +61,13 @@ const computeDealRemaining = (deal: Deal, metrics?: DealMetrics): number | null 
     return Math.max(available, 0);
 };
 
+const formatNaira = (value?: number | null): string => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return "—";
+    }
+    return value.toLocaleString();
+};
+
 const ProductDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
@@ -137,6 +144,27 @@ const ProductDetail: React.FC = () => {
         : false;
     const dealPerUserLimit = activeDealForProduct?.perUserLimit ?? null;
 
+    const isOutOfStock = product?.status === "out_of_stock" || (product?.inventory?.availableStock ?? 0) === 0;
+    const hasBulkTiers = Array.isArray(product?.pricing?.bulkTiers) && (product?.pricing?.bulkTiers?.length ?? 0) > 0;
+    const showBulkPricing = !activeDealForProduct && hasBulkTiers;
+    const bulkSavings = typeof product?.bulkSavings?.percentage === "number"
+        ? product.bulkSavings.percentage
+        : 0;
+    const canBuyBulk = Boolean(
+        showBulkPricing &&
+        product?.pricing?.bulkTiers?.some((tier) => {
+            const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 0;
+            return minQty > 0 && (product?.inventory?.availableStock ?? 0) >= minQty;
+        }) &&
+        !isOutOfStock
+    );
+
+    useEffect(() => {
+        if (!canBuyBulk && showBulkDrawer) {
+            setShowBulkDrawer(false);
+        }
+    }, [canBuyBulk, showBulkDrawer]);
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -163,17 +191,11 @@ const ProductDetail: React.FC = () => {
         );
     }
 
-    const isOutOfStock = product.status === "out_of_stock" || product.inventory.availableStock === 0;
-
-    // Check if ANY bulk tier is available
-    const hasBulkTiers = product.pricing.bulkTiers && product.pricing.bulkTiers.length > 0;
-    const canBuyBulk = hasBulkTiers &&
-        product.pricing.bulkTiers?.some(tier =>
-            product.inventory.availableStock >= tier.minQuantity
-        ) &&
-        !isOutOfStock;
-
-    const bulkSavings = product.bulkSavings?.percentage || 0;
+    const retailPrice = typeof product.pricing.retail?.price === "number" ? product.pricing.retail.price : null;
+    const retailUnit = product.pricing.retail?.unit ?? "unit";
+    const retailMinQuantity = typeof product.pricing.retail?.minQuantity === "number" && product.pricing.retail.minQuantity > 0
+        ? product.pricing.retail.minQuantity
+        : 1;
 
     const primaryButtonLabel = activeDealForProduct
         ? dealSoldOut
@@ -202,8 +224,17 @@ const ProductDetail: React.FC = () => {
         if (activeDealForProduct && dealSoldOut) return;
         if (isSubmitting) return;
 
-        const quantity = product.pricing.retail.minQuantity ?? 1;
-        const unit = product.pricing.retail.unit ?? "unit";
+        const effectivePrice = activeDealForProduct
+            ? (typeof activeDealForProduct.dealPrice === "number" ? activeDealForProduct.dealPrice : null)
+            : retailPrice;
+
+        if (effectivePrice === null) {
+            alert("Price information for this product is unavailable. Please try again later.");
+            return;
+        }
+
+        const quantity = retailMinQuantity;
+        const unit = retailUnit;
 
         setIsSubmitting(true);
         try {
@@ -211,7 +242,7 @@ const ProductDetail: React.FC = () => {
                 productId: product._id,
                 name: product.name,
                 image: product.images[0],
-                price: activeDealForProduct ? activeDealForProduct.dealPrice : product.pricing.retail.price,
+                price: effectivePrice,
                 quantity,
                 unit,
                 priceType: "retail",
@@ -345,10 +376,16 @@ const ProductDetail: React.FC = () => {
                                     ) : null}
                                 </div>
                                 <div className="mt-4 flex flex-wrap items-baseline gap-3">
-                                    <span className="text-3xl font-bold text-[#0F2E19]">₦{activeDealForProduct.dealPrice.toLocaleString()}</span>
-                                    <span className="text-sm text-gray-500 line-through">
-                                        ₦{product.pricing.retail.price.toLocaleString()}
+                                    <span className="text-3xl font-bold text-[#0F2E19]">
+                                        {typeof activeDealForProduct.dealPrice === "number"
+                                            ? `₦${formatNaira(activeDealForProduct.dealPrice)}`
+                                            : "Deal price unavailable"}
                                     </span>
+                                    {retailPrice !== null ? (
+                                        <span className="text-sm text-gray-500 line-through">
+                                            ₦{formatNaira(retailPrice)}
+                                        </span>
+                                    ) : null}
                                     {activeDealForProduct.discountPercentage ? (
                                         <span className="inline-flex items-center rounded-full bg-[#1D7B3C] px-3 py-1 text-xs font-semibold text-white">
                                             Save {activeDealForProduct.discountPercentage}%
@@ -391,23 +428,32 @@ const ProductDetail: React.FC = () => {
                                             {activeDealForProduct ? "Original Price" : "Retail Price"}
                                         </p>
                                         <p className="text-sm text-gray-500">
-                                            Min: {product.pricing.retail.minQuantity} {product.pricing.retail.unit}
+                                            Min: {retailMinQuantity} {retailUnit}
                                         </p>
                                     </div>
                                     <div className="text-right">
                                         <p className={`text-2xl font-bold ${activeDealForProduct ? "text-gray-400 line-through" : "text-gray-900"}`}>
-                                            ₦{product.pricing.retail.price.toLocaleString()}
+                                            {retailPrice !== null ? `₦${formatNaira(retailPrice)}` : "Price unavailable"}
                                         </p>
-                                        <p className="text-sm text-gray-500">per {product.pricing.retail.unit}</p>
+                                        <p className="text-sm text-gray-500">per {retailUnit}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Bulk Tiers Display */}
-                            {hasBulkTiers && product.pricing.bulkTiers?.map((tier, index) => {
-                                const canUseTier = product.inventory.availableStock >= tier.minQuantity && !isOutOfStock;
-                                const tierSavings = product.pricing.retail.price - tier.price;
-                                const tierSavingsPercent = ((tierSavings / product.pricing.retail.price) * 100).toFixed(0);
+                            {showBulkPricing && product.pricing.bulkTiers?.map((tier, index) => {
+                                const tierMinQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 0;
+                                const tierUnit = tier.unit || retailUnit;
+                                const tierPrice = typeof tier.price === "number" && Number.isFinite(tier.price) ? tier.price : null;
+                                if (!tierPrice || tierMinQty === 0) {
+                                    return null;
+                                }
+
+                                const canUseTier = product.inventory.availableStock >= tierMinQty && !isOutOfStock;
+                                const tierSavings = retailPrice !== null ? retailPrice - tierPrice : null;
+                                const tierSavingsPercent = tierSavings !== null && retailPrice
+                                    ? Math.round((tierSavings / retailPrice) * 100)
+                                    : null;
 
                                 return (
                                     <div
@@ -423,14 +469,14 @@ const ProductDetail: React.FC = () => {
                                                     <p className={`font-medium ${canUseTier ? "text-[#1D7B3C]" : "text-gray-600"}`}>
                                                         {tier.name}
                                                     </p>
-                                                    {canUseTier && parseFloat(tierSavingsPercent) > 0 && (
+                                                    {canUseTier && tierSavingsPercent !== null && tierSavingsPercent > 0 && (
                                                         <span className="bg-[#1D7B3C] text-white px-2 py-0.5 rounded text-xs font-medium">
                                                             SAVE {tierSavingsPercent}%
                                                         </span>
                                                     )}
                                                 </div>
                                                 <p className="text-sm text-gray-600">
-                                                    Min: {tier.minQuantity} {tier.unit}
+                                                    Min: {tierMinQty} {tierUnit}
                                                 </p>
                                                 {!canUseTier && (
                                                     <p className="text-xs text-red-600 mt-1">
@@ -440,9 +486,9 @@ const ProductDetail: React.FC = () => {
                                             </div>
                                             <div className="text-right">
                                                 <p className={`text-2xl font-bold ${canUseTier ? "text-[#1D7B3C]" : "text-gray-600"}`}>
-                                                    ₦{tier.price.toLocaleString()}
+                                                    ₦{formatNaira(tierPrice)}
                                                 </p>
-                                                <p className="text-sm text-gray-600">per {tier.unit}</p>
+                                                <p className="text-sm text-gray-600">per {tierUnit}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -537,7 +583,7 @@ const ProductDetail: React.FC = () => {
             </div>
 
             {/* Bulk Buying Drawer - Slides in from right */}
-            {showBulkDrawer && (
+            {canBuyBulk && showBulkDrawer && (
                 <BulkBuying product={product} onClose={() => setShowBulkDrawer(false)} />
             )}
 

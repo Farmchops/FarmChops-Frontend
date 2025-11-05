@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Flame, Sparkles, Timer, ExternalLink } from "lucide-react";
+import { Flame, Sparkles, ExternalLink } from "lucide-react";
 import { useGetActiveDealQuery, useGetUpcomingDealQuery } from "@/redux/api/dealsApi";
 import { normalizeActiveDealPayload } from "@/lib/deals";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -57,9 +57,6 @@ const DealOfTheDayPage = () => {
         return payload.deal ? [payload.deal] : [];
     }, [payload.deals, payload.deal]);
 
-    const featuredDeal = activeDeals[0] ?? null;
-    const additionalDeals = activeDeals.slice(1);
-
     const resolveMetricsForDeal = (deal: Deal | null | undefined): DealMetrics | undefined => {
         if (!deal) return undefined;
         const dealId = getDealId(deal);
@@ -88,7 +85,7 @@ const DealOfTheDayPage = () => {
         );
     }
 
-    if (error || !featuredDeal) {
+    if (error || activeDeals.length === 0) {
         return (
             <section className="mx-auto max-w-4xl space-y-6 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-10 text-center">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm">
@@ -125,172 +122,109 @@ const DealOfTheDayPage = () => {
         );
     }
 
-    const featuredMetrics = resolveMetricsForDeal(featuredDeal);
-    const featuredRemainingUnits = computeRemainingUnits(featuredDeal, featuredMetrics);
-    const featuredSoldOut = featuredMetrics?.soldOut ?? (featuredRemainingUnits !== null && featuredRemainingUnits <= 0);
-    const featuredProductSummary = featuredDeal.product as {
-        slug?: string;
-        id?: string;
-        pricing?: { retailPrice?: number };
-    } | undefined;
-    const featuredProductLink = featuredProductSummary?.slug
-        ? `/products/${featuredProductSummary.slug}`
-        : `/products/${featuredProductSummary?.id ?? featuredDeal.productId}`;
-    const featuredOriginalPrice = featuredProductSummary?.pricing?.retailPrice ?? null;
-
     return (
-        <section className="mx-auto max-w-5xl space-y-10">
-            <header className="flex flex-col gap-2 rounded-3xl border border-emerald-100 bg-emerald-50/80 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 text-sm font-medium text-emerald-800">
+        <section className="mx-auto max-w-5xl space-y-8">
+            <header className="flex flex-col gap-3 rounded-3xl border border-emerald-100 bg-emerald-50/80 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-base font-semibold text-emerald-900">
                     <Flame className="h-5 w-5" />
-                    Today's featured offer
+                    Deal of the Day
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-emerald-800">
-                    {additionalDeals.length > 0 ? (
-                        <span className="rounded-full bg-white/60 px-3 py-1 text-xs uppercase tracking-wide text-emerald-700">
-                            +{additionalDeals.length} more deal{additionalDeals.length > 1 ? "s" : ""} live
-                        </span>
-                    ) : null}
-                    {featuredRemainingUnits !== null ? (
-                        <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-sm font-medium text-emerald-700 shadow-sm">
-                            {featuredSoldOut ? "Sold out" : `${featuredRemainingUnits} left`}
-                            <Sparkles className="h-4 w-4" />
-                        </span>
-                    ) : null}
+                <div className="flex items-center gap-2 text-sm font-medium text-emerald-800">
+                    <Sparkles className="h-4 w-4" />
+                    {activeDeals.length > 1 ? `${activeDeals.length} limited-time deals live` : "Limited-time offer running now"}
                 </div>
             </header>
 
-            <article className="grid gap-6 rounded-3xl border border-emerald-100 bg-white/90 p-6 shadow-sm sm:grid-cols-[1fr_minmax(220px,280px)]">
-                <div className="space-y-4">
-                    <h1 className="text-2xl font-semibold text-emerald-900">{featuredDeal.title || featuredDeal.product?.name || "Deal of the Day"}</h1>
-                    {featuredDeal.promoCopy ? (
-                        <p className="text-sm leading-relaxed text-gray-700">{featuredDeal.promoCopy}</p>
-                    ) : null}
-                    <dl className="grid gap-3 text-sm text-gray-700 sm:grid-cols-2">
-                        <div>
-                            <dt className="font-medium text-emerald-800">Deal price</dt>
-                            <dd>{formatCurrency(featuredDeal.dealPrice)}</dd>
-                        </div>
-                        {typeof featuredOriginalPrice === "number" && featuredOriginalPrice > featuredDeal.dealPrice ? (
-                            <div>
-                                <dt className="font-medium text-emerald-800">Retail price</dt>
-                                <dd className="font-medium text-gray-500 line-through">{formatCurrency(featuredOriginalPrice)}</dd>
-                            </div>
-                        ) : null}
-                        {typeof featuredDeal.discountPercentage === "number" ? (
-                            <div>
-                                <dt className="font-medium text-emerald-800">Discount</dt>
-                                <dd>{featuredDeal.discountPercentage}% off</dd>
-                            </div>
-                        ) : null}
-                        <div>
-                            <dt className="font-medium text-emerald-800">Runs from</dt>
-                            <dd>{formatDate(featuredDeal.startAt)}</dd>
-                        </div>
-                        <div>
-                            <dt className="font-medium text-emerald-800">Ends</dt>
-                            <dd>{formatDate(featuredDeal.endAt)}</dd>
-                        </div>
-                    </dl>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Link
-                            to={featuredProductLink}
-                            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-white shadow-sm transition hover:bg-emerald-700"
-                        >
-                            View product
-                            <ExternalLink className="h-4 w-4" />
-                        </Link>
-                        <Link
-                            to="/products"
-                            className="inline-flex items-center gap-2 rounded-full border border-emerald-600 px-5 py-2 text-emerald-700 transition hover:bg-emerald-50"
-                        >
-                            Browse catalogue
-                        </Link>
-                    </div>
-                </div>
-                <aside className="space-y-4 rounded-2xl bg-emerald-50/70 p-4 text-sm text-emerald-900">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Quick facts</p>
-                    <ul className="space-y-2 text-sm">
-                        <li className="flex items-center gap-2"><Timer className="h-4 w-4" /> Updated in real-time--check back often.</li>
-                        {typeof featuredDeal.perUserLimit === "number" ? <li>Limit of {featuredDeal.perUserLimit} per customer.</li> : null}
-                        <li>Available stock: {featuredDeal.maxUnits} units.</li>
-                        {featuredDeal.description ? <li>{featuredDeal.description}</li> : null}
-                    </ul>
-                </aside>
-            </article>
+            <div className={`grid gap-5 ${activeDeals.length > 1 ? "md:grid-cols-2" : ""}`}>
+                {activeDeals.map((deal, index) => {
+                    const metrics = resolveMetricsForDeal(deal);
+                    const remaining = computeRemainingUnits(deal, metrics);
+                    const soldOut = metrics?.soldOut ?? (remaining !== null && remaining <= 0);
+                    const summary = deal.product as {
+                        slug?: string;
+                        id?: string;
+                        pricing?: { retailPrice?: number };
+                    } | undefined;
+                    const link = summary?.slug ? `/products/${summary.slug}` : `/products/${summary?.id ?? deal.productId}`;
+                    const key = getDealId(deal) ?? `${deal.productId}-${deal.startAt}`;
+                    const originalPrice = summary?.pricing?.retailPrice ?? null;
+                    const highlight = index === 0;
 
-            {additionalDeals.length > 0 ? (
-                <section className="space-y-4">
-                    <h2 className="text-lg font-semibold text-emerald-900">More deals running now</h2>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {additionalDeals.map((deal) => {
-                            const metrics = resolveMetricsForDeal(deal);
-                            const remaining = computeRemainingUnits(deal, metrics);
-                            const soldOut = metrics?.soldOut ?? (remaining !== null && remaining <= 0);
-                            const summary = deal.product as {
-                                slug?: string;
-                                id?: string;
-                                pricing?: { retailPrice?: number };
-                            } | undefined;
-                            const link = summary?.slug ? `/products/${summary.slug}` : `/products/${summary?.id ?? deal.productId}`;
-                            const key = getDealId(deal) ?? `${deal.productId}-${deal.startAt}`;
-                            const originalPrice = summary?.pricing?.retailPrice ?? null;
-
-                            return (
-                                <article key={key} className="space-y-3 rounded-2xl border border-emerald-100 bg-white/80 p-4 shadow-sm">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-emerald-900">{deal.title || deal.product?.name || "Flash deal"}</h3>
-                                            {deal.promoCopy ? <p className="mt-1 text-sm text-gray-600">{deal.promoCopy}</p> : null}
-                                        </div>
-                                        {remaining !== null ? (
-                                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                                                {soldOut ? "Sold out" : `${remaining} left`}
-                                            </span>
-                                        ) : null}
+                    return (
+                        <article
+                            key={key}
+                            className={`flex h-full flex-col justify-between gap-4 rounded-2xl border p-5 shadow-sm transition hover:shadow-md ${highlight ? "border-emerald-200 bg-emerald-50/90" : "border-emerald-100 bg-white/90"}`}
+                        >
+                            <div className="space-y-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-emerald-900">
+                                            {deal.title || deal.product?.name || "Flash deal"}
+                                        </h2>
+                                        {deal.promoCopy ? <p className="mt-1 text-sm text-gray-600">{deal.promoCopy}</p> : null}
                                     </div>
-                                    <dl className="grid gap-2 text-xs text-gray-600">
-                                        <div className="flex items-center justify-between">
-                                            <dt className="font-medium text-emerald-800">Deal price</dt>
-                                            <dd className="text-sm text-gray-800">{formatCurrency(deal.dealPrice)}</dd>
-                                        </div>
-                                        {typeof originalPrice === "number" && originalPrice > deal.dealPrice ? (
-                                            <div className="flex items-center justify-between">
-                                                <dt className="font-medium text-emerald-800">Retail price</dt>
-                                                <dd className="text-sm font-medium text-gray-500 line-through">{formatCurrency(originalPrice)}</dd>
-                                            </div>
-                                        ) : null}
-                                        {typeof deal.discountPercentage === "number" ? (
-                                            <div className="flex items-center justify-between">
-                                                <dt className="font-medium text-emerald-800">Discount</dt>
-                                                <dd className="text-sm text-gray-800">{deal.discountPercentage}% off</dd>
-                                            </div>
-                                        ) : null}
-                                        <div className="flex items-center justify-between">
-                                            <dt className="font-medium text-emerald-800">Runs</dt>
-                                            <dd>
-                                                {formatDate(deal.startAt)} to {formatDate(deal.endAt)}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <Link
-                                            to={link}
-                                            className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
-                                        >
-                                            View product
-                                            <ExternalLink className="h-3.5 w-3.5" />
-                                        </Link>
-                                        <span className="text-xs text-emerald-700">
-                                            {deal.perUserLimit ? `Limit ${deal.perUserLimit} per customer` : "While stocks last"}
+                                    {remaining !== null ? (
+                                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                                            {soldOut ? "Sold out" : `${remaining} left`}
                                         </span>
+                                    ) : null}
+                                </div>
+                                <dl className="grid gap-2 text-xs text-gray-600">
+                                    <div className="flex items-center justify-between">
+                                        <dt className="font-medium text-emerald-800">Deal price</dt>
+                                        <dd className="text-sm text-gray-800">{formatCurrency(deal.dealPrice)}</dd>
                                     </div>
-                                </article>
-                            );
-                        })}
-                    </div>
-                </section>
-            ) : null}
+                                    {typeof originalPrice === "number" && originalPrice > deal.dealPrice ? (
+                                        <div className="flex items-center justify-between">
+                                            <dt className="font-medium text-emerald-800">Retail price</dt>
+                                            <dd className="text-sm font-medium text-gray-500 line-through">{formatCurrency(originalPrice)}</dd>
+                                        </div>
+                                    ) : null}
+                                    {typeof deal.discountPercentage === "number" ? (
+                                        <div className="flex items-center justify-between">
+                                            <dt className="font-medium text-emerald-800">Discount</dt>
+                                            <dd className="text-sm text-gray-800">{deal.discountPercentage}% off</dd>
+                                        </div>
+                                    ) : null}
+                                    <div className="flex items-center justify-between">
+                                        <dt className="font-medium text-emerald-800">Runs</dt>
+                                        <dd>
+                                            {formatDate(deal.startAt)} to {formatDate(deal.endAt)}
+                                        </dd>
+                                    </div>
+                                    {typeof deal.perUserLimit === "number" ? (
+                                        <div className="flex items-center justify-between">
+                                            <dt className="font-medium text-emerald-800">Per customer limit</dt>
+                                            <dd>{deal.perUserLimit}</dd>
+                                        </div>
+                                    ) : null}
+                                    {typeof deal.maxUnits === "number" ? (
+                                        <div className="flex items-center justify-between">
+                                            <dt className="font-medium text-emerald-800">Total stock</dt>
+                                            <dd>{deal.maxUnits} units</dd>
+                                        </div>
+                                    ) : null}
+                                </dl>
+                                {deal.description ? (
+                                    <p className="text-sm text-gray-600">{deal.description}</p>
+                                ) : null}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Link
+                                    to={link}
+                                    className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                                >
+                                    View product
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                </Link>
+                                <span className="text-xs text-emerald-700">
+                                    {soldOut ? "Deal exhausted" : "While stocks last"}
+                                </span>
+                            </div>
+                        </article>
+                    );
+                })}
+            </div>
         </section>
     );
 };

@@ -12,20 +12,37 @@ interface BulkBuyingDrawerProps {
     onClose: () => void;
 }
 
+const formatNaira = (value?: number | null): string => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return "—";
+    }
+    return value.toLocaleString();
+};
+
 export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }) => {
     const [addToCart, { isLoading: adding }] = useAddToCartMutation();
     const [showCartSidebar, setShowCartSidebar] = useState(false);
     const [showToast, setShowToast] = useState(false);
 
-    // Check if product has bulk tiers
-    const hasBulkTiers = product.pricing.bulkTiers && product.pricing.bulkTiers.length > 0;
+    const sanitizedBulkTiers = (product.pricing.bulkTiers ?? []).filter((tier): tier is BulkTier =>
+        typeof tier?.price === "number" && Number.isFinite(tier.price)
+    );
+
+    const hasBulkTiers = sanitizedBulkTiers.length > 0;
+
+    const retailPrice = typeof product.pricing.retail?.price === "number" ? product.pricing.retail.price : 0;
+    const retailMinQuantity = typeof product.pricing.retail?.minQuantity === "number" && product.pricing.retail.minQuantity > 0
+        ? product.pricing.retail.minQuantity
+        : 1;
+    const retailUnit = product.pricing.retail?.unit || "piece";
+    const retailTierName = product.pricing.retail?.unit ? product.pricing.retail.unit : "Retail option";
 
     // For non-bulk products, create a retail tier to show in the modal
     const retailTier: BulkTier = {
-        name: product.pricing.retail.unit || "1 Unit",
-        price: product.pricing.retail.price,
-        minQuantity: product.pricing.retail.minQuantity || 1,
-        unit: product.pricing.retail.unit || "piece",
+        name: retailTierName,
+        price: retailPrice,
+        minQuantity: retailMinQuantity,
+        unit: retailUnit,
     };
 
     // Default to retail tier (user can then select bulk if they want)
@@ -38,7 +55,7 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
         };
 
         if (hasBulkTiers) {
-            product.pricing.bulkTiers!.forEach(tier => {
+            sanitizedBulkTiers.forEach(tier => {
                 initialMultipliers[tier.name] = 1;
             });
         }
@@ -51,18 +68,26 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
 
     // Get the tiers to display - ALWAYS show retail + bulk tiers (if available)
     const displayTiers = hasBulkTiers
-        ? [retailTier, ...product.pricing.bulkTiers!]
+        ? [retailTier, ...sanitizedBulkTiers]
         : [retailTier];
 
     // Calculate actual quantity and total price from multiplier
-    const currentMultiplier = tierMultipliers[selectedTier.name];
-    const actualQuantity = currentMultiplier * selectedTier.minQuantity;
-    const totalPrice = selectedTier.price * currentMultiplier;
+    const currentMultiplier = tierMultipliers[selectedTier.name] ?? 1;
+    const selectedMinQuantity = typeof selectedTier.minQuantity === "number" && selectedTier.minQuantity > 0
+        ? selectedTier.minQuantity
+        : 1;
+    const selectedUnitPrice = typeof selectedTier.price === "number" && Number.isFinite(selectedTier.price)
+        ? selectedTier.price
+        : retailPrice;
+    const actualQuantity = currentMultiplier * selectedMinQuantity;
+    const totalPrice = selectedUnitPrice * currentMultiplier;
 
     // Helper function to format tier name with quantity
     const formatTierName = (tier: BulkTier) => {
-        if (hasBulkTiers && tier.minQuantity > 1) {
-            return `${tier.name} (${tier.minQuantity} ${product.inventory.unit})`;
+        const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
+        const unitLabel = tier.unit || product.inventory.unit || retailUnit;
+        if (hasBulkTiers && minQty > 1) {
+            return `${tier.name} (${minQty} ${unitLabel})`;
         }
         return tier.name;
     };
@@ -75,14 +100,15 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
 
     const handleQuantityChange = (tier: BulkTier, type: "add" | "subtract") => {
         setTierMultipliers((prev) => {
-            const currentMultiplier = prev[tier.name];
+            const currentMultiplier = prev[tier.name] ?? 1;
             let newMultiplier = type === "add" ? currentMultiplier + 1 : currentMultiplier - 1;
 
             // Prevent going below 1
             if (newMultiplier < 1) newMultiplier = 1;
 
             // Prevent exceeding stock
-            const maxMultiplier = Math.floor(product.inventory.availableStock / tier.minQuantity);
+            const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
+            const maxMultiplier = Math.max(1, Math.floor(product.inventory.availableStock / minQty));
             if (newMultiplier > maxMultiplier) newMultiplier = maxMultiplier;
 
             return { ...prev, [tier.name]: newMultiplier };
@@ -96,23 +122,33 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
     const handleAddToCart = async () => {
         if (!selectedTier) return;
 
-        const multiplier = tierMultipliers[selectedTier.name];
+        const multiplier = tierMultipliers[selectedTier.name] ?? 1;
         // Check if the selected tier is NOT in the bulk tiers array (making it retail)
         const isRetailTier = !hasBulkTiers || !product.pricing.bulkTiers?.some(t => t.name === selectedTier.name);
 
         // Format the tier name to include quantity (e.g., "Bucket of Mango (14 pieces)")
         const formattedTierName = formatTierName(selectedTier);
 
+        const unitPrice = typeof selectedTier.price === "number" ? selectedTier.price : retailPrice;
+        if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+            alert("Price information for this option is unavailable. Please try again later.");
+            return;
+        }
+
+        const minQty = typeof selectedTier.minQuantity === "number" && selectedTier.minQuantity > 0
+            ? selectedTier.minQuantity
+            : 1;
+
         try {
             await addToCart({
                 productId: product._id,
                 name: isRetailTier ? product.name : `${product.name} (${formattedTierName})`,
                 image: product.images[0],
-                price: selectedTier.price,
+                price: unitPrice,
                 quantity: multiplier, // Use multiplier as quantity (1, 2, 3...)
-                unit: selectedTier.unit,
+                unit: selectedTier.unit || retailUnit,
                 priceType: isRetailTier ? "retail" : "bulk",
-                minQuantity: selectedTier.minQuantity,
+                minQuantity: minQty,
                 tierName: selectedTier.name,
             }).unwrap();
 
@@ -175,8 +211,10 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                     <div className="space-y-4">
                         {displayTiers.map((tier) => {
                             const isSelected = selectedTier.name === tier.name;
-                            const multiplier = tierMultipliers[tier.name];
-                            const maxMultiplier = Math.floor(product.inventory.availableStock / tier.minQuantity);
+                            const multiplier = tierMultipliers[tier.name] ?? 1;
+                            const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
+                            const tierPrice = typeof tier.price === "number" ? tier.price : 0;
+                            const maxMultiplier = Math.max(1, Math.floor(product.inventory.availableStock / minQty));
 
                             return (
                                 <div
@@ -196,9 +234,7 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                                             <p className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2">
                                                 {formatTierName(tier)}
                                             </p>
-                                            <p className="text-xs text-gray-600 mt-0.5">
-                                                ₦{tier.price.toLocaleString()}
-                                            </p>
+                                            <p className="text-xs text-gray-600 mt-0.5">₦{formatNaira(tierPrice)}</p>
                                         </div>
                                     </div>
 
@@ -263,20 +299,20 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                         <div className="flex justify-between text-xs sm:text-sm">
                             <span className="text-gray-600">Quantity</span>
                             <span className="font-medium">
-                                {actualQuantity} {product.inventory.unit}
+                                {actualQuantity} {selectedTier.unit || product.inventory.unit || retailUnit}
                             </span>
                         </div>
                         <div className="flex justify-between text-xs sm:text-sm">
                             <span className="text-gray-600">Unit Price</span>
                             <span className="font-medium">
-                                ₦{selectedTier.price.toLocaleString()}
+                                ₦{formatNaira(typeof selectedTier.price === "number" ? selectedTier.price : 0)}
                             </span>
                         </div>
                         <div className="border-t border-gray-300 pt-2 mt-2">
                             <div className="flex justify-between">
                                 <span className="font-semibold text-sm sm:text-base text-gray-900">Total</span>
                                 <span className="font-bold text-base sm:text-lg text-[#1D7B3C]">
-                                    ₦{totalPrice.toLocaleString()}
+                                    ₦{formatNaira(totalPrice)}
                                 </span>
                             </div>
                         </div>
