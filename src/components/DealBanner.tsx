@@ -113,19 +113,27 @@ export const DealBanner = () => {
 
     if (error || !activeDeal) {
         return (
-            <div className="flex w-full flex-col gap-2 bg-[#133F1F] px-4 py-3 text-white sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-emerald-200">
-                    <Flame className="h-4 w-4" />
-                    Deal of the Day
+            <div className="flex w-full flex-col gap-3 bg-[#133F1F] px-4 py-3 text-white">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-emerald-200">
+                        <Flame className="h-4 w-4" />
+                        Deal of the Day
+                    </div>
+                    <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:gap-3">
+                        <span className="font-medium text-white">Watch this space.</span>
+                        <span className="text-xs text-emerald-100">New flash offers are coming soon—check back for fresh savings.</span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Stay tuned
+                    </span>
                 </div>
-                <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:gap-3">
-                    <span className="font-medium text-white">Watch this space.</span>
-                    <span className="text-xs text-emerald-100">New flash offers are coming soon—check back for fresh savings.</span>
+                <div className="flex flex-wrap items-center justify-end gap-4 text-xs sm:text-sm text-emerald-100">
+                    <span className="font-medium text-white">Deal of the Day</span>
+                    <span>Bulk Buying</span>
+                    <span>Pay Later</span>
+                    <span>Become a vendor</span>
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Stay tuned
-                </span>
             </div>
         );
     }
