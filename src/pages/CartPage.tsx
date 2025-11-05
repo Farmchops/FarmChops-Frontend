@@ -1,5 +1,5 @@
 // src/pages/CartPage.tsx
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
@@ -10,6 +10,21 @@ import {
   useRemoveFromCartMutation,
   useClearCartMutation,
 } from "@/redux/api/cartApi";
+import type { CartItem } from "@/redux/api/cartApi";
+import { useGetActiveDealQuery } from "@/redux/api/dealsApi";
+import { normalizeActiveDealPayload } from "@/lib/deals";
+import type { Deal } from "@/types/deals";
+
+type DealCartAlert = {
+  status: "expired" | "endingSoon" | "active" | "unknown";
+  remainingMinutes?: number;
+  endAt?: string;
+};
+
+type ExtendedCartItem = CartItem & {
+  _id?: string;
+  total?: number;
+};
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,12 +34,81 @@ const CartPage: React.FC = () => {
   const [clearCart] = useClearCartMutation();
   const [showClearModal, setShowClearModal] = useState(false);
 
-  const cart = cartData?.cart?.items || [];
+  const {
+    data: activeDealsResponse,
+    isFetching: isFetchingDeals,
+    isLoading: isLoadingDeals,
+    isUninitialized: isDealsUninitialized,
+  } = useGetActiveDealQuery();
+
+  const activeDealsByProductId = useMemo(() => {
+    const record: Record<string, Deal> = {};
+    const normalized = normalizeActiveDealPayload(activeDealsResponse);
+    (normalized.deals ?? []).forEach((deal) => {
+      if (deal?.productId) {
+        record[deal.productId] = deal;
+      }
+    });
+    return record;
+  }, [activeDealsResponse]);
+  const dealsReady = !(isLoadingDeals || isFetchingDeals || isDealsUninitialized);
+
+  const cartItems = useMemo(
+    () => (cartData?.cart?.items ?? []) as ExtendedCartItem[],
+    [cartData]
+  );
   const totalItems = cartData?.cart?.totalItems || 0;
   const totalAmount = cartData?.cart?.totalAmount || 0;
 
+  const dealInsights = useMemo(() => {
+    const normalized = normalizeActiveDealPayload(activeDealsResponse);
+    const map = new Map<string, DealCartAlert>();
+    if (!dealsReady) {
+      return { map, hasExpired: false, endingSoonCount: 0, pending: true } as const;
+    }
+
+    const now = Date.now();
+    let hasExpired = false;
+    let endingSoonCount = 0;
+
+    cartItems.forEach((item) => {
+      if (item.tierName !== "deal-of-the-day") return;
+
+      const key = `${item.productId}-${item.priceType}-${item.tierName || "default"}`;
+      const matchingDeal = activeDealsByProductId[item.productId] ?? normalized.deals?.find((deal) => deal.productId === item.productId);
+
+      if (!matchingDeal || matchingDeal.status !== "active") {
+        map.set(key, { status: "expired" });
+        hasExpired = true;
+        return;
+      }
+
+      const endTime = new Date(matchingDeal.endAt).getTime();
+      if (!Number.isFinite(endTime)) {
+        map.set(key, { status: "unknown" });
+        return;
+      }
+
+      const remainingMs = endTime - now;
+      if (remainingMs <= 0) {
+        map.set(key, { status: "expired" });
+        hasExpired = true;
+        return;
+      }
+
+      const remainingMinutes = Math.ceil(remainingMs / 60000);
+      const status = remainingMinutes <= 60 ? "endingSoon" : "active";
+      if (status === "endingSoon") {
+        endingSoonCount += 1;
+      }
+      map.set(key, { status, remainingMinutes, endAt: matchingDeal.endAt });
+    });
+
+    return { map, hasExpired, endingSoonCount, pending: false } as const;
+  }, [cartItems, activeDealsByProductId, dealsReady, activeDealsResponse]);
+
   const handleQuantityChange = async (
-    item: any,
+    item: ExtendedCartItem,
     type: "add" | "subtract"
   ) => {
     const currentQty = item.quantity;
@@ -80,11 +164,27 @@ const CartPage: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    if (cart.length === 0) {
+    if (cartItems.length === 0) {
       alert("Your cart is empty");
       return;
     }
+    if (!dealInsights.pending && dealInsights.hasExpired) {
+      alert(
+        "One or more deals in your cart have expired. Remove expired deals or refresh the offer before proceeding to checkout."
+      );
+      return;
+    }
     navigate("/checkout");
+  };
+
+  const formatRemainingTime = (minutes: number | undefined) => {
+    if (!minutes || minutes <= 0) return "0m";
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${mins}m`;
   };
 
   if (isLoading) {
@@ -105,6 +205,16 @@ const CartPage: React.FC = () => {
     <div className="bg-gray-50 min-h-screen">
       <CartHero />
       <section className="max-w-6xl mx-auto px-2 sm:px-4 py-4 md:py-8">
+        {!dealInsights.pending && dealInsights.hasExpired && (
+          <div className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            A deal in your cart has expired. Remove it to avoid unexpected price changes at checkout.
+          </div>
+        )}
+        {!dealInsights.pending && !dealInsights.hasExpired && dealInsights.endingSoonCount > 0 && (
+          <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {dealInsights.endingSoonCount} {dealInsights.endingSoonCount === 1 ? "deal" : "deals"} will expire within the next hour.
+          </div>
+        )}
         <div className="mb-4 md:mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">My Cart</h2>
@@ -112,7 +222,7 @@ const CartPage: React.FC = () => {
               {totalItems} {totalItems === 1 ? 'Item' : 'Items'} in your cart
             </p>
           </div>
-          {cart.length > 0 && (
+          {cartItems.length > 0 && (
             <button
               type="button"
               onClick={() => setShowClearModal(true)}
@@ -123,7 +233,7 @@ const CartPage: React.FC = () => {
           )}
         </div>
 
-        {cart.length === 0 ? (
+    {cartItems.length === 0 ? (
           <div className="text-center py-20">
             <svg
               className="mx-auto h-24 w-24 text-gray-400"
@@ -162,12 +272,14 @@ const CartPage: React.FC = () => {
               
               {/* Cart Items */}
               <div>
-                {cart.map((item) => {
+                {cartItems.map((item) => {
                   const itemSubtotal = item.price * item.quantity;
 
                   // Since we're now storing multipliers (1, 2, 3...) directly as quantity,
                   // we display the quantity as-is without any division
                   const displayQuantity = item.quantity;
+                  const itemKey = `${item.productId}-${item.priceType}-${item.tierName || 'default'}`;
+                  const dealAlert = dealInsights.map.get(itemKey);
 
                   return (
                     <div key={`${item.productId}-${item.priceType}-${item.tierName || 'default'}`} className="border-b border-gray-100 last:border-0">
@@ -187,6 +299,27 @@ const CartPage: React.FC = () => {
                                 {item.name}
                               </h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
+                              {dealAlert && (
+                                <p
+                                  className={`mt-1 text-xs ${
+                                    dealAlert.status === "expired"
+                                      ? "text-red-600"
+                                      : dealAlert.status === "endingSoon"
+                                        ? "text-amber-600"
+                                        : dealAlert.status === "active"
+                                          ? "text-[#1D7B3C]"
+                                          : "text-gray-500"
+                                  }`}
+                                >
+                                  {dealAlert.status === "expired"
+                                    ? "This deal has ended. Price may update at checkout."
+                                    : dealAlert.status === "endingSoon"
+                                      ? `Deal expires in ${formatRemainingTime(dealAlert.remainingMinutes)}.`
+                                      : dealAlert.status === "active"
+                                        ? "Deal price locked in while the offer is active."
+                                        : "Deal status pending confirmation at checkout."}
+                                </p>
+                              )}
                               
                               {/* Mobile Layout */}
                               <div className="mt-2 space-y-2 md:hidden">
@@ -252,6 +385,17 @@ const CartPage: React.FC = () => {
                           {/* Desktop Price */}
                           <div className="hidden md:block w-32 text-center">
                             <span className="font-medium">₦{item.price.toLocaleString()}</span>
+                            {dealAlert && (
+                              <span className="block text-xs mt-1 text-amber-600 md:mt-2">
+                                {dealAlert.status === "endingSoon"
+                                  ? `Ends in ${formatRemainingTime(dealAlert.remainingMinutes)}`
+                                  : dealAlert.status === "expired"
+                                    ? "Deal expired"
+                                    : dealAlert.status === "active"
+                                      ? "Deal price"
+                                      : "Deal pending"}
+                              </span>
+                            )}
                           </div>
 
                           {/* Desktop Quantity */}

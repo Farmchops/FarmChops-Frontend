@@ -1,15 +1,15 @@
 // src/pages/ProductDetail.tsx - UPDATED for bulkTiers
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { addItem } from "../../redux/features/cart/cartSlice";
-import { Heart, ArrowLeft, Star, Truck, Shield, RefreshCw, Flame } from "lucide-react";
+import { ArrowLeft, Star, Flame } from "lucide-react";
 import cartImg from "../../assets/cart.svg";
 import { useGetProductBySlugQuery } from "../../redux/api/productApi";
 import { BulkBuying } from "../../components/Product/BulkBuying";
 import { useGetActiveDealQuery } from "@/redux/api/dealsApi";
 import { normalizeActiveDealPayload } from "@/lib/deals";
 import type { Deal, DealMetrics } from "@/types/deals";
+import { useAddToCartMutation } from "@/redux/api/cartApi";
+import { CartSidebar } from "@/components/Cart/CartSidebar";
 
 const formatDealCountdown = (seconds: number | null): string => {
     if (seconds === null || seconds <= 0) {
@@ -64,7 +64,6 @@ const computeDealRemaining = (deal: Deal, metrics?: DealMetrics): number | null 
 const ProductDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
 
     const { data, isLoading, error } = useGetProductBySlugQuery(slug || "", {
@@ -100,7 +99,11 @@ const ProductDetail: React.FC = () => {
 
     const [selectedImage, setSelectedImage] = useState(0);
     const [showBulkDrawer, setShowBulkDrawer] = useState(false);
-    const [adding, setAdding] = useState(false);
+    const [showCartSidebar, setShowCartSidebar] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [recentlyAdded, setRecentlyAdded] = useState(false);
+
+    const [addToCart] = useAddToCartMutation();
 
     useEffect(() => {
         if (typeof dealMetrics?.countdownSeconds === "number") {
@@ -175,38 +178,56 @@ const ProductDetail: React.FC = () => {
     const primaryButtonLabel = activeDealForProduct
         ? dealSoldOut
             ? "Sold Out"
-            : adding
-                ? "Deal Claimed"
-                : "Claim Deal"
+            : isSubmitting
+                ? "Claiming..."
+                : recentlyAdded
+                    ? "Deal Claimed"
+                    : "Claim Deal"
         : isOutOfStock
             ? "Out of Stock"
-            : adding
-                ? "Added to Cart"
-                : "Buy Retail";
+            : isSubmitting
+                ? "Adding..."
+                : recentlyAdded
+                    ? "Added to Cart"
+                    : "Buy Retail";
 
     const primaryButtonDisabled = Boolean(
         (isOutOfStock && !activeDealForProduct) ||
-        adding ||
+        isSubmitting ||
         (activeDealForProduct && dealSoldOut)
     );
 
-    const handleRetailAddToCart = () => {
+    const handleRetailAddToCart = async () => {
         if (isOutOfStock && !activeDealForProduct) return;
         if (activeDealForProduct && dealSoldOut) return;
+        if (isSubmitting) return;
 
-        setAdding(true);
-        dispatch(
-            addItem({
-                id: product._id,
+        const quantity = product.pricing.retail.minQuantity ?? 1;
+        const unit = product.pricing.retail.unit ?? "unit";
+
+        setIsSubmitting(true);
+        try {
+            await addToCart({
+                productId: product._id,
                 name: product.name,
-                price: activeDealForProduct ? activeDealForProduct.dealPrice : product.pricing.retail.price,
                 image: product.images[0],
-                quantity: product.pricing.retail.minQuantity,
-                quantityType: "retail",
-                unit: product.pricing.retail.unit,
-            })
-        );
-        setTimeout(() => setAdding(false), 700);
+                price: activeDealForProduct ? activeDealForProduct.dealPrice : product.pricing.retail.price,
+                quantity,
+                unit,
+                priceType: "retail",
+                minQuantity: quantity,
+                tierName: activeDealForProduct ? "deal-of-the-day" : undefined,
+            }).unwrap();
+
+            setRecentlyAdded(true);
+            setTimeout(() => setRecentlyAdded(false), 1500);
+            setShowCartSidebar(true);
+        } catch (cartError) {
+            console.error("Failed to add item to cart", cartError);
+            alert("Unable to add item to cart. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -510,26 +531,6 @@ const ProductDetail: React.FC = () => {
                                 </button>
                             )}
 
-                            <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                                <Heart size={20} />
-                                Add to Wishlist
-                            </button>
-                        </div>
-
-                        {/* Features */}
-                        <div className="border-t pt-6 space-y-3">
-                            <div className="flex items-center gap-3 text-gray-700">
-                                <Truck className="text-[#1D7B3C]" size={20} />
-                                <span className="text-sm">Free delivery for orders above ₦10,000</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-gray-700">
-                                <Shield className="text-[#1D7B3C]" size={20} />
-                                <span className="text-sm">100% quality guarantee</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-gray-700">
-                                <RefreshCw className="text-[#1D7B3C]" size={20} />
-                                <span className="text-sm">Easy returns within 7 days</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -539,6 +540,8 @@ const ProductDetail: React.FC = () => {
             {showBulkDrawer && (
                 <BulkBuying product={product} onClose={() => setShowBulkDrawer(false)} />
             )}
+
+            <CartSidebar isOpen={showCartSidebar} onClose={() => setShowCartSidebar(false)} />
         </div>
     );
 };

@@ -128,11 +128,15 @@ const DealOfTheDayPage = () => {
     const featuredMetrics = resolveMetricsForDeal(featuredDeal);
     const featuredRemainingUnits = computeRemainingUnits(featuredDeal, featuredMetrics);
     const featuredSoldOut = featuredMetrics?.soldOut ?? (featuredRemainingUnits !== null && featuredRemainingUnits <= 0);
-    const featuredProductSummary = featuredDeal.product as { slug?: string; id?: string; pricing?: { retailPrice?: number; salePrice?: number } } | undefined;
+    const featuredProductSummary = featuredDeal.product as {
+        slug?: string;
+        id?: string;
+        pricing?: { retailPrice?: number };
+    } | undefined;
     const featuredProductLink = featuredProductSummary?.slug
         ? `/products/${featuredProductSummary.slug}`
         : `/products/${featuredProductSummary?.id ?? featuredDeal.productId}`;
-    const featuredOriginalPrice = featuredProductSummary?.pricing?.retailPrice ?? featuredProductSummary?.pricing?.salePrice ?? null;
+    const featuredOriginalPrice = featuredProductSummary?.pricing?.retailPrice ?? null;
 
     return (
         <section className="mx-auto max-w-5xl space-y-10">
@@ -169,7 +173,7 @@ const DealOfTheDayPage = () => {
                         </div>
                         {typeof featuredOriginalPrice === "number" && featuredOriginalPrice > featuredDeal.dealPrice ? (
                             <div>
-                                <dt className="font-medium text-emerald-800">Original price</dt>
+                                <dt className="font-medium text-emerald-800">Retail price</dt>
                                 <dd className="font-medium text-gray-500 line-through">{formatCurrency(featuredOriginalPrice)}</dd>
                             </div>
                         ) : null}
@@ -223,10 +227,14 @@ const DealOfTheDayPage = () => {
                             const metrics = resolveMetricsForDeal(deal);
                             const remaining = computeRemainingUnits(deal, metrics);
                             const soldOut = metrics?.soldOut ?? (remaining !== null && remaining <= 0);
-                            const summary = deal.product as { slug?: string; id?: string; pricing?: { retailPrice?: number; salePrice?: number } } | undefined;
+                            const summary = deal.product as {
+                                slug?: string;
+                                id?: string;
+                                pricing?: { retailPrice?: number };
+                            } | undefined;
                             const link = summary?.slug ? `/products/${summary.slug}` : `/products/${summary?.id ?? deal.productId}`;
                             const key = getDealId(deal) ?? `${deal.productId}-${deal.startAt}`;
-                            const originalPrice = summary?.pricing?.retailPrice ?? summary?.pricing?.salePrice ?? null;
+                            const originalPrice = summary?.pricing?.retailPrice ?? null;
 
                             return (
                                 <article key={key} className="space-y-3 rounded-2xl border border-emerald-100 bg-white/80 p-4 shadow-sm">
@@ -248,7 +256,7 @@ const DealOfTheDayPage = () => {
                                         </div>
                                         {typeof originalPrice === "number" && originalPrice > deal.dealPrice ? (
                                             <div className="flex items-center justify-between">
-                                                <dt className="font-medium text-emerald-800">Original</dt>
+                                                <dt className="font-medium text-emerald-800">Retail price</dt>
                                                 <dd className="text-sm font-medium text-gray-500 line-through">{formatCurrency(originalPrice)}</dd>
                                             </div>
                                         ) : null}

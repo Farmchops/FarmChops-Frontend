@@ -133,6 +133,9 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-0.5">
                                                     {item.unit}
+                                                    {item.tierName === "deal-of-the-day" && (
+                                                        <span className="text-[#1D7B3C] font-medium ml-1">• Deal price</span>
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
@@ -142,6 +145,9 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                             <p className="text-xs sm:text-sm font-semibold text-gray-900">
                                                 ₦{item.price.toLocaleString()}
                                             </p>
+                                            {item.tierName === "deal-of-the-day" && (
+                                                <p className="text-[11px] text-amber-600 mt-1">Limited-time offer</p>
+                                            )}
                                         </div>
 
                                         {/* Quantity */}
