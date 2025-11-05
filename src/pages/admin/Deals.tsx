@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Pause, Play, XCircle, Pencil, Loader2, AlertCircle, Image as ImageIcon, Star, Trash2 } from "lucide-react";
 import { useGetAdminDealsQuery, useCreateDealMutation, useUpdateDealMutation, useUpdateDealStatusMutation, useDeleteDealMutation } from "@/redux/api/dealsApi";
+import { AlertModal } from "@/components/AlertModal";
 import { useGetProductsQuery } from "@/redux/api/productApi";
 import type { Deal, DealStatus } from "@/types/deals";
 import type { Product } from "@/types/product";
@@ -444,6 +445,7 @@ const DealsPage = () => {
     const [deleteDeal, { isLoading: isDeleting }] = useDeleteDealMutation();
     const [updateDealStatus, { isLoading: isUpdatingStatus }] = useUpdateDealStatusMutation();
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmingDeal, setConfirmingDeal] = useState<Deal | null>(null);
 
     const products = useMemo(() => {
         const productList = productsData?.data?.products ?? [];
@@ -571,15 +573,20 @@ const DealsPage = () => {
         }
     };
 
-    const handleDeleteDeal = async (deal: Deal) => {
-        const confirmation = window.confirm("Delete this deal permanently? This cannot be undone.");
-        if (!confirmation) {
+    const confirmDelete = (deal: Deal) => {
+        setConfirmingDeal(deal);
+    };
+
+    const handleConfirmDelete = async () => {
+        const dealId = confirmingDeal?._id;
+        if (!dealId) {
+            setConfirmingDeal(null);
             return;
         }
 
         try {
-            setDeletingId(deal._id);
-            await deleteDeal(deal._id).unwrap();
+            setDeletingId(dealId);
+            await deleteDeal(dealId).unwrap();
             setFeedback({ type: "success", message: "Deal removed." });
             refetch();
         } catch (mutationError) {
@@ -589,6 +596,7 @@ const DealsPage = () => {
             setFeedback({ type: "error", message });
         } finally {
             setDeletingId(null);
+            setConfirmingDeal(null);
         }
     };
 
@@ -794,7 +802,7 @@ const DealsPage = () => {
                                                     ) : null}
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleDeleteDeal(deal)}
+                                                        onClick={() => confirmDelete(deal)}
                                                         className="inline-flex items-center gap-1 rounded-lg border border-rose-400 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50"
                                                         disabled={isDeleting}
                                                     >
@@ -824,6 +832,14 @@ const DealsPage = () => {
                 initialDeal={editingDeal}
                 isSubmitting={isSubmitting}
                 error={formError}
+            />
+            <AlertModal
+                isOpen={Boolean(confirmingDeal)}
+                onClose={() => setConfirmingDeal(null)}
+                type="confirm"
+                title="Delete deal"
+                message="Delete this deal permanently? This cannot be undone."
+                onConfirm={handleConfirmDelete}
             />
         </div>
     );

@@ -200,8 +200,8 @@ const DealOfTheDayPage = () => {
                                         </div>
                                     ) : null}
                                     <div className="space-y-1">
-                                        <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Runs</dt>
-                                        <dd className="text-base text-gray-800">{formatDate(deal.startAt)} to {formatDate(deal.endAt)}</dd>
+                                        <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Limited quantity</dt>
+                                        <dd className="text-base text-gray-800">{soldOut ? "Sold out" : remaining !== null ? `${remaining} units left` : "While stocks last"}</dd>
                                     </div>
                                     {typeof deal.perUserLimit === "number" ? (
                                         <div className="space-y-1">
