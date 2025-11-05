@@ -148,6 +148,7 @@ const DealOfTheDayPage = () => {
                         id?: string;
                         pricing?: { retailPrice?: number };
                     } | undefined;
+                    const link = summary?.slug ? `/products/${summary.slug}` : `/products/${summary?.id ?? deal.productId}`;
                     const key = getDealId(deal) ?? `${deal.productId}-${deal.startAt}`;
                     const originalPrice = summary?.pricing?.retailPrice ?? null;
                     const highlight = index === 0;
@@ -209,9 +210,18 @@ const DealOfTheDayPage = () => {
                                     <p className="text-sm text-gray-600">{deal.description}</p>
                                 ) : null}
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                                <ExternalLink className="h-3.5 w-3.5" />
-                                <span>{soldOut ? "Deal exhausted" : "While stocks last"}</span>
+                            <div className="flex flex-col gap-2">
+                                <Link
+                                    to={link}
+                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${soldOut ? "pointer-events-none bg-gray-200 text-gray-500" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}
+                                >
+                                    {soldOut ? "Sold out" : "Claim deal"}
+                                    <ExternalLink className="h-4 w-4" />
+                                </Link>
+                                <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                    <ExternalLink className="h-3 w-3" />
+                                    {soldOut ? "Deal exhausted" : "While stocks last"}
+                                </span>
                             </div>
                         </article>
                     );
