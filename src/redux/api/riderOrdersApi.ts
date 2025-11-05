@@ -3,8 +3,17 @@ import type { RootState } from '../store';
 import type { ApiResponse } from '@/types/api';
 import type { Order } from '@/types/orders';
 
+export interface RiderAssignedOrdersMetrics {
+    awaitingPickup?: number;
+    enRoute?: number;
+    deliveredToday?: number;
+    otherStatuses?: number;
+    totalAssigned?: number;
+}
+
 export interface RiderAssignedOrdersResponse {
     orders: Order[];
+    metrics?: RiderAssignedOrdersMetrics;
     meta?: {
         totalAssigned?: number;
         awaitingPickup?: number;

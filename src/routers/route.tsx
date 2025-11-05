@@ -46,6 +46,7 @@ import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 import AdminManagement from "@/pages/admin/AdminManagement";
 import OrderSuccess from "@/components/Checkout/OrderSuccess";
 import RiderDashboard from "../pages/admin/RiderDashboard";
+import Deals from "@/pages/admin/Deals";
 
 const router = createBrowserRouter([
     {
@@ -155,6 +156,14 @@ const router = createBrowserRouter([
                 element: (
                     <AdminRoute requiredPermission="view_orders">
                         <AdminOrders />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "deals",
+                element: (
+                    <AdminRoute requiredPermission="promotions.deals.manage">
+                        <Deals />
                     </AdminRoute>
                 ),
             },

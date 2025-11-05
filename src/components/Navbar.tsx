@@ -8,6 +8,7 @@ import type { RootState } from "../redux/store"; // <-- adjust if your store pat
 import { useLogoutMutation } from "../redux/api/authApi"; // <-- adjust if path differs
 import { logout as logoutAction } from "../redux/features/auth/authSlice"; // <-- adjust if path differs
 import { useGetCartQuery } from "@/redux/api/cartApi";
+import DealBanner from "./DealBanner";
 
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -189,12 +190,7 @@ const Navbar: React.FC = () => {
             </div>
 
             {/* Green pay bar */}
-            <div className="bg-[#1D7B3C] text-white flex justify-end gap-8 py-2 text-xs md:text-[15px] pr-8 font-light">
-                <p className="hidden md:block">Deal of the Day</p>
-                <p>Pay Later</p>
-                <p>Bulk Buying</p>
-                <p>Become a vendor</p>
-            </div>
+            <DealBanner />
 
             {/* Mobile Menu Overlay */}
             <div

@@ -12,6 +12,7 @@ import {
     X,
 } from "lucide-react";
 import { useConfirmDeliveryMutation, useGetAssignedOrdersQuery, type RiderAssignedOrdersResponse } from "@/redux/api/riderOrdersApi";
+import type { ApiResponse } from "@/types/api";
 import type { Order } from "@/types/orders";
 import { getAccentClass, ORDER_STATUS_CONFIG } from "@/utils/orderWorkflow";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -202,53 +203,55 @@ const RiderDashboard = () => {
     const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
 
-    const orders = useMemo(() => {
+    const { orders, metrics, meta } = useMemo(() => {
+        const empty = {
+            orders: [] as Order[],
+            metrics: undefined as RiderAssignedOrdersResponse["metrics"] | undefined,
+            meta: undefined as RiderAssignedOrdersResponse["meta"] | undefined,
+        };
+
         if (!data) {
-            return [] as Order[];
+            return empty;
+        }
+
+        const directPayload = data as unknown as RiderAssignedOrdersResponse | undefined;
+        if (directPayload && Array.isArray(directPayload.orders)) {
+            return {
+                orders: directPayload.orders,
+                metrics: directPayload.metrics,
+                meta: directPayload.meta,
+            };
+        }
+
+        const apiResponse = data as ApiResponse<RiderAssignedOrdersResponse> | undefined;
+        if (apiResponse?.data && Array.isArray(apiResponse.data.orders)) {
+            return {
+                orders: apiResponse.data.orders,
+                metrics: apiResponse.data.metrics,
+                meta: apiResponse.data.meta,
+            };
         }
 
         if (Array.isArray((data as unknown as { orders?: Order[] }).orders)) {
-            return (data as unknown as { orders: Order[] }).orders;
+            return {
+                orders: (data as unknown as { orders: Order[] }).orders,
+                metrics: undefined,
+                meta: undefined,
+            };
         }
 
-        const innerData = (data as unknown as { data?: RiderAssignedOrdersResponse | Order[] }).data;
-        if (innerData) {
-            if (Array.isArray((innerData as RiderAssignedOrdersResponse).orders)) {
-                return ((innerData as RiderAssignedOrdersResponse).orders) ?? [];
-            }
-            if (Array.isArray(innerData)) {
-                return innerData as Order[];
-            }
+        if (Array.isArray((data as unknown as { data?: Order[] }).data)) {
+            return {
+                orders: (data as unknown as { data: Order[] }).data,
+                metrics: undefined,
+                meta: undefined,
+            };
         }
 
-        return [] as Order[];
+        return empty;
     }, [data]);
 
-    const riderMeta = useMemo(() => {
-        if (!data) {
-            return undefined as RiderAssignedOrdersResponse["meta"] | undefined;
-        }
-
-        const maybeResponse = data as unknown as RiderAssignedOrdersResponse | undefined;
-        if (maybeResponse?.meta) {
-            return maybeResponse.meta;
-        }
-
-        const innerData = (data as unknown as { data?: RiderAssignedOrdersResponse }).data;
-        return innerData?.meta;
-    }, [data]);
-
-    const totals = useMemo(() => {
-        if (riderMeta) {
-            const awaitingPickup = riderMeta.awaitingPickup ?? 0;
-            const enRoute = riderMeta.enRoute ?? 0;
-            const delivered = riderMeta.deliveredToday ?? 0;
-            const totalAssigned = riderMeta.totalAssigned ?? awaitingPickup + enRoute;
-            const other = Math.max(totalAssigned - awaitingPickup - enRoute, 0);
-
-            return { awaitingPickup, enRoute, delivered, other };
-        }
-
+    const reducedTotals = useMemo(() => {
         return orders.reduce(
             (summary, order) => {
                 switch (order.orderStatus) {
@@ -270,7 +273,24 @@ const RiderDashboard = () => {
             },
             { awaitingPickup: 0, enRoute: 0, delivered: 0, other: 0 }
         );
-    }, [orders, riderMeta]);
+    }, [orders]);
+
+    const totals = useMemo(() => {
+        const awaitingPickup = metrics?.awaitingPickup ?? meta?.awaitingPickup ?? reducedTotals.awaitingPickup;
+        const enRoute = metrics?.enRoute ?? meta?.enRoute ?? reducedTotals.enRoute;
+        const delivered = metrics?.deliveredToday ?? meta?.deliveredToday ?? reducedTotals.delivered;
+
+        let other = metrics?.otherStatuses;
+        if (other === undefined) {
+            if (meta?.totalAssigned !== undefined) {
+                other = Math.max(meta.totalAssigned - awaitingPickup - enRoute - delivered, 0);
+            } else {
+                other = reducedTotals.other;
+            }
+        }
+
+        return { awaitingPickup, enRoute, delivered, other };
+    }, [metrics, meta, reducedTotals]);
 
     useEffect(() => {
         if (error) {

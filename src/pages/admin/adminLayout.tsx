@@ -180,7 +180,8 @@ import {
     X,
     Shapes,
     UserCog,
-    Truck
+    Truck,
+    Tag
 } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -283,6 +284,12 @@ const AdminLayout = () => {
                 label: "Orders",
                 icon: ShoppingCart,
                 permission: "view_orders",
+            },
+            {
+                path: "deals",
+                label: "Deals",
+                icon: Tag,
+                permission: "promotions.deals.manage",
             },
             {
                 path: "sales",
