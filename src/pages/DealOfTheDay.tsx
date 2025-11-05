@@ -148,7 +148,6 @@ const DealOfTheDayPage = () => {
                         id?: string;
                         pricing?: { retailPrice?: number };
                     } | undefined;
-                    const link = summary?.slug ? `/products/${summary.slug}` : `/products/${summary?.id ?? deal.productId}`;
                     const key = getDealId(deal) ?? `${deal.productId}-${deal.startAt}`;
                     const originalPrice = summary?.pricing?.retailPrice ?? null;
                     const highlight = index === 0;
@@ -172,39 +171,37 @@ const DealOfTheDayPage = () => {
                                         </span>
                                     ) : null}
                                 </div>
-                                <dl className="grid gap-2 text-xs text-gray-600">
-                                    <div className="flex items-center justify-between">
-                                        <dt className="font-medium text-emerald-800">Deal price</dt>
-                                        <dd className="text-sm text-gray-800">{formatCurrency(deal.dealPrice)}</dd>
+                                <dl className="grid gap-3 text-sm text-gray-600">
+                                    <div className="space-y-1">
+                                        <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Deal price</dt>
+                                        <dd className="text-base text-gray-800">{formatCurrency(deal.dealPrice)}</dd>
                                     </div>
                                     {typeof originalPrice === "number" && originalPrice > deal.dealPrice ? (
-                                        <div className="flex items-center justify-between">
-                                            <dt className="font-medium text-emerald-800">Retail price</dt>
+                                        <div className="space-y-1">
+                                            <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Retail price</dt>
                                             <dd className="text-sm font-medium text-gray-500 line-through">{formatCurrency(originalPrice)}</dd>
                                         </div>
                                     ) : null}
                                     {typeof deal.discountPercentage === "number" ? (
-                                        <div className="flex items-center justify-between">
-                                            <dt className="font-medium text-emerald-800">Discount</dt>
-                                            <dd className="text-sm text-gray-800">{deal.discountPercentage}% off</dd>
+                                        <div className="space-y-1">
+                                            <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Discount</dt>
+                                            <dd className="text-base text-gray-800">{deal.discountPercentage}% off</dd>
                                         </div>
                                     ) : null}
-                                    <div className="flex items-center justify-between">
-                                        <dt className="font-medium text-emerald-800">Runs</dt>
-                                        <dd>
-                                            {formatDate(deal.startAt)} to {formatDate(deal.endAt)}
-                                        </dd>
+                                    <div className="space-y-1">
+                                        <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Runs</dt>
+                                        <dd className="text-base text-gray-800">{formatDate(deal.startAt)} to {formatDate(deal.endAt)}</dd>
                                     </div>
                                     {typeof deal.perUserLimit === "number" ? (
-                                        <div className="flex items-center justify-between">
-                                            <dt className="font-medium text-emerald-800">Per customer limit</dt>
-                                            <dd>{deal.perUserLimit}</dd>
+                                        <div className="space-y-1">
+                                            <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Per customer limit</dt>
+                                            <dd className="text-base text-gray-800">{deal.perUserLimit}</dd>
                                         </div>
                                     ) : null}
                                     {typeof deal.maxUnits === "number" ? (
-                                        <div className="flex items-center justify-between">
-                                            <dt className="font-medium text-emerald-800">Total stock</dt>
-                                            <dd>{deal.maxUnits} units</dd>
+                                        <div className="space-y-1">
+                                            <dt className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Total stock</dt>
+                                            <dd className="text-base text-gray-800">{deal.maxUnits} units</dd>
                                         </div>
                                     ) : null}
                                 </dl>
@@ -212,17 +209,9 @@ const DealOfTheDayPage = () => {
                                     <p className="text-sm text-gray-600">{deal.description}</p>
                                 ) : null}
                             </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Link
-                                    to={link}
-                                    className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
-                                >
-                                    View product
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                </Link>
-                                <span className="text-xs text-emerald-700">
-                                    {soldOut ? "Deal exhausted" : "While stocks last"}
-                                </span>
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                <span>{soldOut ? "Deal exhausted" : "While stocks last"}</span>
                             </div>
                         </article>
                     );
