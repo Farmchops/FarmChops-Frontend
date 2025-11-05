@@ -9,13 +9,23 @@ const formatCountdown = (seconds: number | null): string => {
     if (seconds === null || seconds < 0) {
         return "";
     }
-    const hours = Math.floor(seconds / 3600);
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    if (hours > 0) {
-        return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
+
+    const parts: string[] = [];
+    if (days > 0) {
+        parts.push(`${days}d`);
     }
-    return `${minutes.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`;
+    parts.push(`${hours.toString().padStart(2, "0")}h`);
+    parts.push(`${minutes.toString().padStart(2, "0")}m`);
+    if (days === 0) {
+        parts.push(`${secs.toString().padStart(2, "0")}s`);
+    }
+
+    return parts.join(" ");
 };
 
 const getDealTitle = (deal: Deal | null | undefined) => {
@@ -26,11 +36,17 @@ const getDealTitle = (deal: Deal | null | undefined) => {
 const getProductLink = (deal: Deal | null | undefined) => {
     if (!deal) return "/products";
     const slug = (deal.product as unknown as { slug?: string })?.slug;
-    if (slug) {
-        return `/products/${slug}`;
-    }
-    return `/products/${deal.productId}`;
+    const basePath = slug ? `/products/${slug}` : `/products/${deal.productId}`;
+    const search = new URLSearchParams({ deal: deal._id }).toString();
+    return `${basePath}?${search}`;
 };
+
+const quickOptions = [
+    { label: "Bulk Buying", breakpoint: "sm" as const, alwaysVisible: true },
+    { label: "Pay Later", breakpoint: "sm" as const, alwaysVisible: true },
+    { label: "Group Sharing", breakpoint: "sm" as const, alwaysVisible: true },
+    { label: "Become a vendor", breakpoint: "md" as const, alwaysVisible: false },
+] as const;
 
 export const DealBanner = () => {
     const { data, isLoading, error } = useGetActiveDealQuery();
@@ -87,9 +103,14 @@ export const DealBanner = () => {
                 <Link to="/deals" className="font-medium tracking-wide text-white transition hover:text-emerald-200">
                     Deal of the Day
                 </Link>
-                <span className="hidden sm:inline">Bulk Buying</span>
-                <span className="hidden sm:inline">Pay Later</span>
-                <span className="hidden md:inline">Become a vendor</span>
+                {quickOptions.map((option) => (
+                    <span
+                        key={option.label}
+                        className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"}`}
+                    >
+                        {option.label}
+                    </span>
+                ))}
             </div>
         );
     }
@@ -114,10 +135,11 @@ export const DealBanner = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                     {countdownLabel ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
-                            <Timer className="h-3.5 w-3.5" />
-                            {countdownLabel}
-                        </span>
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white sm:text-sm">
+                            <Timer className="h-4 w-4" />
+                            <span>Ends in</span>
+                            <span className="font-mono text-sm text-white sm:text-base">{countdownLabel}</span>
+                        </div>
                     ) : null}
                     {soldOut ? (
                         <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold text-white">
@@ -133,6 +155,16 @@ export const DealBanner = () => {
                             <Sparkles className="h-3.5 w-3.5" />
                         </Link>
                     )}
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-emerald-100 sm:gap-3 sm:text-xs">
+                        {quickOptions.map((option) => (
+                            <span
+                                key={option.label}
+                                className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-white`}
+                            >
+                                {option.label}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

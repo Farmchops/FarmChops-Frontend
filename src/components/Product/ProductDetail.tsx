@@ -1,27 +1,138 @@
 // src/pages/ProductDetail.tsx - UPDATED for bulkTiers
-import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addItem } from "../../redux/features/cart/cartSlice";
-import { Heart, ArrowLeft, Star, Truck, Shield, RefreshCw } from "lucide-react";
+import { Heart, ArrowLeft, Star, Truck, Shield, RefreshCw, Flame } from "lucide-react";
 import cartImg from "../../assets/cart.svg";
 import { useGetProductBySlugQuery } from "../../redux/api/productApi";
 import { BulkBuying } from "../../components/Product/BulkBuying";
+import { useGetActiveDealQuery } from "@/redux/api/dealsApi";
+import { normalizeActiveDealPayload } from "@/lib/deals";
+import type { Deal, DealMetrics } from "@/types/deals";
+
+const formatDealCountdown = (seconds: number | null): string => {
+    if (seconds === null || seconds <= 0) {
+        return "";
+    }
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    const parts: string[] = [];
+    if (days > 0) {
+        parts.push(`${days}d`);
+    }
+    parts.push(`${hours.toString().padStart(2, "0")}h`);
+    parts.push(`${minutes.toString().padStart(2, "0")}m`);
+    if (days === 0) {
+        parts.push(`${secs.toString().padStart(2, "0")}s`);
+    }
+
+    return parts.join(" ");
+};
+
+const resolveDealProductId = (deal: Deal | null | undefined): string | null => {
+    if (!deal) return null;
+    if (deal.productId) return deal.productId;
+    const reference = deal.product as unknown as { id?: string; _id?: string } | undefined;
+    return reference?.id ?? reference?._id ?? null;
+};
+
+const computeDealRemaining = (deal: Deal, metrics?: DealMetrics): number | null => {
+    if (!deal) {
+        return null;
+    }
+
+    if (typeof metrics?.remainingUnits === "number") {
+        return Math.max(metrics.remainingUnits, 0);
+    }
+
+    const sold = deal.soldUnits ?? 0;
+    const reserved = deal.reservedUnits ?? 0;
+    const available = deal.maxUnits - sold - reserved;
+
+    if (!Number.isFinite(available)) {
+        return null;
+    }
+
+    return Math.max(available, 0);
+};
 
 const ProductDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
 
     const { data, isLoading, error } = useGetProductBySlugQuery(slug || "", {
         skip: !slug,
     });
 
+    const { data: activeDealResponse } = useGetActiveDealQuery(undefined, {
+        pollingInterval: 60_000,
+    });
+
+    const activeDealPayload = useMemo(() => normalizeActiveDealPayload(activeDealResponse), [activeDealResponse]);
+
     const product = data?.data;
+    const productId = product?._id ?? null;
+
+    const highlightedDealId = searchParams.get("deal");
+
+    const activeDealForProduct = useMemo(() => {
+        if (!productId) return null;
+        const candidate = activeDealPayload.deal;
+        if (!candidate) return null;
+        const candidateProductId = resolveDealProductId(candidate);
+        if (candidateProductId !== productId) return null;
+        if (highlightedDealId && candidate._id !== highlightedDealId) return null;
+        return candidate;
+    }, [activeDealPayload.deal, productId, highlightedDealId]);
+
+    const dealMetrics = activeDealForProduct ? activeDealPayload.metrics ?? activeDealForProduct.metrics : undefined;
+
+    const [dealCountdown, setDealCountdown] = useState<number | null>(
+        dealMetrics?.countdownSeconds ?? null,
+    );
 
     const [selectedImage, setSelectedImage] = useState(0);
     const [showBulkDrawer, setShowBulkDrawer] = useState(false);
     const [adding, setAdding] = useState(false);
+
+    useEffect(() => {
+        if (typeof dealMetrics?.countdownSeconds === "number") {
+            setDealCountdown(dealMetrics.countdownSeconds);
+        } else {
+            setDealCountdown(null);
+        }
+    }, [dealMetrics?.countdownSeconds, activeDealForProduct?._id]);
+
+    useEffect(() => {
+        if (dealCountdown === null || dealCountdown <= 0) {
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+            setDealCountdown((previous) => {
+                if (previous === null) return previous;
+                return previous > 0 ? previous - 1 : 0;
+            });
+        }, 1000);
+
+        return () => window.clearInterval(timer);
+    }, [dealCountdown]);
+
+    const dealCountdownLabel = formatDealCountdown(dealCountdown);
+    const dealRemainingUnits = activeDealForProduct
+        ? computeDealRemaining(activeDealForProduct, dealMetrics)
+        : null;
+    const dealSoldOut = activeDealForProduct
+        ? dealMetrics?.soldOut ?? (typeof dealRemainingUnits === "number" && dealRemainingUnits <= 0)
+        : false;
+    const dealPerUserLimit = activeDealForProduct?.perUserLimit ?? null;
 
     if (isLoading) {
         return (
@@ -61,15 +172,34 @@ const ProductDetail: React.FC = () => {
 
     const bulkSavings = product.bulkSavings?.percentage || 0;
 
+    const primaryButtonLabel = activeDealForProduct
+        ? dealSoldOut
+            ? "Sold Out"
+            : adding
+                ? "Deal Claimed"
+                : "Claim Deal"
+        : isOutOfStock
+            ? "Out of Stock"
+            : adding
+                ? "Added to Cart"
+                : "Buy Retail";
+
+    const primaryButtonDisabled = Boolean(
+        (isOutOfStock && !activeDealForProduct) ||
+        adding ||
+        (activeDealForProduct && dealSoldOut)
+    );
+
     const handleRetailAddToCart = () => {
-        if (isOutOfStock) return;
+        if (isOutOfStock && !activeDealForProduct) return;
+        if (activeDealForProduct && dealSoldOut) return;
 
         setAdding(true);
         dispatch(
             addItem({
                 id: product._id,
                 name: product.name,
-                price: product.pricing.retail.price,
+                price: activeDealForProduct ? activeDealForProduct.dealPrice : product.pricing.retail.price,
                 image: product.images[0],
                 quantity: product.pricing.retail.minQuantity,
                 quantityType: "retail",
@@ -169,21 +299,82 @@ const ProductDetail: React.FC = () => {
                             <p className="text-gray-600">{product.description}</p>
                         </div>
 
+                        {activeDealForProduct ? (
+                            <div className="rounded-xl border-2 border-[#1D7B3C] bg-emerald-50 px-4 py-5">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="space-y-1">
+                                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#0F2E19]">
+                                            <Flame className="h-4 w-4 text-[#1D7B3C]" />
+                                            Deal of the Day
+                                        </span>
+                                        <p className="text-lg font-semibold text-[#0F2E19]">
+                                            {activeDealForProduct.headline || activeDealForProduct.title || product.name}
+                                        </p>
+                                        {activeDealForProduct.promoCopy || activeDealForProduct.shortDescription ? (
+                                            <p className="text-sm text-[#0F2E19]/80">
+                                                {activeDealForProduct.promoCopy ?? activeDealForProduct.shortDescription}
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                    {dealCountdownLabel ? (
+                                        <div className="flex flex-col items-start gap-1 text-[#0F2E19] sm:items-end">
+                                            <span className="text-xs uppercase tracking-wide text-[#1D7B3C]">Ends in</span>
+                                            <span className="font-mono text-lg font-semibold">{dealCountdownLabel}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
+                                <div className="mt-4 flex flex-wrap items-baseline gap-3">
+                                    <span className="text-3xl font-bold text-[#0F2E19]">₦{activeDealForProduct.dealPrice.toLocaleString()}</span>
+                                    <span className="text-sm text-gray-500 line-through">
+                                        ₦{product.pricing.retail.price.toLocaleString()}
+                                    </span>
+                                    {activeDealForProduct.discountPercentage ? (
+                                        <span className="inline-flex items-center rounded-full bg-[#1D7B3C] px-3 py-1 text-xs font-semibold text-white">
+                                            Save {activeDealForProduct.discountPercentage}%
+                                        </span>
+                                    ) : null}
+                                    {typeof dealRemainingUnits === "number" ? (
+                                        <span className="text-sm font-medium text-[#1D7B3C]">
+                                            {dealSoldOut ? "Sold out" : `Only ${dealRemainingUnits} left at this price`}
+                                        </span>
+                                    ) : null}
+                                </div>
+                                {dealPerUserLimit ? (
+                                    <p className="mt-2 text-xs text-[#0F2E19]/70">
+                                        Limit {dealPerUserLimit} per customer while the offer lasts.
+                                    </p>
+                                ) : null}
+                            </div>
+                        ) : null}
+
                         {/* Pricing Section */}
                         <div className="space-y-3">
                             <h3 className="font-semibold text-gray-900">Pricing Options</h3>
+                            {activeDealForProduct ? (
+                                <p className="text-sm text-[#1D7B3C]">
+                                    Deal price applies automatically at checkout while the countdown is active.
+                                </p>
+                            ) : null}
 
                             {/* Retail Price */}
-                            <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-[#1D7B3C] transition-colors">
+                            <div
+                                className={`border-2 rounded-lg p-4 transition-colors ${
+                                    activeDealForProduct
+                                        ? "border-gray-200 bg-gray-50"
+                                        : "border-gray-200 hover:border-[#1D7B3C]"
+                                }`}
+                            >
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="font-medium text-gray-900">Retail Price</p>
+                                        <p className={`font-medium ${activeDealForProduct ? "text-gray-600" : "text-gray-900"}`}>
+                                            {activeDealForProduct ? "Original Price" : "Retail Price"}
+                                        </p>
                                         <p className="text-sm text-gray-500">
                                             Min: {product.pricing.retail.minQuantity} {product.pricing.retail.unit}
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-2xl font-bold text-gray-900">
+                                        <p className={`text-2xl font-bold ${activeDealForProduct ? "text-gray-400 line-through" : "text-gray-900"}`}>
                                             ₦{product.pricing.retail.price.toLocaleString()}
                                         </p>
                                         <p className="text-sm text-gray-500">per {product.pricing.retail.unit}</p>
@@ -238,18 +429,34 @@ const ProductDetail: React.FC = () => {
                             })}
                         </div>
 
-                        {/* Stock Info */}
-                        <div className="bg-gray-50 rounded-lg p-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-700">Availability</span>
-                                <span className={`font-medium ${isOutOfStock ? "text-red-600" : "text-green-600"}`}>
-                                    {isOutOfStock
-                                        ? "Out of Stock"
-                                        : `${product.inventory.availableStock} ${product.inventory.unit} in stock`
-                                    }
-                                </span>
+                        {/* Stock / Deal Info */}
+                        {activeDealForProduct ? (
+                            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                    <span className="text-sm font-medium text-[#0F2E19]">Deal availability</span>
+                                    <span className={`text-sm font-semibold ${dealSoldOut ? "text-red-600" : "text-[#1D7B3C]"}`}>
+                                        {dealSoldOut ? "Sold out" : `${dealRemainingUnits ?? 0} left`}
+                                    </span>
+                                </div>
+                                {dealPerUserLimit ? (
+                                    <p className="mt-1 text-xs text-[#0F2E19]/70">
+                                        Limit {dealPerUserLimit} per customer while the offer is live.
+                                    </p>
+                                ) : null}
                             </div>
-                        </div>
+                        ) : (
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-700">Availability</span>
+                                    <span className={`font-medium ${isOutOfStock ? "text-red-600" : "text-green-600"}`}>
+                                        {isOutOfStock
+                                            ? "Out of Stock"
+                                            : `${product.inventory.availableStock} ${product.inventory.unit} in stock`
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Tags */}
                         {product.tags.length > 0 && (
@@ -274,11 +481,13 @@ const ProductDetail: React.FC = () => {
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={handleRetailAddToCart}
-                                        disabled={adding || isOutOfStock}
-                                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-[#1D7B3C] hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={primaryButtonDisabled}
+                                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-[#1D7B3C] hover:bg-green-800 transition-colors disabled:cursor-not-allowed disabled:bg-[#1D7B3C]/60"
                                     >
-                                        Buy Retail
-                                        <img src={cartImg} alt="cart" className="w-4 h-4" />
+                                        {primaryButtonLabel}
+                                        {!primaryButtonDisabled && !dealSoldOut && (
+                                            <img src={cartImg} alt="cart" className="w-4 h-4" />
+                                        )}
                                     </button>
                                     <button
                                         onClick={() => setShowBulkDrawer(true)}
@@ -291,11 +500,13 @@ const ProductDetail: React.FC = () => {
                             ) : (
                                 <button
                                     onClick={handleRetailAddToCart}
-                                    disabled={adding || isOutOfStock}
-                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-[#1D7B3C] hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={primaryButtonDisabled}
+                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white bg-[#1D7B3C] hover:bg-green-800 transition-colors disabled:cursor-not-allowed disabled:bg-[#1D7B3C]/60"
                                 >
-                                    {isOutOfStock ? "Out of Stock" : adding ? "Added to Cart" : "Add to Cart"}
-                                    {!isOutOfStock && <img src={cartImg} alt="cart" className="w-4 h-4" />}
+                                    {primaryButtonLabel}
+                                    {!primaryButtonDisabled && !dealSoldOut && (
+                                        <img src={cartImg} alt="cart" className="w-4 h-4" />
+                                    )}
                                 </button>
                             )}
 
