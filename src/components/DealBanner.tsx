@@ -12,11 +12,27 @@ const extractActiveDeal = (
         return { deal: null, metrics: undefined, userReservation: null };
     }
 
-    if ((response as ApiResponse<ActiveDealPayload>).data) {
-        return (response as ApiResponse<ActiveDealPayload>).data ?? { deal: null };
+    const apiResponse = response as ApiResponse<ActiveDealPayload>;
+    const payload = ("data" in apiResponse && apiResponse.data ? apiResponse.data : response) as ActiveDealPayload & {
+        activeDeal?: Deal | null;
+        deal?: Deal | null;
+        metrics?: ActiveDealPayload["metrics"];
+        userReservation?: ActiveDealPayload["userReservation"];
+    };
+
+    if (payload.activeDeal && !payload.deal) {
+        return {
+            deal: payload.activeDeal,
+            metrics: payload.metrics,
+            userReservation: payload.userReservation ?? null,
+        };
     }
 
-    return response as ActiveDealPayload;
+    return {
+        deal: payload.deal ?? null,
+        metrics: payload.metrics,
+        userReservation: payload.userReservation ?? null,
+    };
 };
 
 const formatCountdown = (seconds: number | null): string => {
@@ -97,11 +113,19 @@ export const DealBanner = () => {
 
     if (error || !activeDeal) {
         return (
-            <div className="flex w-full items-center justify-end gap-6 bg-[#1D7B3C] px-4 py-2 text-xs text-white">
-                <span>Deal of the Day</span>
-                <span className="hidden sm:inline">Bulk Buying</span>
-                <span className="hidden sm:inline">Pay Later</span>
-                <span className="hidden md:inline">Become a vendor</span>
+            <div className="flex w-full flex-col gap-2 bg-[#133F1F] px-4 py-3 text-white sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-emerald-200">
+                    <Flame className="h-4 w-4" />
+                    Deal of the Day
+                </div>
+                <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:gap-3">
+                    <span className="font-medium text-white">Watch this space.</span>
+                    <span className="text-xs text-emerald-100">New flash offers are coming soon—check back for fresh savings.</span>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Stay tuned
+                </span>
             </div>
         );
     }
