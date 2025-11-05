@@ -159,7 +159,7 @@ const DealOfTheDayPage = () => {
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
                                         <h2 className="text-lg font-semibold text-emerald-900">
-                                            {deal.title || deal.product?.name || "Flash deal"}
+                                            {deal.title || deal.product?.name || "Deal of the Day"}
                                         </h2>
                                         {deal.promoCopy ? <p className="mt-1 text-sm text-gray-600">{deal.promoCopy}</p> : null}
                                     </div>

@@ -18,7 +18,14 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
 
     const cart = cartData?.cart;
     const items = cart?.items || [];
-    const subtotal = cart?.totalAmount || 0;
+    const subtotal = typeof cart?.totalAmount === "number" ? cart.totalAmount : 0;
+
+    const formatNaira = (value?: number | null) => {
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+            return "—";
+        }
+        return value.toLocaleString();
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -118,7 +125,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 {items.map((item: any) => (
                                     <div
-                                        key={item._id}
+                                        key={item._id || `${item.productId}-${item.tierName ?? "retail"}`}
                                         className="grid grid-cols-12 gap-2 items-center bg-green-50 p-2 sm:p-3 rounded-lg"
                                     >
                                         {/* Product Info */}
@@ -144,7 +151,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                         {/* Price */}
                                         <div className="col-span-3 text-center">
                                             <p className="text-xs sm:text-sm font-semibold text-gray-900">
-                                                ₦{item.price.toLocaleString()}
+                                                ₦{formatNaira(item.price)}
                                             </p>
                                             {item.tierName === "deal-of-the-day" && (
                                                 <p className="text-[11px] text-amber-600 mt-1">Limited-time offer</p>
@@ -173,7 +180,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                         <div className="col-span-12 mt-1 pt-2 border-t border-gray-200 flex justify-between items-center">
                                             <span className="text-xs text-gray-600">Subtotal</span>
                                             <span className="text-sm font-bold text-[#1D7B3C]">
-                                                ₦{item.total.toLocaleString()}
+                                                ₦{formatNaira(item.total)}
                                             </span>
                                         </div>
                                     </div>
@@ -206,7 +213,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between text-gray-600">
                                     <span>Items ({items.length}):</span>
-                                    <span className="font-medium">₦{subtotal.toLocaleString()}</span>
+                                    <span className="font-medium">₦{formatNaira(subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span>Shipping:</span>
@@ -214,7 +221,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                 </div>
                                 <div className="flex justify-between font-bold text-base sm:text-lg border-t border-gray-200 pt-2 mt-2">
                                     <span>Total:</span>
-                                    <span className="text-[#1D7B3C]">₦{subtotal.toLocaleString()}</span>
+                                    <span className="text-[#1D7B3C]">₦{formatNaira(subtotal)}</span>
                                 </div>
                             </div>
                         </div>

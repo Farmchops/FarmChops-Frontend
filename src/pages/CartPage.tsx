@@ -26,6 +26,13 @@ type ExtendedCartItem = CartItem & {
   total?: number;
 };
 
+const formatNaira = (value?: number | null) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "—";
+  }
+  return value.toLocaleString();
+};
+
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: cartData, isLoading } = useGetCartQuery();
@@ -327,11 +334,11 @@ const CartPage: React.FC = () => {
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <span className="text-sm text-gray-500">Unit Price:</span>
-                                    <span className="ml-2 font-medium">₦{item.price.toLocaleString()}</span>
+                                    <span className="ml-2 font-medium">₦{formatNaira(item.price)}</span>
                                   </div>
                                   <div className="text-right">
                                     <div className="text-sm text-gray-500">Subtotal</div>
-                                    <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
+                                    <div className="font-medium">₦{formatNaira(itemSubtotal)}</div>
                                   </div>
                                 </div>
                                 
@@ -384,7 +391,7 @@ const CartPage: React.FC = () => {
 
                           {/* Desktop Price */}
                           <div className="hidden md:block w-32 text-center">
-                            <span className="font-medium">₦{item.price.toLocaleString()}</span>
+                            <span className="font-medium">₦{formatNaira(item.price)}</span>
                             {dealAlert && (
                               <span className="block text-xs mt-1 text-amber-600 md:mt-2">
                                 {dealAlert.status === "endingSoon"
@@ -429,7 +436,7 @@ const CartPage: React.FC = () => {
 
                           {/* Desktop Subtotal */}
                           <div className="hidden md:flex items-center w-32 justify-end pr-4">
-                            <div className="font-medium">₦{itemSubtotal.toLocaleString()}</div>
+                            <div className="font-medium">₦{formatNaira(itemSubtotal)}</div>
                           </div>
 
                           {/* Remove button - Desktop only (mobile version is now in the product info section) */}
@@ -466,12 +473,12 @@ const CartPage: React.FC = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
-                  <span className="font-medium">₦{totalAmount.toLocaleString()}</span>
+                  <span className="font-medium">₦{formatNaira(totalAmount)}</span>
                 </div>
                 <div className="h-px bg-gray-200 my-3"></div>
                 <div className="flex justify-between text-base font-semibold text-gray-900">
                   <span>Total</span>
-                  <span>₦{totalAmount.toLocaleString()}</span>
+                  <span>₦{formatNaira(totalAmount)}</span>
                 </div>
               </div>
 
