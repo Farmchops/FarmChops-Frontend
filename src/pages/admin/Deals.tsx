@@ -437,7 +437,11 @@ const DealsPage = () => {
     const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
 
-    const { data, isLoading, isFetching, refetch } = useGetAdminDealsQuery(filters);
+    const { data, isLoading, isFetching, refetch } = useGetAdminDealsQuery(filters, {
+        pollingInterval: 10000,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    });
     const { data: productsData } = useGetProductsQuery({ page: 1, limit: 100 });
 
     const [createDeal, { isLoading: isCreating }] = useCreateDealMutation();

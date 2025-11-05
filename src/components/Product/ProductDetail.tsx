@@ -8,7 +8,7 @@ import { BulkBuying } from "../../components/Product/BulkBuying";
 import { useGetActiveDealQuery } from "@/redux/api/dealsApi";
 import { normalizeActiveDealPayload } from "@/lib/deals";
 import type { Deal, DealMetrics } from "@/types/deals";
-import { useAddToCartMutation } from "@/redux/api/cartApi";
+import { useAddToCartMutation, useGetCartQuery } from "@/redux/api/cartApi";
 import { CartSidebar } from "@/components/Cart/CartSidebar";
 
 const resolveDealProductId = (deal: Deal | null | undefined): string | null => {
@@ -54,9 +54,11 @@ const ProductDetail: React.FC = () => {
         skip: !slug,
     });
 
-    const { data: activeDealResponse } = useGetActiveDealQuery(undefined, {
+    const { data: activeDealResponse, refetch: refetchActiveDeal } = useGetActiveDealQuery(undefined, {
         pollingInterval: 60_000,
     });
+
+    const { data: cartSnapshot } = useGetCartQuery();
 
     const activeDealPayload = useMemo(() => normalizeActiveDealPayload(activeDealResponse), [activeDealResponse]);
 
@@ -91,6 +93,19 @@ const ProductDetail: React.FC = () => {
         ? dealMetrics?.soldOut ?? (typeof dealRemainingUnits === "number" && dealRemainingUnits <= 0)
         : false;
     const dealPerUserLimit = activeDealForProduct?.perUserLimit ?? null;
+
+    const dealUnitsInCart = useMemo(() => {
+        if (!productId) return 0;
+        const items = cartSnapshot?.cart?.items ?? [];
+        return items
+            .filter((item) => item.productId === productId && item.tierName === "deal-of-the-day")
+            .reduce((total, item) => total + (item.quantity ?? 0), 0);
+    }, [cartSnapshot, productId]);
+
+    const perUserRemaining = dealPerUserLimit !== null
+        ? Math.max(dealPerUserLimit - dealUnitsInCart, 0)
+        : null;
+    const dealLimitReached = perUserRemaining !== null && perUserRemaining <= 0;
 
     const isOutOfStock = product?.status === "out_of_stock" || (product?.inventory?.availableStock ?? 0) === 0;
     const hasBulkTiers = Array.isArray(product?.pricing?.bulkTiers) && (product?.pricing?.bulkTiers?.length ?? 0) > 0;
@@ -152,7 +167,9 @@ const ProductDetail: React.FC = () => {
                 ? "Claiming..."
                 : recentlyAdded
                     ? "Deal Claimed"
-                    : "Claim Deal"
+                    : dealLimitReached
+                        ? "Limit Reached"
+                        : "Claim Deal"
         : isOutOfStock
             ? "Out of Stock"
             : isSubmitting
@@ -164,12 +181,16 @@ const ProductDetail: React.FC = () => {
     const primaryButtonDisabled = Boolean(
         (isOutOfStock && !activeDealForProduct) ||
         isSubmitting ||
-        (activeDealForProduct && dealSoldOut)
+        (activeDealForProduct && (dealSoldOut || dealLimitReached))
     );
 
     const handleRetailAddToCart = async () => {
         if (isOutOfStock && !activeDealForProduct) return;
         if (activeDealForProduct && dealSoldOut) return;
+        if (activeDealForProduct && dealLimitReached) {
+            alert(`You have reached the limit for this deal.`);
+            return;
+        }
         if (isSubmitting) return;
 
         const effectivePrice = activeDealForProduct
@@ -181,8 +202,24 @@ const ProductDetail: React.FC = () => {
             return;
         }
 
-        const quantity = retailMinQuantity;
+        let quantity = retailMinQuantity;
         const unit = retailUnit;
+
+        if (activeDealForProduct && dealPerUserLimit !== null) {
+            const maxAdditional = Math.max(dealPerUserLimit - dealUnitsInCart, 0);
+            if (maxAdditional <= 0) {
+                alert(`You have already claimed the maximum of ${dealPerUserLimit} for this deal.`);
+                return;
+            }
+            if (quantity > maxAdditional) {
+                quantity = maxAdditional;
+            }
+        }
+
+        if (quantity <= 0) {
+            alert("Unable to add more of this deal to your cart.");
+            return;
+        }
 
         setIsSubmitting(true);
         try {
@@ -199,6 +236,7 @@ const ProductDetail: React.FC = () => {
             }).unwrap();
 
             setRecentlyAdded(true);
+            refetchActiveDeal();
             setTimeout(() => setRecentlyAdded(false), 1500);
             setShowCartSidebar(true);
         } catch (cartError) {

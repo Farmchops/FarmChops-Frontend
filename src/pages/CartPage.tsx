@@ -18,6 +18,8 @@ import type { Deal, DealMetrics } from "@/types/deals";
 type DealCartAlert = {
   status: "active" | "soldOut" | "unknown";
   remainingUnits?: number | null;
+  perUserLimit?: number | null;
+  perUserRemaining?: number | null;
 };
 
 type ExtendedCartItem = CartItem & {
@@ -97,7 +99,7 @@ const CartPage: React.FC = () => {
       const matchingDeal = activeDealsByProductId[item.productId] ?? normalized.deals?.find((deal) => deal.productId === item.productId);
 
       if (!matchingDeal) {
-        map.set(key, { status: "soldOut", remainingUnits: 0 });
+        map.set(key, { status: "soldOut", remainingUnits: 0, perUserLimit: null, perUserRemaining: 0 });
         hasSoldOut = true;
         return;
       }
@@ -106,14 +108,16 @@ const CartPage: React.FC = () => {
       const metrics = (dealId && normalized.metricsByDealId ? normalized.metricsByDealId[dealId] : undefined) ?? matchingDeal.metrics;
       const remainingUnits = computeRemainingUnits(matchingDeal, metrics ?? undefined);
   const soldOut = matchingDeal.status !== "active" || metrics?.soldOut === true || (remainingUnits !== null && remainingUnits <= 0);
+      const perUserLimit = typeof matchingDeal.perUserLimit === "number" ? matchingDeal.perUserLimit : null;
+      const perUserRemaining = perUserLimit !== null ? Math.max(perUserLimit - item.quantity, 0) : null;
 
       if (soldOut) {
-        map.set(key, { status: "soldOut", remainingUnits: remainingUnits ?? 0 });
+        map.set(key, { status: "soldOut", remainingUnits: remainingUnits ?? 0, perUserLimit, perUserRemaining: 0 });
         hasSoldOut = true;
         return;
       }
 
-      map.set(key, { status: "active", remainingUnits });
+      map.set(key, { status: "active", remainingUnits, perUserLimit, perUserRemaining });
     });
 
     return { map, hasSoldOut, pending: false } as const;
@@ -128,7 +132,30 @@ const CartPage: React.FC = () => {
     // For retail items, also increment by 1
     const changeBy = 1;
 
+    const itemKey = `${item.productId}-${item.priceType}-${item.tierName || "default"}`;
+    const dealAlert = dealInsights.map.get(itemKey);
+    const perUserLimit = dealAlert?.perUserLimit ?? null;
+    const remainingGlobal = typeof dealAlert?.remainingUnits === "number" ? dealAlert.remainingUnits : null;
+
     const newQty = type === "add" ? currentQty + changeBy : currentQty - changeBy;
+
+    if (perUserLimit !== null && newQty > perUserLimit) {
+      alert(`This deal is limited to ${perUserLimit} unit${perUserLimit > 1 ? "s" : ""} per customer.`);
+      return;
+    }
+
+    if (type === "add" && remainingGlobal !== null && remainingGlobal <= 0) {
+      alert("This deal has sold out. You can't add more units.");
+      return;
+    }
+
+    if (type === "add" && remainingGlobal !== null) {
+      const maxTotal = currentQty + remainingGlobal;
+      if (newQty > maxTotal) {
+        alert("Not enough deal stock left to increase the quantity.");
+        return;
+      }
+    }
 
     // If quantity goes below 1, remove the item
     if (newQty < 1) {
@@ -296,9 +323,12 @@ const CartPage: React.FC = () => {
                       const remainingText = typeof dealAlert.remainingUnits === "number"
                         ? `${Math.max(dealAlert.remainingUnits, 0)} left`
                         : "While stocks last";
+                      const limitText = typeof dealAlert.perUserLimit === "number"
+                        ? ` Limit ${dealAlert.perUserLimit} per customer${typeof dealAlert.perUserRemaining === "number" ? ` (${dealAlert.perUserRemaining} left for you).` : "."}`
+                        : "";
                       return {
                         color: "text-[#1D7B3C]",
-                        message: `Deal price locked in. ${remainingText}.`,
+                        message: `Deal price locked in. ${remainingText}.${limitText}`,
                         badge: remainingText,
                       };
                     }

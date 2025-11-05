@@ -57,7 +57,11 @@ const computeRemainingUnits = (deal: Deal, metrics?: DealMetrics): number | null
 };
 
 const DealOfTheDayPage = () => {
-    const { data, isLoading, error, refetch, isFetching } = useGetActiveDealQuery();
+    const { data, isLoading, error, refetch, isFetching } = useGetActiveDealQuery(undefined, {
+        pollingInterval: 10000,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    });
     const { data: upcomingData } = useGetUpcomingDealQuery();
     const payload = useMemo(() => normalizeActiveDealPayload(data), [data]);
 
