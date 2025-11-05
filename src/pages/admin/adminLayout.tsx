@@ -352,8 +352,8 @@ const AdminLayout = () => {
     return (
         <div className="min-h-screen bg-green-50">
             {/* Top Navigation Bar */}
-            <header className=" fixed top-0 left-0 right-0 z-40">
-                <div className="flex items-center justify-between px-4 py-3 max-w-full">
+            <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-sm">
+                <div className="flex items-center justify-between px-4 py-3">
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -374,12 +374,12 @@ const AdminLayout = () => {
 
                     {/* User Info and Avatar */}
                     <div className="flex items-center gap-3 ml-auto">
-                        <div className="text-right hidden sm:block">
+                        <div className="hidden sm:block text-right">
                             <p className="text-sm font-medium">
                                 {user?.firstName || "Admin"} {user?.lastName || ""}
                             </p>
                             <p className="text-xs text-gray-700">
-                                {user?.adminRole ? getAdminRoleDisplay(user.adminRole) : "Admin--"}
+                                {user?.adminRole ? getAdminRoleDisplay(user.adminRole) : "Admin"}
                             </p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-[#1D7B3C] text-white flex items-center justify-center text-sm font-semibold shadow-md">
@@ -389,11 +389,11 @@ const AdminLayout = () => {
                 </div>
             </header>
 
-            <div className="flex pt-16- lg:pt-14-">
+            <div className="flex pt-24 lg:pt-20">
                 {/* Sidebar */}
                 <aside
                     className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-                        } pt-16 lg:pt-0 overflow-y-auto`}
+                        } pt-24 lg:pt-6 overflow-y-auto`}
                 >
                     <nav className="min-h-screen flex flex-col p-4">
                         {/* Logo */}
@@ -466,8 +466,7 @@ const AdminLayout = () => {
 
                 {/* Main Content Area */}
                 <main className="flex-1 overflow-auto">
-
-                    <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="p-4 sm:p-6 lg:p-8 pt-4">
                         <Outlet />
                     </div>
                 </main>
