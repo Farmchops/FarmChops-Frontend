@@ -28,8 +28,8 @@ interface CreateDealPayload {
     discountPercentage?: number;
     maxUnits: number;
     perUserLimit?: number;
-    startAt: string;
-    endAt: string;
+    startAt?: string | null;
+    endAt?: string | null;
     description?: string;
     heroImage?: string;
     isFeatured?: boolean;
@@ -44,8 +44,8 @@ type UpdateDealPayload = {
     discountPercentage?: number;
     maxUnits?: number;
     perUserLimit?: number | null;
-    startAt?: string;
-    endAt?: string;
+    startAt?: string | null;
+    endAt?: string | null;
     description?: string;
     heroImage?: string;
     isFeatured?: boolean;

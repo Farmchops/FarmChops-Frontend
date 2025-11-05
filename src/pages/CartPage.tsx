@@ -13,17 +13,31 @@ import {
 import type { CartItem } from "@/redux/api/cartApi";
 import { useGetActiveDealQuery } from "@/redux/api/dealsApi";
 import { normalizeActiveDealPayload } from "@/lib/deals";
-import type { Deal } from "@/types/deals";
+import type { Deal, DealMetrics } from "@/types/deals";
 
 type DealCartAlert = {
-  status: "expired" | "endingSoon" | "active" | "unknown";
-  remainingMinutes?: number;
-  endAt?: string;
+  status: "active" | "soldOut" | "unknown";
+  remainingUnits?: number | null;
 };
 
 type ExtendedCartItem = CartItem & {
   _id?: string;
   total?: number;
+};
+
+const computeRemainingUnits = (deal: Deal, metrics?: DealMetrics): number | null => {
+  if (metrics && typeof metrics.remainingUnits === "number") {
+    return Math.max(metrics.remainingUnits, 0);
+  }
+
+  if (typeof deal.maxUnits === "number") {
+    const sold = metrics?.soldUnits ?? deal.soldUnits ?? 0;
+    const reserved = metrics?.reservedUnits ?? deal.reservedUnits ?? 0;
+    const remaining = deal.maxUnits - sold - reserved;
+    return Number.isFinite(remaining) ? Math.max(remaining, 0) : null;
+  }
+
+  return null;
 };
 
 const formatNaira = (value?: number | null) => {
@@ -71,12 +85,10 @@ const CartPage: React.FC = () => {
     const normalized = normalizeActiveDealPayload(activeDealsResponse);
     const map = new Map<string, DealCartAlert>();
     if (!dealsReady) {
-      return { map, hasExpired: false, endingSoonCount: 0, pending: true } as const;
+      return { map, hasSoldOut: false, pending: true } as const;
     }
 
-    const now = Date.now();
-    let hasExpired = false;
-    let endingSoonCount = 0;
+    let hasSoldOut = false;
 
     cartItems.forEach((item) => {
       if (item.tierName !== "deal-of-the-day") return;
@@ -85,43 +97,26 @@ const CartPage: React.FC = () => {
       const matchingDeal = activeDealsByProductId[item.productId] ?? normalized.deals?.find((deal) => deal.productId === item.productId);
 
       if (!matchingDeal) {
-        map.set(key, { status: "expired" });
-        hasExpired = true;
+        map.set(key, { status: "soldOut", remainingUnits: 0 });
+        hasSoldOut = true;
         return;
       }
 
-      const startTime = matchingDeal.startAt ? new Date(matchingDeal.startAt).getTime() : Number.NaN;
-      const endTime = matchingDeal.endAt ? new Date(matchingDeal.endAt).getTime() : Number.NaN;
-      const activeByStatus = matchingDeal.status === "active";
-      const activeByWindow = Number.isFinite(startTime) && Number.isFinite(endTime) && now >= startTime && now < endTime;
+      const dealId = (matchingDeal as Deal & { _id?: string; id?: string })._id ?? (matchingDeal as Deal & { _id?: string; id?: string }).id ?? null;
+      const metrics = (dealId && normalized.metricsByDealId ? normalized.metricsByDealId[dealId] : undefined) ?? matchingDeal.metrics;
+      const remainingUnits = computeRemainingUnits(matchingDeal, metrics ?? undefined);
+  const soldOut = matchingDeal.status !== "active" || metrics?.soldOut === true || (remainingUnits !== null && remainingUnits <= 0);
 
-      if (!(activeByStatus || activeByWindow)) {
-        map.set(key, { status: "expired" });
-        hasExpired = true;
+      if (soldOut) {
+        map.set(key, { status: "soldOut", remainingUnits: remainingUnits ?? 0 });
+        hasSoldOut = true;
         return;
       }
 
-      if (!Number.isFinite(endTime)) {
-        map.set(key, { status: "unknown" });
-        return;
-      }
-
-      const remainingMs = endTime - now;
-      if (remainingMs <= 0) {
-        map.set(key, { status: "expired" });
-        hasExpired = true;
-        return;
-      }
-
-      const remainingMinutes = Math.ceil(remainingMs / 60000);
-      const status = remainingMinutes <= 60 ? "endingSoon" : "active";
-      if (status === "endingSoon") {
-        endingSoonCount += 1;
-      }
-      map.set(key, { status, remainingMinutes, endAt: matchingDeal.endAt });
+      map.set(key, { status: "active", remainingUnits });
     });
 
-    return { map, hasExpired, endingSoonCount, pending: false } as const;
+    return { map, hasSoldOut, pending: false } as const;
   }, [cartItems, activeDealsByProductId, dealsReady, activeDealsResponse]);
 
   const handleQuantityChange = async (
@@ -185,23 +180,13 @@ const CartPage: React.FC = () => {
       alert("Your cart is empty");
       return;
     }
-    if (!dealInsights.pending && dealInsights.hasExpired) {
+    if (!dealInsights.pending && dealInsights.hasSoldOut) {
       alert(
-        "One or more deals in your cart have expired. Remove expired deals or refresh the offer before proceeding to checkout."
+        "One or more deal offers in your cart have sold out. Remove sold-out deals before proceeding to checkout."
       );
       return;
     }
     navigate("/checkout");
-  };
-
-  const formatRemainingTime = (minutes: number | undefined) => {
-    if (!minutes || minutes <= 0) return "0m";
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-    }
-    return `${mins}m`;
   };
 
   if (isLoading) {
@@ -222,14 +207,9 @@ const CartPage: React.FC = () => {
     <div className="bg-gray-50 min-h-screen">
       <CartHero />
       <section className="max-w-6xl mx-auto px-2 sm:px-4 py-4 md:py-8">
-        {!dealInsights.pending && dealInsights.hasExpired && (
+        {!dealInsights.pending && dealInsights.hasSoldOut && (
           <div className="mb-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-            A deal in your cart has expired. Remove it to avoid unexpected price changes at checkout.
-          </div>
-        )}
-        {!dealInsights.pending && !dealInsights.hasExpired && dealInsights.endingSoonCount > 0 && (
-          <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            {dealInsights.endingSoonCount} {dealInsights.endingSoonCount === 1 ? "deal" : "deals"} will expire within the next hour.
+            A deal in your cart has sold out. Remove it to avoid unexpected price changes at checkout.
           </div>
         )}
         <div className="mb-4 md:mb-6 flex items-center justify-between">
@@ -297,6 +277,37 @@ const CartPage: React.FC = () => {
                   const displayQuantity = item.quantity;
                   const itemKey = `${item.productId}-${item.priceType}-${item.tierName || 'default'}`;
                   const dealAlert = dealInsights.map.get(itemKey);
+                  const dealStatus = (() => {
+                    if (!dealAlert) {
+                      return {
+                        color: "text-gray-500",
+                        message: "Deal status pending confirmation at checkout.",
+                        badge: null as string | null,
+                      };
+                    }
+                    if (dealAlert.status === "soldOut") {
+                      return {
+                        color: "text-red-600",
+                        message: "This deal has sold out. Price may update at checkout.",
+                        badge: "Deal sold out",
+                      };
+                    }
+                    if (dealAlert.status === "active") {
+                      const remainingText = typeof dealAlert.remainingUnits === "number"
+                        ? `${Math.max(dealAlert.remainingUnits, 0)} left`
+                        : "While stocks last";
+                      return {
+                        color: "text-[#1D7B3C]",
+                        message: `Deal price locked in. ${remainingText}.`,
+                        badge: remainingText,
+                      };
+                    }
+                    return {
+                      color: "text-gray-500",
+                      message: "Deal status pending confirmation at checkout.",
+                      badge: "Checking availability",
+                    };
+                  })();
 
                   return (
                     <div key={`${item.productId}-${item.priceType}-${item.tierName || 'default'}`} className="border-b border-gray-100 last:border-0">
@@ -317,24 +328,8 @@ const CartPage: React.FC = () => {
                               </h3>
                               <p className="text-sm text-gray-500">{item.unit} • <span className="capitalize">{item.priceType}</span></p>
                               {dealAlert && (
-                                <p
-                                  className={`mt-1 text-xs ${
-                                    dealAlert.status === "expired"
-                                      ? "text-red-600"
-                                      : dealAlert.status === "endingSoon"
-                                        ? "text-amber-600"
-                                        : dealAlert.status === "active"
-                                          ? "text-[#1D7B3C]"
-                                          : "text-gray-500"
-                                  }`}
-                                >
-                                  {dealAlert.status === "expired"
-                                    ? "This deal has ended. Price may update at checkout."
-                                    : dealAlert.status === "endingSoon"
-                                      ? `Deal expires in ${formatRemainingTime(dealAlert.remainingMinutes)}.`
-                                      : dealAlert.status === "active"
-                                        ? "Deal price locked in while the offer is active."
-                                        : "Deal status pending confirmation at checkout."}
+                                <p className={`mt-1 text-xs ${dealStatus.color}`}>
+                                  {dealStatus.message}
                                 </p>
                               )}
                               
@@ -402,15 +397,9 @@ const CartPage: React.FC = () => {
                           {/* Desktop Price */}
                           <div className="hidden md:block w-32 text-center">
                             <span className="font-medium">₦{formatNaira(item.price)}</span>
-                            {dealAlert && (
-                              <span className="block text-xs mt-1 text-amber-600 md:mt-2">
-                                {dealAlert.status === "endingSoon"
-                                  ? `Ends in ${formatRemainingTime(dealAlert.remainingMinutes)}`
-                                  : dealAlert.status === "expired"
-                                    ? "Deal expired"
-                                    : dealAlert.status === "active"
-                                      ? "Deal price"
-                                      : "Deal pending"}
+                            {dealAlert && dealStatus.badge && (
+                              <span className={`block text-xs mt-1 md:mt-2 ${dealStatus.color}`}>
+                                {dealStatus.badge}
                               </span>
                             )}
                           </div>

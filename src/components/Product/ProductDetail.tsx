@@ -11,29 +11,6 @@ import type { Deal, DealMetrics } from "@/types/deals";
 import { useAddToCartMutation } from "@/redux/api/cartApi";
 import { CartSidebar } from "@/components/Cart/CartSidebar";
 
-const formatDealCountdown = (seconds: number | null): string => {
-    if (seconds === null || seconds <= 0) {
-        return "";
-    }
-
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    const parts: string[] = [];
-    if (days > 0) {
-        parts.push(`${days}d`);
-    }
-    parts.push(`${hours.toString().padStart(2, "0")}h`);
-    parts.push(`${minutes.toString().padStart(2, "0")}m`);
-    if (days === 0) {
-        parts.push(`${secs.toString().padStart(2, "0")}s`);
-    }
-
-    return parts.join(" ");
-};
-
 const resolveDealProductId = (deal: Deal | null | undefined): string | null => {
     if (!deal) return null;
     if (deal.productId) return deal.productId;
@@ -100,10 +77,6 @@ const ProductDetail: React.FC = () => {
 
     const dealMetrics = activeDealForProduct ? activeDealPayload.metrics ?? activeDealForProduct.metrics : undefined;
 
-    const [dealCountdown, setDealCountdown] = useState<number | null>(
-        dealMetrics?.countdownSeconds ?? null,
-    );
-
     const [selectedImage, setSelectedImage] = useState(0);
     const [showBulkDrawer, setShowBulkDrawer] = useState(false);
     const [showCartSidebar, setShowCartSidebar] = useState(false);
@@ -111,31 +84,6 @@ const ProductDetail: React.FC = () => {
     const [recentlyAdded, setRecentlyAdded] = useState(false);
 
     const [addToCart] = useAddToCartMutation();
-
-    useEffect(() => {
-        if (typeof dealMetrics?.countdownSeconds === "number") {
-            setDealCountdown(dealMetrics.countdownSeconds);
-        } else {
-            setDealCountdown(null);
-        }
-    }, [dealMetrics?.countdownSeconds, activeDealForProduct?._id]);
-
-    useEffect(() => {
-        if (dealCountdown === null || dealCountdown <= 0) {
-            return;
-        }
-
-        const timer = window.setInterval(() => {
-            setDealCountdown((previous) => {
-                if (previous === null) return previous;
-                return previous > 0 ? previous - 1 : 0;
-            });
-        }, 1000);
-
-        return () => window.clearInterval(timer);
-    }, [dealCountdown]);
-
-    const dealCountdownLabel = formatDealCountdown(dealCountdown);
     const dealRemainingUnits = activeDealForProduct
         ? computeDealRemaining(activeDealForProduct, dealMetrics)
         : null;
@@ -368,10 +316,12 @@ const ProductDetail: React.FC = () => {
                                             </p>
                                         ) : null}
                                     </div>
-                                    {dealCountdownLabel ? (
+                                    {typeof dealRemainingUnits === "number" ? (
                                         <div className="flex flex-col items-start gap-1 text-[#0F2E19] sm:items-end">
-                                            <span className="text-xs uppercase tracking-wide text-[#1D7B3C]">Ends in</span>
-                                            <span className="font-mono text-lg font-semibold">{dealCountdownLabel}</span>
+                                            <span className="text-xs uppercase tracking-wide text-[#1D7B3C]">Live now</span>
+                                            <span className="font-mono text-lg font-semibold">
+                                                {dealSoldOut ? "Sold out" : `${dealRemainingUnits} left`}
+                                            </span>
                                         </div>
                                     ) : null}
                                 </div>
@@ -410,7 +360,7 @@ const ProductDetail: React.FC = () => {
                             <h3 className="font-semibold text-gray-900">Pricing Options</h3>
                             {activeDealForProduct ? (
                                 <p className="text-sm text-[#1D7B3C]">
-                                    Deal price applies automatically at checkout while the countdown is active.
+                                    Deal price applies automatically at checkout while stock lasts.
                                 </p>
                             ) : null}
 

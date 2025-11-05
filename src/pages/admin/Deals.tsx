@@ -56,9 +56,12 @@ const parseNumberField = (value: string): number | undefined => {
     return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-const formatDateTime = (iso?: string) => {
+const formatDateTime = (iso?: string | null) => {
     if (!iso) return "-";
     const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) {
+        return "-";
+    }
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 };
 
@@ -78,6 +81,25 @@ const getStatusBadgeClass = (status: DealStatus) => {
         default:
             return "bg-slate-100 text-slate-600";
     }
+};
+
+const formatScheduleLabel = (start?: string | null, end?: string | null) => {
+    const hasStart = Boolean(start);
+    const hasEnd = Boolean(end);
+
+    if (hasStart && hasEnd) {
+        return `Runs ${formatDateTime(start)} – ${formatDateTime(end)}`;
+    }
+
+    if (hasStart) {
+        return `Starts ${formatDateTime(start)}`;
+    }
+
+    if (hasEnd) {
+        return `Ends ${formatDateTime(end)}`;
+    }
+
+    return "No schedule restrictions";
 };
 
 const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmitting, error }: DealFormModalProps) => {
@@ -143,8 +165,23 @@ const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmi
             return;
         }
 
-        if (!values.startAt || !values.endAt) {
-            setLocalError("Provide both start and end times.");
+        const hasStart = Boolean(values.startAt);
+        const hasEnd = Boolean(values.endAt);
+        const startDate = hasStart ? new Date(values.startAt) : null;
+        const endDate = hasEnd ? new Date(values.endAt) : null;
+
+        if (startDate && Number.isNaN(startDate.getTime())) {
+            setLocalError("Start time is invalid.");
+            return;
+        }
+
+        if (endDate && Number.isNaN(endDate.getTime())) {
+            setLocalError("End time is invalid.");
+            return;
+        }
+
+        if (startDate && endDate && startDate >= endDate) {
+            setLocalError("End time must be after the start time.");
             return;
         }
 
@@ -243,7 +280,7 @@ const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmi
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Start time</label>
+                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Start time (optional)</label>
                             <input
                                 type="datetime-local"
                                 value={values.startAt}
@@ -252,7 +289,7 @@ const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmi
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">End time</label>
+                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">End time (optional)</label>
                             <input
                                 type="datetime-local"
                                 value={values.endAt}
@@ -467,14 +504,29 @@ const DealsPage = () => {
         const discountPercentage = parseNumberField(values.discountPercentage);
         const perUserLimit = parseNumberField(values.perUserLimit);
 
+        const startInput = values.startAt.trim();
+        const endInput = values.endAt.trim();
+        const isEditing = Boolean(dealId);
+        const activeEditingDeal = isEditing && editingDeal?._id === dealId ? editingDeal : null;
+        const startAt = startInput
+            ? new Date(startInput).toISOString()
+            : isEditing && activeEditingDeal?.startAt
+                ? null
+                : undefined;
+        const endAt = endInput
+            ? new Date(endInput).toISOString()
+            : isEditing && activeEditingDeal?.endAt
+                ? null
+                : undefined;
+
         const payload = {
             productId: values.productId,
             dealPrice,
             discountPercentage,
             maxUnits,
             perUserLimit,
-            startAt: new Date(values.startAt).toISOString(),
-            endAt: new Date(values.endAt).toISOString(),
+            ...(typeof startAt !== "undefined" ? { startAt } : {}),
+            ...(typeof endAt !== "undefined" ? { endAt } : {}),
             promoCopy: values.promoCopy?.trim() || undefined,
             headline: values.headline?.trim() || undefined,
             title: values.title?.trim() || undefined,
@@ -649,7 +701,7 @@ const DealsPage = () => {
                                                         </span>
                                                     </div>
                                                     <p className="text-sm text-gray-600">{deal.product?.name}</p>
-                                                    <p className="text-xs text-gray-500">Runs {formatDateTime(deal.startAt)} – {formatDateTime(deal.endAt)}</p>
+                                                    <p className="text-xs text-gray-500">{formatScheduleLabel(deal.startAt, deal.endAt)}</p>
                                                 </div>
                                                 <div className="text-sm text-gray-700">
                                                     <p className="font-semibold text-gray-900">₦{deal.dealPrice?.toLocaleString()}</p>

@@ -6,9 +6,12 @@ import { normalizeActiveDealPayload } from "@/lib/deals";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import type { Deal, DealMetrics } from "@/types/deals";
 
-const formatDate = (iso?: string) => {
+const formatDate = (iso?: string | null) => {
     if (!iso) return "-";
     const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) {
+        return "-";
+    }
     return date.toLocaleString(undefined, {
         dateStyle: "medium",
         timeStyle: "short",

@@ -35,8 +35,8 @@ export interface Deal {
     discountPercentage?: number;
     maxUnits: number;
     perUserLimit?: number | null;
-    startAt: string;
-    endAt: string;
+    startAt?: string | null;
+    endAt?: string | null;
     status: DealStatus;
     promoCopy?: string;
     title?: string;
