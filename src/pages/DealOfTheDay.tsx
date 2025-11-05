@@ -33,6 +33,14 @@ const getDealId = (deal: Deal | null | undefined): string | null => {
     return reference._id ?? reference.id ?? null;
 };
 
+const isRenderableDeal = (deal: Deal | null | undefined): deal is Deal => {
+    if (!deal) return false;
+    if (typeof deal.dealPrice !== "number" || Number.isNaN(deal.dealPrice)) {
+        return false;
+    }
+    return Boolean(deal.productId || deal.product?.id);
+};
+
 const computeRemainingUnits = (deal: Deal, metrics?: DealMetrics): number | null => {
     if (metrics && typeof metrics.remainingUnits === "number") {
         return Math.max(metrics.remainingUnits, 0);
@@ -53,12 +61,14 @@ const DealOfTheDayPage = () => {
     const { data: upcomingData } = useGetUpcomingDealQuery();
     const payload = useMemo(() => normalizeActiveDealPayload(data), [data]);
 
-    const activeDeals = useMemo(() => {
+    const rawActiveDeals = useMemo(() => {
         if (payload.deals && payload.deals.length) {
             return payload.deals;
         }
         return payload.deal ? [payload.deal] : [];
     }, [payload.deals, payload.deal]);
+
+    const activeDeals = useMemo(() => rawActiveDeals.filter(isRenderableDeal), [rawActiveDeals]);
 
     const resolveMetricsForDeal = (deal: Deal | null | undefined): DealMetrics | undefined => {
         if (!deal) return undefined;
@@ -218,8 +228,7 @@ const DealOfTheDayPage = () => {
                                     {soldOut ? "Sold out" : "Claim deal"}
                                     <ExternalLink className="h-4 w-4" />
                                 </Link>
-                                <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                                    <ExternalLink className="h-3 w-3" />
+                                <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
                                     {soldOut ? "Deal exhausted" : "While stocks last"}
                                 </span>
                             </div>

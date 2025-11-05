@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pause, Play, XCircle, Pencil, Loader2, AlertCircle, Image as ImageIcon, Star } from "lucide-react";
-import { useGetAdminDealsQuery, useCreateDealMutation, useUpdateDealMutation, useUpdateDealStatusMutation } from "@/redux/api/dealsApi";
+import { Plus, Pause, Play, XCircle, Pencil, Loader2, AlertCircle, Image as ImageIcon, Star, Trash2 } from "lucide-react";
+import { useGetAdminDealsQuery, useCreateDealMutation, useUpdateDealMutation, useUpdateDealStatusMutation, useDeleteDealMutation } from "@/redux/api/dealsApi";
 import { useGetProductsQuery } from "@/redux/api/productApi";
 import type { Deal, DealStatus } from "@/types/deals";
 import type { Product } from "@/types/product";
@@ -441,7 +441,9 @@ const DealsPage = () => {
 
     const [createDeal, { isLoading: isCreating }] = useCreateDealMutation();
     const [updateDeal, { isLoading: isUpdating }] = useUpdateDealMutation();
+    const [deleteDeal, { isLoading: isDeleting }] = useDeleteDealMutation();
     const [updateDealStatus, { isLoading: isUpdatingStatus }] = useUpdateDealStatusMutation();
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const products = useMemo(() => {
         const productList = productsData?.data?.products ?? [];
@@ -569,6 +571,27 @@ const DealsPage = () => {
         }
     };
 
+    const handleDeleteDeal = async (deal: Deal) => {
+        const confirmation = window.confirm("Delete this deal permanently? This cannot be undone.");
+        if (!confirmation) {
+            return;
+        }
+
+        try {
+            setDeletingId(deal._id);
+            await deleteDeal(deal._id).unwrap();
+            setFeedback({ type: "success", message: "Deal removed." });
+            refetch();
+        } catch (mutationError) {
+            const message = (mutationError as { data?: { message?: string; error?: string } })?.data?.message
+                ?? (mutationError as { data?: { error?: string } })?.data?.error
+                ?? "Unable to delete the deal.";
+            setFeedback({ type: "error", message });
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
     const openCreateModal = () => {
         setEditingDeal(null);
         setFeedback(null);
@@ -691,6 +714,7 @@ const DealsPage = () => {
                                                 ? Math.max(deal.maxUnits - deal.soldUnits, 0)
                                                 : undefined);
                                         const sold = deal.metrics?.soldUnits ?? deal.soldUnits;
+                                        const isDeletingThisDeal = isDeleting && deletingId === deal._id;
                                         return (
                                             <li key={deal._id} className="grid gap-4 px-6 py-5 sm:grid-cols-[1.5fr,1fr,1fr,auto] sm:items-center">
                                                 <div className="space-y-1">
@@ -768,6 +792,19 @@ const DealsPage = () => {
                                                             Cancel
                                                         </button>
                                                     ) : null}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteDeal(deal)}
+                                                        className="inline-flex items-center gap-1 rounded-lg border border-rose-400 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50"
+                                                        disabled={isDeleting}
+                                                    >
+                                                        {isDeletingThisDeal ? (
+                                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        )}
+                                                        {isDeletingThisDeal ? "Removing" : "Delete"}
+                                                    </button>
                                                 </div>
                                             </li>
                                         );

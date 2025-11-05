@@ -166,6 +166,19 @@ export const dealsApi = createApi({
             ],
         }),
 
+            deleteDeal: builder.mutation<ApiResponse<{ success: boolean }>, string>({
+                query: (id) => ({
+                    url: `/admin/deals/${id}`,
+                    method: 'DELETE',
+                }),
+                invalidatesTags: (_result, _error, id) => [
+                    { type: 'Deal', id },
+                    { type: 'Deals', id: 'LIST' },
+                    { type: 'ActiveDeal', id },
+                    { type: 'UpcomingDeal', id: 'NEXT' },
+                ],
+            }),
+
         updateDealStatus: builder.mutation<ApiResponse<{ deal: Deal }>, UpdateDealStatusPayload>({
             query: ({ id, action, reason }) => ({
                 url: `/admin/deals/${id}/${action}`,
@@ -197,6 +210,7 @@ export const {
     useGetDealByIdQuery,
     useCreateDealMutation,
     useUpdateDealMutation,
+    useDeleteDealMutation,
     useUpdateDealStatusMutation,
     usePreviewDealMutation,
 } = dealsApi;
