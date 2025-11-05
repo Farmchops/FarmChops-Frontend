@@ -84,13 +84,23 @@ const CartPage: React.FC = () => {
       const key = `${item.productId}-${item.priceType}-${item.tierName || "default"}`;
       const matchingDeal = activeDealsByProductId[item.productId] ?? normalized.deals?.find((deal) => deal.productId === item.productId);
 
-      if (!matchingDeal || matchingDeal.status !== "active") {
+      if (!matchingDeal) {
         map.set(key, { status: "expired" });
         hasExpired = true;
         return;
       }
 
-      const endTime = new Date(matchingDeal.endAt).getTime();
+      const startTime = matchingDeal.startAt ? new Date(matchingDeal.startAt).getTime() : Number.NaN;
+      const endTime = matchingDeal.endAt ? new Date(matchingDeal.endAt).getTime() : Number.NaN;
+      const activeByStatus = matchingDeal.status === "active";
+      const activeByWindow = Number.isFinite(startTime) && Number.isFinite(endTime) && now >= startTime && now < endTime;
+
+      if (!(activeByStatus || activeByWindow)) {
+        map.set(key, { status: "expired" });
+        hasExpired = true;
+        return;
+      }
+
       if (!Number.isFinite(endTime)) {
         map.set(key, { status: "unknown" });
         return;
