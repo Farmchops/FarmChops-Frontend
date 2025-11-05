@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGetCartQuery, useClearCartMutation } from "@/redux/api/cartApi";
+import type { CartItem } from "@/redux/api/cartApi";
 
 interface CartSidebarProps {
     isOpen: boolean;
@@ -17,7 +18,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
     const [backdropVisible, setBackdropVisible] = useState(false);
 
     const cart = cartData?.cart;
-    const items = cart?.items || [];
+    type SidebarCartItem = CartItem & { _id?: string; total?: number }; // server enriches items with _id/total
+    const items = (cart?.items ?? []) as SidebarCartItem[];
     const subtotal = typeof cart?.totalAmount === "number" ? cart.totalAmount : 0;
 
     const formatNaira = (value?: number | null) => {
@@ -122,8 +124,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
 
                             {/* Cart Items */}
                             <div className="space-y-3 mb-6">
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                {items.map((item: any) => (
+                                {items.map((item) => (
                                     <div
                                         key={item._id || `${item.productId}-${item.tierName ?? "retail"}`}
                                         className="grid grid-cols-12 gap-2 items-center bg-green-50 p-2 sm:p-3 rounded-lg"
