@@ -161,7 +161,7 @@ const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmi
 
     return (
         <div className="fixed inset-0 z-[1050] flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-xl">
+            <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-xl">
                 <div className="flex items-center justify-between border-b px-6 py-4">
                     <div>
                         <p className="text-xs uppercase tracking-wide text-gray-500">{initialDeal ? "Edit Deal" : "New Deal"}</p>
@@ -172,7 +172,7 @@ const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmi
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="grid gap-4 px-6 py-5 text-sm">
+                <form id="deal-form" onSubmit={handleSubmit} className="grid gap-4 px-6 py-5 text-sm overflow-y-auto flex-1">
                     <div className="grid gap-2">
                         <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Product</label>
                         <select
@@ -319,6 +319,19 @@ const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmi
                                 className="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
                                 placeholder="https://..."
                             />
+                            {values.heroImage ? (
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                                    <img
+                                        src={values.heroImage}
+                                        alt="Hero preview"
+                                        className="h-32 w-full rounded-md object-cover"
+                                        onError={(event) => {
+                                            event.currentTarget.style.display = "none";
+                                        }}
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500">Preview shown on customer banner.</p>
+                                </div>
+                            ) : null}
                         </div>
                         <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
                             <input
@@ -340,34 +353,35 @@ const DealFormModal = ({ open, onClose, onSubmit, products, initialDeal, isSubmi
                             <span>{localError || error}</span>
                         </div>
                     )}
-
-                    <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4">
-                        <button
-                            type="button"
-                            onClick={resetAndClose}
-                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white"
-                            disabled={isSubmitting}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="inline-flex items-center gap-2 rounded-lg bg-[#1D7B3C] px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-70"
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Saving…
-                                </>
-                            ) : initialDeal ? (
-                                "Update deal"
-                            ) : (
-                                "Create deal"
-                            )}
-                        </button>
-                    </div>
                 </form>
+
+                <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4">
+                    <button
+                        type="button"
+                        onClick={resetAndClose}
+                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white"
+                        disabled={isSubmitting}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        form="deal-form"
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#1D7B3C] px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-70"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Saving…
+                            </>
+                        ) : initialDeal ? (
+                            "Update deal"
+                        ) : (
+                            "Create deal"
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );
