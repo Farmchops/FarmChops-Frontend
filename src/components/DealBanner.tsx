@@ -84,7 +84,7 @@ export const DealBanner = () => {
     if (error || !activeDeal) {
         return (
             <div className="flex w-full items-center justify-end gap-6 bg-[#1D7B3C] px-4 py-2 text-xs text-white">
-                <Link to="/deals" className="font-medium uppercase tracking-wide text-white transition hover:text-emerald-200">
+                <Link to="/deals" className="font-medium tracking-wide text-white transition hover:text-emerald-200">
                     Deal of the Day
                 </Link>
                 <span className="hidden sm:inline">Bulk Buying</span>
@@ -96,10 +96,10 @@ export const DealBanner = () => {
 
     return (
         <div className="flex w-full flex-col gap-2 bg-[#133F1F] px-4 py-2 text-white sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-emerald-200">
+            <Link to="/deals" className="flex items-center gap-2 text-xs font-medium tracking-wide text-emerald-200 hover:text-emerald-100">
                 <Flame className="h-4 w-4" />
                 Deal of the Day
-            </div>
+            </Link>
             <div className="flex flex-1 flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
                     <span className="font-medium text-white">{title}</span>
