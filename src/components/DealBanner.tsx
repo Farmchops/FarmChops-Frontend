@@ -15,7 +15,12 @@ const quickOptions = [
 export const DealBanner = () => {
     const { data, isLoading, error } = useGetActiveDealQuery();
     const payload = useMemo(() => normalizeActiveDealPayload(data), [data]);
-    const hasActiveDeal = Boolean(payload.deal);
+    const activeDeals = payload.deals && payload.deals.length
+        ? payload.deals
+        : payload.deal
+            ? [payload.deal]
+            : [];
+    const hasActiveDeal = activeDeals.length > 0;
 
     if (isLoading) {
         return (
@@ -51,7 +56,11 @@ export const DealBanner = () => {
                 Deal of the Day
             </div>
             <div className="flex flex-1 flex-col gap-2 text-xs sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:text-sm">
-                <span className="text-emerald-100 sm:text-emerald-50">Limited-time deals are live. Browse all offers.</span>
+                <span className="text-emerald-100 sm:text-emerald-50">
+                    {activeDeals.length === 1
+                        ? "Limited-time deal is live."
+                        : `${activeDeals.length} limited-time deals are live.`}
+                </span>
                 <Link
                     to="/deals"
                     className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-[#133F1F] transition hover:bg-emerald-100"

@@ -4,7 +4,7 @@ import { Flame, Sparkles, Timer, ExternalLink } from "lucide-react";
 import { useGetActiveDealQuery, useGetUpcomingDealQuery } from "@/redux/api/dealsApi";
 import { normalizeActiveDealPayload } from "@/lib/deals";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import type { Deal } from "@/types/deals";
+import type { Deal, DealMetrics } from "@/types/deals";
 
 const formatDate = (iso?: string) => {
     if (!iso) return "-";
@@ -24,11 +24,54 @@ const formatCurrency = (value?: number) => {
     }).format(value);
 };
 
+const getDealId = (deal: Deal | null | undefined): string | null => {
+    if (!deal) return null;
+    const reference = deal as Deal & { id?: string };
+    return reference._id ?? reference.id ?? null;
+};
+
+const computeRemainingUnits = (deal: Deal, metrics?: DealMetrics): number | null => {
+    if (metrics && typeof metrics.remainingUnits === "number") {
+        return Math.max(metrics.remainingUnits, 0);
+    }
+
+    if (typeof deal.maxUnits === "number") {
+        const sold = metrics?.soldUnits ?? deal.soldUnits ?? 0;
+        const reserved = metrics?.reservedUnits ?? deal.reservedUnits ?? 0;
+        const remaining = deal.maxUnits - sold - reserved;
+        return Number.isFinite(remaining) ? Math.max(remaining, 0) : null;
+    }
+
+    return null;
+};
+
 const DealOfTheDayPage = () => {
     const { data, isLoading, error, refetch, isFetching } = useGetActiveDealQuery();
     const { data: upcomingData } = useGetUpcomingDealQuery();
     const payload = useMemo(() => normalizeActiveDealPayload(data), [data]);
-    const activeDeal = payload.deal;
+
+    const activeDeals = useMemo(() => {
+        if (payload.deals && payload.deals.length) {
+            return payload.deals;
+        }
+        return payload.deal ? [payload.deal] : [];
+    }, [payload.deals, payload.deal]);
+
+    const featuredDeal = activeDeals[0] ?? null;
+    const additionalDeals = activeDeals.slice(1);
+
+    const resolveMetricsForDeal = (deal: Deal | null | undefined): DealMetrics | undefined => {
+        if (!deal) return undefined;
+        const dealId = getDealId(deal);
+        if (dealId && payload.metricsByDealId && payload.metricsByDealId[dealId]) {
+            return payload.metricsByDealId[dealId] ?? undefined;
+        }
+        if (payload.deal && getDealId(payload.deal) === dealId && payload.metrics) {
+            return payload.metrics;
+        }
+        return deal.metrics;
+    };
+
     const upcoming = useMemo(() => {
         const raw = (upcomingData?.data ?? upcomingData) as unknown;
         if (raw && typeof raw === "object" && "deal" in raw) {
@@ -45,7 +88,7 @@ const DealOfTheDayPage = () => {
         );
     }
 
-    if (error || !activeDeal) {
+    if (error || !featuredDeal) {
         return (
             <section className="mx-auto max-w-4xl space-y-6 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-10 text-center">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm">
@@ -54,7 +97,7 @@ const DealOfTheDayPage = () => {
                 </div>
                 <h1 className="text-3xl font-semibold text-emerald-900">No flash offer running right now</h1>
                 <p className="mx-auto max-w-2xl text-sm text-emerald-800">
-                    We refresh our Deal of the Day frequently. Be the first to know when the next offer drops—keep an eye on this page or explore our catalogue for everyday savings.
+                    We refresh our Deal of the Day frequently. Be the first to know when the next offer drops--keep an eye on this page or explore our catalogue for everyday savings.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium text-emerald-900">
                     <Link to="/products" className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-white shadow-sm transition hover:bg-emerald-700">
@@ -67,7 +110,7 @@ const DealOfTheDayPage = () => {
                         className="inline-flex items-center gap-2 rounded-full border border-emerald-500 px-5 py-2 text-emerald-700 transition hover:bg-emerald-500/10"
                         disabled={isFetching}
                     >
-                        {isFetching ? "Checking…" : "Check again"}
+                        {isFetching ? "Checking..." : "Check again"}
                     </button>
                 </div>
                 {upcoming ? (
@@ -82,57 +125,65 @@ const DealOfTheDayPage = () => {
         );
     }
 
-    const remainingUnits = payload.metrics?.remainingUnits ?? activeDeal.metrics?.remainingUnits ?? null;
-    const soldOut = payload.metrics?.soldOut ?? activeDeal.metrics?.soldOut ?? false;
-    const productSummary = activeDeal.product as { slug?: string; id?: string } | undefined;
-    const productLink = productSummary?.slug
-        ? `/products/${productSummary.slug}`
-        : `/products/${productSummary?.id ?? activeDeal.productId}`;
+    const featuredMetrics = resolveMetricsForDeal(featuredDeal);
+    const featuredRemainingUnits = computeRemainingUnits(featuredDeal, featuredMetrics);
+    const featuredSoldOut = featuredMetrics?.soldOut ?? (featuredRemainingUnits !== null && featuredRemainingUnits <= 0);
+    const featuredProductSummary = featuredDeal.product as { slug?: string; id?: string } | undefined;
+    const featuredProductLink = featuredProductSummary?.slug
+        ? `/products/${featuredProductSummary.slug}`
+        : `/products/${featuredProductSummary?.id ?? featuredDeal.productId}`;
 
     return (
-        <section className="mx-auto max-w-5xl space-y-8">
+        <section className="mx-auto max-w-5xl space-y-10">
             <header className="flex flex-col gap-2 rounded-3xl border border-emerald-100 bg-emerald-50/80 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium text-emerald-800">
                     <Flame className="h-5 w-5" />
-                    Today’s featured offer
+                    Today's featured offer
                 </div>
-                {remainingUnits !== null ? (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-sm font-medium text-emerald-700 shadow-sm">
-                        {soldOut ? "Sold out" : `${remainingUnits} left`}
-                        <Sparkles className="h-4 w-4" />
-                    </span>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-emerald-800">
+                    {additionalDeals.length > 0 ? (
+                        <span className="rounded-full bg-white/60 px-3 py-1 text-xs uppercase tracking-wide text-emerald-700">
+                            +{additionalDeals.length} more deal{additionalDeals.length > 1 ? "s" : ""} live
+                        </span>
+                    ) : null}
+                    {featuredRemainingUnits !== null ? (
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-sm font-medium text-emerald-700 shadow-sm">
+                            {featuredSoldOut ? "Sold out" : `${featuredRemainingUnits} left`}
+                            <Sparkles className="h-4 w-4" />
+                        </span>
+                    ) : null}
+                </div>
             </header>
 
             <article className="grid gap-6 rounded-3xl border border-emerald-100 bg-white/90 p-6 shadow-sm sm:grid-cols-[1fr_minmax(220px,280px)]">
                 <div className="space-y-4">
-                    <h1 className="text-2xl font-semibold text-emerald-900">{activeDeal.title || activeDeal.product?.name || "Deal of the Day"}</h1>
-                    {activeDeal.promoCopy ? (
-                        <p className="text-sm leading-relaxed text-gray-700">{activeDeal.promoCopy}</p>
+                    <h1 className="text-2xl font-semibold text-emerald-900">{featuredDeal.title || featuredDeal.product?.name || "Deal of the Day"}</h1>
+                    {featuredDeal.promoCopy ? (
+                        <p className="text-sm leading-relaxed text-gray-700">{featuredDeal.promoCopy}</p>
                     ) : null}
                     <dl className="grid gap-3 text-sm text-gray-700 sm:grid-cols-2">
                         <div>
                             <dt className="font-medium text-emerald-800">Deal price</dt>
-                            <dd>{formatCurrency(activeDeal.dealPrice)}</dd>
+                            <dd>{formatCurrency(featuredDeal.dealPrice)}</dd>
                         </div>
-                        {typeof activeDeal.discountPercentage === "number" ? (
+                        {typeof featuredDeal.discountPercentage === "number" ? (
                             <div>
                                 <dt className="font-medium text-emerald-800">Discount</dt>
-                                <dd>{activeDeal.discountPercentage}% off</dd>
+                                <dd>{featuredDeal.discountPercentage}% off</dd>
                             </div>
                         ) : null}
                         <div>
                             <dt className="font-medium text-emerald-800">Runs from</dt>
-                            <dd>{formatDate(activeDeal.startAt)}</dd>
+                            <dd>{formatDate(featuredDeal.startAt)}</dd>
                         </div>
                         <div>
                             <dt className="font-medium text-emerald-800">Ends</dt>
-                            <dd>{formatDate(activeDeal.endAt)}</dd>
+                            <dd>{formatDate(featuredDeal.endAt)}</dd>
                         </div>
                     </dl>
                     <div className="flex flex-wrap items-center gap-3">
                         <Link
-                            to={productLink}
+                            to={featuredProductLink}
                             className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-white shadow-sm transition hover:bg-emerald-700"
                         >
                             View product
@@ -149,15 +200,75 @@ const DealOfTheDayPage = () => {
                 <aside className="space-y-4 rounded-2xl bg-emerald-50/70 p-4 text-sm text-emerald-900">
                     <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Quick facts</p>
                     <ul className="space-y-2 text-sm">
-                        <li className="flex items-center gap-2"><Timer className="h-4 w-4" /> Updated in real-time—check back often.</li>
-                        {typeof activeDeal.perUserLimit === "number" ? (
-                            <li>Limit of {activeDeal.perUserLimit} per customer.</li>
-                        ) : null}
-                        <li>Available stock: {activeDeal.maxUnits} units.</li>
-                        {activeDeal.description ? <li>{activeDeal.description}</li> : null}
+                        <li className="flex items-center gap-2"><Timer className="h-4 w-4" /> Updated in real-time--check back often.</li>
+                        {typeof featuredDeal.perUserLimit === "number" ? <li>Limit of {featuredDeal.perUserLimit} per customer.</li> : null}
+                        <li>Available stock: {featuredDeal.maxUnits} units.</li>
+                        {featuredDeal.description ? <li>{featuredDeal.description}</li> : null}
                     </ul>
                 </aside>
             </article>
+
+            {additionalDeals.length > 0 ? (
+                <section className="space-y-4">
+                    <h2 className="text-lg font-semibold text-emerald-900">More deals running now</h2>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {additionalDeals.map((deal) => {
+                            const metrics = resolveMetricsForDeal(deal);
+                            const remaining = computeRemainingUnits(deal, metrics);
+                            const soldOut = metrics?.soldOut ?? (remaining !== null && remaining <= 0);
+                            const summary = deal.product as { slug?: string; id?: string } | undefined;
+                            const link = summary?.slug ? `/products/${summary.slug}` : `/products/${summary?.id ?? deal.productId}`;
+                            const key = getDealId(deal) ?? `${deal.productId}-${deal.startAt}`;
+
+                            return (
+                                <article key={key} className="space-y-3 rounded-2xl border border-emerald-100 bg-white/80 p-4 shadow-sm">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-emerald-900">{deal.title || deal.product?.name || "Flash deal"}</h3>
+                                            {deal.promoCopy ? <p className="mt-1 text-sm text-gray-600">{deal.promoCopy}</p> : null}
+                                        </div>
+                                        {remaining !== null ? (
+                                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                                {soldOut ? "Sold out" : `${remaining} left`}
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                    <dl className="grid gap-2 text-xs text-gray-600">
+                                        <div className="flex items-center justify-between">
+                                            <dt className="font-medium text-emerald-800">Deal price</dt>
+                                            <dd className="text-sm text-gray-800">{formatCurrency(deal.dealPrice)}</dd>
+                                        </div>
+                                        {typeof deal.discountPercentage === "number" ? (
+                                            <div className="flex items-center justify-between">
+                                                <dt className="font-medium text-emerald-800">Discount</dt>
+                                                <dd className="text-sm text-gray-800">{deal.discountPercentage}% off</dd>
+                                            </div>
+                                        ) : null}
+                                        <div className="flex items-center justify-between">
+                                            <dt className="font-medium text-emerald-800">Runs</dt>
+                                            <dd>
+                                                {formatDate(deal.startAt)} to {formatDate(deal.endAt)}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Link
+                                            to={link}
+                                            className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                                        >
+                                            View product
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                        </Link>
+                                        <span className="text-xs text-emerald-700">
+                                            {deal.perUserLimit ? `Limit ${deal.perUserLimit} per customer` : "While stocks last"}
+                                        </span>
+                                    </div>
+                                </article>
+                            );
+                        })}
+                    </div>
+                </section>
+            ) : null}
         </section>
     );
 };

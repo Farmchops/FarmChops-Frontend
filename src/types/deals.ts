@@ -65,7 +65,9 @@ export interface DealReservationSummary {
 
 export interface ActiveDealPayload {
     deal: Deal | null;
+    deals?: Deal[];
     metrics?: DealMetrics;
+    metricsByDealId?: Record<string, DealMetrics | undefined>;
     userReservation?: DealReservationSummary | null;
 }
 
