@@ -2,38 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Flame, Timer, Sparkles } from "lucide-react";
 import { useGetActiveDealQuery } from "@/redux/api/dealsApi";
-import type { ActiveDealPayload, Deal } from "@/types/deals";
-import type { ApiResponse } from "@/types/api";
-
-const extractActiveDeal = (
-    response: ApiResponse<ActiveDealPayload> | ActiveDealPayload | undefined
-): ActiveDealPayload => {
-    if (!response) {
-        return { deal: null, metrics: undefined, userReservation: null };
-    }
-
-    const apiResponse = response as ApiResponse<ActiveDealPayload>;
-    const payload = ("data" in apiResponse && apiResponse.data ? apiResponse.data : response) as ActiveDealPayload & {
-        activeDeal?: Deal | null;
-        deal?: Deal | null;
-        metrics?: ActiveDealPayload["metrics"];
-        userReservation?: ActiveDealPayload["userReservation"];
-    };
-
-    if (payload.activeDeal && !payload.deal) {
-        return {
-            deal: payload.activeDeal,
-            metrics: payload.metrics,
-            userReservation: payload.userReservation ?? null,
-        };
-    }
-
-    return {
-        deal: payload.deal ?? null,
-        metrics: payload.metrics,
-        userReservation: payload.userReservation ?? null,
-    };
-};
+import { normalizeActiveDealPayload } from "@/lib/deals";
+import type { Deal } from "@/types/deals";
 
 const formatCountdown = (seconds: number | null): string => {
     if (seconds === null || seconds < 0) {
@@ -64,7 +34,7 @@ const getProductLink = (deal: Deal | null | undefined) => {
 
 export const DealBanner = () => {
     const { data, isLoading, error } = useGetActiveDealQuery();
-    const payload = useMemo(() => extractActiveDeal(data), [data]);
+    const payload = useMemo(() => normalizeActiveDealPayload(data), [data]);
     const activeDeal = payload.deal;
     const metrics = payload.metrics ?? activeDeal?.metrics;
     const [countdown, setCountdown] = useState<number | null>(metrics?.countdownSeconds ?? null);
@@ -113,27 +83,13 @@ export const DealBanner = () => {
 
     if (error || !activeDeal) {
         return (
-            <div className="flex w-full flex-col gap-3 bg-[#133F1F] px-4 py-3 text-white">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-emerald-200">
-                        <Flame className="h-4 w-4" />
-                        Deal of the Day
-                    </div>
-                    <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:gap-3">
-                        <span className="font-medium text-white">Watch this space.</span>
-                        <span className="text-xs text-emerald-100">New flash offers are coming soon—check back for fresh savings.</span>
-                    </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Stay tuned
-                    </span>
-                </div>
-                <div className="flex flex-wrap items-center justify-end gap-4 text-xs sm:text-sm text-emerald-100">
-                    <span className="font-medium text-white">Deal of the Day</span>
-                    <span>Bulk Buying</span>
-                    <span>Pay Later</span>
-                    <span>Become a vendor</span>
-                </div>
+            <div className="flex w-full items-center justify-end gap-6 bg-[#1D7B3C] px-4 py-2 text-xs text-white">
+                <Link to="/deals" className="font-medium uppercase tracking-wide text-white transition hover:text-emerald-200">
+                    Deal of the Day
+                </Link>
+                <span className="hidden sm:inline">Bulk Buying</span>
+                <span className="hidden sm:inline">Pay Later</span>
+                <span className="hidden md:inline">Become a vendor</span>
             </div>
         );
     }

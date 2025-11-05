@@ -8,6 +8,7 @@ import About from "../pages/About";
 import Products from "../pages/Products";
 import ProductDetail from "@/components/Product/ProductDetail";
 import Contacts from "../pages/Contacts";
+import DealOfTheDay from "../pages/DealOfTheDay";
 import CartPage from "../pages/CartPage";
 import Checkout from "../pages/CheckOut";
 import Thanks from "../pages/ThankYou";
@@ -45,7 +46,7 @@ import AdminForgotPassword from "@/pages/admin/AdminForgotPassword";
 import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 import AdminManagement from "@/pages/admin/AdminManagement";
 import OrderSuccess from "@/components/Checkout/OrderSuccess";
-import RiderDashboard from "../pages/admin/RiderDashboard";
+import RiderDashboard from "@/pages/admin/RiderDashboard";
 import Deals from "@/pages/admin/Deals";
 
 const router = createBrowserRouter([
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
             { path: "/", element: <Home /> },
             { path: "/about", element: <About /> },
             { path: "/products", element: <Products /> },
+            { path: "/deals", element: <DealOfTheDay /> },
             { path: "/contact", element: <Contacts /> },
             { path: "/cart", element: <CartPage /> },
             { path: "/verifyemail", element: <VerifyEmail /> },
