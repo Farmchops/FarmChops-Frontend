@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useGetCartQuery, useClearCartMutation } from "@/redux/api/cartApi";
+import { useGetCartQuery, useClearCartMutation, useRemoveFromCartMutation } from "@/redux/api/cartApi";
 import type { CartItem } from "@/redux/api/cartApi";
 
 interface CartSidebarProps {
@@ -14,8 +14,10 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
     const navigate = useNavigate();
     const { data: cartData } = useGetCartQuery();
     const [clearCart, { isLoading: isClearing }] = useClearCartMutation();
+    const [removeFromCart] = useRemoveFromCartMutation();
     const [open, setOpen] = useState(false);
     const [backdropVisible, setBackdropVisible] = useState(false);
+    const [removingKey, setRemovingKey] = useState<string | null>(null);
 
     const cart = cartData?.cart;
     type SidebarCartItem = CartItem & { _id?: string; total?: number }; // server enriches items with _id/total
@@ -57,6 +59,24 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
             } catch (error) {
                 console.error("Failed to clear cart:", error);
             }
+        }
+    };
+
+    const handleRemoveItem = async (item: SidebarCartItem) => {
+        const key = item._id || `${item.productId}-${item.priceType}-${item.tierName ?? "retail"}`;
+        setRemovingKey(key);
+        try {
+            await removeFromCart({
+                productId: item.productId,
+                body: {
+                    priceType: item.priceType,
+                    tierName: item.tierName,
+                },
+            }).unwrap();
+        } catch (error) {
+            console.error("Failed to remove item from cart:", error);
+        } finally {
+            setRemovingKey((current) => (current === key ? null : current));
         }
     };
 
@@ -124,9 +144,17 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
 
                             {/* Cart Items */}
                             <div className="space-y-3 mb-6">
-                                {items.map((item) => (
+                                {items.map((item) => {
+                                    const key = item._id || `${item.productId}-${item.tierName ?? "retail"}`;
+                                    const itemSubtotal = typeof item.total === "number"
+                                        ? item.total
+                                        : typeof item.price === "number" && typeof item.quantity === "number"
+                                            ? item.price * item.quantity
+                                            : null;
+
+                                    return (
                                     <div
-                                        key={item._id || `${item.productId}-${item.tierName ?? "retail"}`}
+                                        key={key}
                                         className="grid grid-cols-12 gap-2 items-center bg-green-50 p-2 sm:p-3 rounded-lg"
                                     >
                                         {/* Product Info */}
@@ -170,10 +198,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                         <div className="col-span-1 flex justify-end">
                                             <button
                                                 type="button"
+                                                onClick={() => handleRemoveItem(item)}
+                                                disabled={removingKey === key}
                                                 className="text-red-500 hover:text-red-700 p-1"
                                                 aria-label="Remove item"
                                             >
-                                                <Trash2 size={14} />
+                                                <Trash2 size={14} className={removingKey === key ? "opacity-50" : undefined} />
                                             </button>
                                         </div>
 
@@ -181,11 +211,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                         <div className="col-span-12 mt-1 pt-2 border-t border-gray-200 flex justify-between items-center">
                                             <span className="text-xs text-gray-600">Subtotal</span>
                                             <span className="text-sm font-bold text-[#1D7B3C]">
-                                                ₦{formatNaira(item.total)}
+                                                ₦{formatNaira(itemSubtotal)}
                                             </span>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Clear Cart Button */}
