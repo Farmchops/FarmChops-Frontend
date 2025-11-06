@@ -227,7 +227,7 @@ const ProductDetail: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            await addToCart({
+            const payload = {
                 productId: product._id,
                 name: product.name,
                 image: product.images[0],
@@ -235,10 +235,14 @@ const ProductDetail: React.FC = () => {
                 quantity,
                 unit,
                 priceType: "retail",
-                dealId: activeDealId ?? undefined,
                 minQuantity: quantity,
-                tierName: activeDealForProduct ? "deal-of-the-day" : undefined,
-            }).unwrap();
+            };
+            // If claiming a deal, always include dealId and tierName
+            if (activeDealForProduct && activeDealId) {
+                payload.dealId = activeDealId;
+                payload.tierName = "deal-of-the-day";
+            }
+            await addToCart(payload).unwrap();
 
             setRecentlyAdded(true);
             refetchActiveDeal();
