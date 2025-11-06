@@ -71,12 +71,22 @@ export const DealBanner = () => {
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-emerald-100 sm:gap-3 sm:text-xs">
                 {quickOptions.map((option) => (
-                    <span
-                        key={option.label}
-                        className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-white`}
-                    >
-                        {option.label}
-                    </span>
+                    option.label === "Bulk Buying" ? (
+                        <Link
+                            key={option.label}
+                            to="/bulk-buying"
+                            className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-white`}
+                        >
+                            {option.label}
+                        </Link>
+                    ) : (
+                        <span
+                            key={option.label}
+                            className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-white`}
+                        >
+                            {option.label}
+                        </span>
+                    )
                 ))}
             </div>
         </div>

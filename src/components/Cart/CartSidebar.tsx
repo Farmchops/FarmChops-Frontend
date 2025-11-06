@@ -2,17 +2,20 @@
 import React, { useState, useEffect } from "react";
 import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useGetCartQuery, useClearCartMutation, useRemoveFromCartMutation } from "@/redux/api/cartApi";
+import { useGetCartQuery, useClearCartMutation, useRemoveFromCartMutation, useUpdateCartItemMutation } from "@/redux/api/cartApi";
 import type { CartItem } from "@/redux/api/cartApi";
 
 interface CartSidebarProps {
     isOpen: boolean;
     onClose: () => void;
+    showQuantityControls?: boolean;
 }
 
-export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
+export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQuantityControls = true }) => {
+    const [updateCartItem, { isLoading: isUpdating }] = useUpdateCartItemMutation();
     const navigate = useNavigate();
-    const { data: cartData } = useGetCartQuery();
+    const { data: cartData, refetch } = useGetCartQuery();
+    // Ensure showQuantityControls is defined
     const [clearCart, { isLoading: isClearing }] = useClearCartMutation();
     const [removeFromCart] = useRemoveFromCartMutation();
     const [open, setOpen] = useState(false);
@@ -34,13 +37,14 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
     useEffect(() => {
         if (isOpen) {
             setOpen(true);
+            refetch(); // Force cart query to update when sidebar opens
             const timer = setTimeout(() => setBackdropVisible(true), 100);
             return () => clearTimeout(timer);
         } else {
             setBackdropVisible(false);
             setTimeout(() => setOpen(false), 150);
         }
-    }, [isOpen]);
+    }, [isOpen, refetch]);
 
     const handleViewCart = () => {
         onClose();
@@ -156,7 +160,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                     return (
                                     <div
                                         key={key}
-                                        className="grid grid-cols-12 gap-2 items-center bg-green-50 p-2 sm:p-3 rounded-lg"
+                                        className="grid grid-cols-12 gap-2 items-center bg-white border border-gray-200 p-3 rounded-lg shadow-sm"
                                     >
                                         {/* Product Info */}
                                         <div className="col-span-6 flex items-center gap-2">
@@ -188,30 +192,72 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                                             )}
                                         </div>
 
-                                        {/* Quantity */}
-                                        <div className="col-span-2 text-center">
-                                            <p className="text-xs sm:text-sm font-medium text-gray-700">
-                                                {item.quantity}
-                                            </p>
-                                        </div>
-
-                                        {/* Remove button */}
-                                        <div className="col-span-1 flex justify-end">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveItem(item)}
-                                                disabled={removingKey === key}
-                                                className="text-red-500 hover:text-red-700 p-1"
-                                                aria-label="Remove item"
-                                            >
-                                                <Trash2 size={14} className={removingKey === key ? "opacity-50" : undefined} />
-                                            </button>
-                                        </div>
+                                                                                {/* Remove button only, no quantity controls if showQuantityControls is false */}
+                                                                                {showQuantityControls ? (
+                                                                                    <div className="col-span-3 flex items-center justify-center gap-2">
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            className="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                                                                                            disabled={isUpdating || item.quantity <= 1}
+                                                                                            onClick={async () => {
+                                                                                                if (item.quantity > 1) {
+                                                                                                    await updateCartItem({
+                                                                                                        productId: item.productId,
+                                                                                                        quantity: item.quantity - 1,
+                                                                                                        priceType: item.priceType,
+                                                                                                        dealId: item.dealId,
+                                                                                                        tierName: item.tierName,
+                                                                                                    });
+                                                                                                }
+                                                                                            }}
+                                                                                        >
+                                                                                            -
+                                                                                        </button>
+                                                                                        <span className="text-xs sm:text-sm font-medium text-gray-700 min-w-[28px] text-center">{item.quantity}</span>
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            className="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                                                                                            disabled={isUpdating}
+                                                                                            onClick={async () => {
+                                                                                                await updateCartItem({
+                                                                                                    productId: item.productId,
+                                                                                                    quantity: item.quantity + 1,
+                                                                                                    priceType: item.priceType,
+                                                                                                    dealId: item.dealId,
+                                                                                                    tierName: item.tierName,
+                                                                                                });
+                                                                                            }}
+                                                                                        >
+                                                                                            +
+                                                                                        </button>
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => handleRemoveItem(item)}
+                                                                                            disabled={removingKey === key}
+                                                                                            className="ml-2 text-red-500 hover:text-red-700 p-1"
+                                                                                            aria-label="Remove item"
+                                                                                        >
+                                                                                            <Trash2 size={16} className={removingKey === key ? "opacity-50" : undefined} />
+                                                                                        </button>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="col-span-3 flex items-center justify-end">
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => handleRemoveItem(item)}
+                                                                                            disabled={removingKey === key}
+                                                                                            className="text-red-500 hover:text-red-700 p-1"
+                                                                                            aria-label="Remove item"
+                                                                                        >
+                                                                                            <Trash2 size={16} className={removingKey === key ? "opacity-50" : undefined} />
+                                                                                        </button>
+                                                                                    </div>
+                                                                                )}
 
                                         {/* Subtotal - Full width below on mobile */}
-                                        <div className="col-span-12 mt-1 pt-2 border-t border-gray-200 flex justify-between items-center">
-                                            <span className="text-xs text-gray-600">Subtotal</span>
-                                            <span className="text-sm font-bold text-[#1D7B3C]">
+                                        <div className="col-span-12 mt-2 pt-2 border-t border-gray-100 flex justify-between items-center bg-gray-50 rounded">
+                                            <span className="text-xs text-gray-500">Subtotal</span>
+                                            <span className="text-sm font-bold text-green-700">
                                                 ₦{formatNaira(itemSubtotal)}
                                             </span>
                                         </div>

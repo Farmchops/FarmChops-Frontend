@@ -20,6 +20,7 @@ import Register from "../pages/auth/Register";
 import Login from "../pages/auth/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
 import ProfileCompletion from "../pages/auth/ProfileCompletion";
+import BulkBuyingPage from "../pages/BulkBuying";
 
 // Profile Pages
 import ProfileLayout from "../pages/profile/ProfileLayout";
@@ -109,6 +110,7 @@ const router = createBrowserRouter([
                     { path: "payment-methods", element: <PaymentMethods /> },
                 ],
             },
+            { path: "/bulk-buying", element: <BulkBuyingPage /> },
         ],
     },
 

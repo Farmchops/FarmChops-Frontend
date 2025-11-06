@@ -319,7 +319,8 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                     </div>
 
                     {/* Add to Cart Button */}
-                    <div className="flex items-center justify-center">
+                    {/* add top margin so the button isn't too close to the summary block above */}
+                    <div className="flex items-center justify-center mt-4 sm:mt-6">
                         <button
                             type="button"
                             onClick={handleAddToCart}
