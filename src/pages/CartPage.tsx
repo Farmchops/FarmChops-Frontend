@@ -18,6 +18,7 @@ import type { Deal, DealMetrics } from "@/types/deals";
 type DealCartAlert = {
   status: "active" | "soldOut" | "unknown";
   remainingUnits?: number | null;
+  dealId?: string | null;
   perUserLimit?: number | null;
   perUserRemaining?: number | null;
 };
@@ -25,6 +26,12 @@ type DealCartAlert = {
 type ExtendedCartItem = CartItem & {
   _id?: string;
   total?: number;
+};
+
+const resolveDealIdentifier = (deal: Deal | null | undefined): string | null => {
+  if (!deal) return null;
+  const reference = deal as Deal & { id?: string };
+  return reference._id ?? reference.id ?? null;
 };
 
 const computeRemainingUnits = (deal: Deal, metrics?: DealMetrics): number | null => {
@@ -74,6 +81,22 @@ const CartPage: React.FC = () => {
     });
     return record;
   }, [activeDealsResponse]);
+
+  const activeDealsById = useMemo(() => {
+    const record: Record<string, Deal> = {};
+    const normalized = normalizeActiveDealPayload(activeDealsResponse);
+    (normalized.deals ?? []).forEach((deal) => {
+      const id = resolveDealIdentifier(deal);
+      if (id) {
+        record[id] = deal;
+      }
+    });
+    const primaryId = resolveDealIdentifier(normalized.deal ?? null);
+    if (primaryId && normalized.deal) {
+      record[primaryId] = normalized.deal;
+    }
+    return record;
+  }, [activeDealsResponse]);
   const dealsReady = !(isLoadingDeals || isFetchingDeals || isDealsUninitialized);
 
   const cartItems = useMemo(
@@ -96,32 +119,63 @@ const CartPage: React.FC = () => {
       if (item.tierName !== "deal-of-the-day") return;
 
       const key = `${item.productId}-${item.priceType}-${item.tierName || "default"}`;
-      const matchingDeal = activeDealsByProductId[item.productId] ?? normalized.deals?.find((deal) => deal.productId === item.productId);
+      const itemDealId = (item as { dealId?: string | null }).dealId ?? null;
+
+      let matchingDeal: Deal | undefined;
+
+      if (itemDealId) {
+        matchingDeal = activeDealsById[itemDealId] ?? normalized.deals?.find((deal) => resolveDealIdentifier(deal) === itemDealId);
+        if (!matchingDeal && normalized.deal && resolveDealIdentifier(normalized.deal) === itemDealId) {
+          matchingDeal = normalized.deal;
+        }
+      }
 
       if (!matchingDeal) {
-        map.set(key, { status: "soldOut", remainingUnits: 0, perUserLimit: null, perUserRemaining: 0 });
+        matchingDeal = activeDealsByProductId[item.productId] ?? normalized.deals?.find((deal) => deal.productId === item.productId);
+      }
+
+      if (!matchingDeal) {
+        map.set(key, { status: "soldOut", remainingUnits: 0, dealId: itemDealId, perUserLimit: null, perUserRemaining: 0 });
         hasSoldOut = true;
         return;
       }
 
-      const dealId = (matchingDeal as Deal & { _id?: string; id?: string })._id ?? (matchingDeal as Deal & { _id?: string; id?: string }).id ?? null;
+      const dealId = resolveDealIdentifier(matchingDeal) ?? itemDealId;
       const metrics = (dealId && normalized.metricsByDealId ? normalized.metricsByDealId[dealId] : undefined) ?? matchingDeal.metrics;
       const remainingUnits = computeRemainingUnits(matchingDeal, metrics ?? undefined);
-  const soldOut = matchingDeal.status !== "active" || metrics?.soldOut === true || (remainingUnits !== null && remainingUnits <= 0);
+      const soldOut = matchingDeal.status !== "active" || metrics?.soldOut === true || (remainingUnits !== null && remainingUnits <= 0);
       const perUserLimit = typeof matchingDeal.perUserLimit === "number" ? matchingDeal.perUserLimit : null;
-      const perUserRemaining = perUserLimit !== null ? Math.max(perUserLimit - item.quantity, 0) : null;
+      const perUserRemainingFromMetrics = typeof metrics?.perUserRemaining === "number" ? metrics.perUserRemaining : null;
+      const perUserRemaining = perUserLimit !== null
+        ? Math.max(
+            perUserRemainingFromMetrics ?? perUserLimit - item.quantity,
+            0,
+          )
+        : null;
 
       if (soldOut) {
-        map.set(key, { status: "soldOut", remainingUnits: remainingUnits ?? 0, perUserLimit, perUserRemaining: 0 });
+        map.set(key, {
+          status: "soldOut",
+          remainingUnits: remainingUnits ?? 0,
+          perUserLimit,
+          perUserRemaining: 0,
+          dealId,
+        });
         hasSoldOut = true;
         return;
       }
 
-      map.set(key, { status: "active", remainingUnits, perUserLimit, perUserRemaining });
+      map.set(key, {
+        status: "active",
+        remainingUnits,
+        perUserLimit,
+        perUserRemaining,
+        dealId,
+      });
     });
 
     return { map, hasSoldOut, pending: false } as const;
-  }, [cartItems, activeDealsByProductId, dealsReady, activeDealsResponse]);
+  }, [cartItems, activeDealsByProductId, activeDealsById, dealsReady, activeDealsResponse]);
 
   const handleQuantityChange = async (
     item: ExtendedCartItem,
@@ -134,13 +188,20 @@ const CartPage: React.FC = () => {
 
     const itemKey = `${item.productId}-${item.priceType}-${item.tierName || "default"}`;
     const dealAlert = dealInsights.map.get(itemKey);
+    const dealIdForItem = dealAlert?.dealId ?? item.dealId;
     const perUserLimit = dealAlert?.perUserLimit ?? null;
     const remainingGlobal = typeof dealAlert?.remainingUnits === "number" ? dealAlert.remainingUnits : null;
+    const perUserRemainingFromAlert = typeof dealAlert?.perUserRemaining === "number" ? dealAlert.perUserRemaining : null;
 
     const newQty = type === "add" ? currentQty + changeBy : currentQty - changeBy;
 
     if (perUserLimit !== null && newQty > perUserLimit) {
       alert(`This deal is limited to ${perUserLimit} unit${perUserLimit > 1 ? "s" : ""} per customer.`);
+      return;
+    }
+
+    if (perUserRemainingFromAlert !== null && type === "add" && perUserRemainingFromAlert <= 0) {
+      alert("You have reached the per-customer limit for this deal.");
       return;
     }
 
@@ -162,7 +223,7 @@ const CartPage: React.FC = () => {
       try {
         await removeFromCart({
           productId: item.productId,
-          body: { priceType: item.priceType, tierName: item.tierName },
+          body: { priceType: item.priceType, tierName: item.tierName, dealId: dealIdForItem ?? undefined },
         }).unwrap();
       } catch (error) {
         console.error("Failed to remove item:", error);
@@ -175,6 +236,7 @@ const CartPage: React.FC = () => {
         productId: item.productId,
         quantity: newQty,
         priceType: item.priceType,
+        dealId: dealIdForItem ?? undefined,
         tierName: item.tierName,
       }).unwrap();
     } catch (error) {
@@ -182,11 +244,16 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const handleRemoveItem = async (productId: string, priceType: "retail" | "bulk", tierName?: string) => {
+  const handleRemoveItem = async (
+    productId: string,
+    priceType: "retail" | "bulk",
+    tierName?: string,
+    dealId?: string | null,
+  ) => {
     try {
       await removeFromCart({
         productId,
-        body: { priceType, tierName },
+        body: { priceType, tierName, dealId: dealId ?? undefined },
       }).unwrap();
     } catch (error) {
       console.error("Failed to remove item:", error);
@@ -412,7 +479,7 @@ const CartPage: React.FC = () => {
                                 {/* Remove Button */}
                                 <div className="pt-2">
                                   <button
-                                    onClick={() => handleRemoveItem(item.productId, item.priceType, item.tierName)}
+                                    onClick={() => handleRemoveItem(item.productId, item.priceType, item.tierName, item.dealId ?? null)}
                                     className="w-full py-2 px-4 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200 flex items-center justify-center space-x-2"
                                     disabled={isRemoving}
                                   >
@@ -471,7 +538,7 @@ const CartPage: React.FC = () => {
                           {/* Remove button - Desktop only (mobile version is now in the product info section) */}
                           <div className="hidden md:block ml-4">
                             <button
-                              onClick={() => handleRemoveItem(item.productId, item.priceType, item.tierName)}
+                              onClick={() => handleRemoveItem(item.productId, item.priceType, item.tierName, item.dealId ?? null)}
                               className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-colors duration-200"
                               disabled={isRemoving}
                               aria-label="Remove item"

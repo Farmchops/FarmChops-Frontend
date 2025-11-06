@@ -71,6 +71,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => 
                 body: {
                     priceType: item.priceType,
                     tierName: item.tierName,
+                    dealId: item.dealId,
                 },
             }).unwrap();
         } catch (error) {

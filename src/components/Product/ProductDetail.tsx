@@ -77,6 +77,10 @@ const ProductDetail: React.FC = () => {
         return candidate;
     }, [activeDealPayload.deal, productId, highlightedDealId]);
 
+    const activeDealId = activeDealForProduct?._id
+        ?? (activeDealForProduct as { id?: string })?.id
+        ?? null;
+
     const dealMetrics = activeDealForProduct ? activeDealPayload.metrics ?? activeDealForProduct.metrics : undefined;
 
     const [selectedImage, setSelectedImage] = useState(0);
@@ -95,12 +99,12 @@ const ProductDetail: React.FC = () => {
     const dealPerUserLimit = activeDealForProduct?.perUserLimit ?? null;
 
     const dealUnitsInCart = useMemo(() => {
-        if (!productId) return 0;
+        if (!activeDealId) return 0;
         const items = cartSnapshot?.cart?.items ?? [];
         return items
-            .filter((item) => item.productId === productId && item.tierName === "deal-of-the-day")
+            .filter((item) => item.dealId === activeDealId)
             .reduce((total, item) => total + (item.quantity ?? 0), 0);
-    }, [cartSnapshot, productId]);
+    }, [cartSnapshot, activeDealId]);
 
     const perUserRemaining = dealPerUserLimit !== null
         ? Math.max(dealPerUserLimit - dealUnitsInCart, 0)
@@ -231,6 +235,7 @@ const ProductDetail: React.FC = () => {
                 quantity,
                 unit,
                 priceType: "retail",
+                dealId: activeDealId ?? undefined,
                 minQuantity: quantity,
                 tierName: activeDealForProduct ? "deal-of-the-day" : undefined,
             }).unwrap();
