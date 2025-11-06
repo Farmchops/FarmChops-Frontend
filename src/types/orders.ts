@@ -222,6 +222,19 @@ export interface CreateOrderRequest {
     paymentMethod: PaymentMethod;
     deliveryFee: number;
     notes?: string; // pass buyer's note so backend can persist it
+    items: Array<{
+        productId: string;
+        name: string;
+        image: string;
+        price: number;
+        quantity: number;
+        unit: string;
+        priceType: 'retail' | 'bulk';
+        minQuantity?: number;
+        dealId?: string;
+        tierName?: string;
+        multiplier?: number;
+    }>;
 }
 
 
