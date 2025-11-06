@@ -227,7 +227,7 @@ const ProductDetail: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            const payload = {
+            const payload: import("@/redux/api/cartApi").AddToCartRequest = {
                 productId: product._id,
                 name: product.name,
                 image: product.images[0],
