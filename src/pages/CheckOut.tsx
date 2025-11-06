@@ -347,7 +347,22 @@ const Checkout: React.FC = () => {
             throw new Error("Delivery information (city/state) could not be determined. Please include city and state in the address.");
         }
 
-                const orderResponse = await createOrder({
+        // Include cart items in the order payload, with dealId/tierName if present
+        const items = (cart?.items ?? []).map(item => ({
+            productId: item.productId,
+            name: item.name,
+            image: item.image,
+            price: item.price,
+            quantity: item.quantity,
+            unit: item.unit,
+            priceType: item.priceType,
+            minQuantity: item.minQuantity,
+            dealId: item.dealId,
+            tierName: item.tierName,
+            multiplier: item.multiplier,
+        }));
+
+        const orderResponse = await createOrder({
             deliveryInfo: {
                 address: formData.address,
                 city,
@@ -357,9 +372,8 @@ const Checkout: React.FC = () => {
             paymentMethod,
             deliveryFee: deliveryData.delivery.fee ?? 0,
             notes: formData.notes || undefined,
+            items,
         }).unwrap();
-
-
 
         if (orderResponse.success && orderResponse.data) {
             const { order, payment } = orderResponse.data;

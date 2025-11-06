@@ -58,7 +58,7 @@ export const DealBanner = () => {
             <div className="flex flex-1 flex-col gap-2 text-xs sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:text-sm">
                 <span className="text-emerald-100 sm:text-emerald-50">
                     {activeDeals.length === 1
-                        ? "Limited-time deal is live."
+                        ? "1 limited-time deal is live."
                         : `${activeDeals.length} limited-time deals are live.`}
                 </span>
                 <Link
