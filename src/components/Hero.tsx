@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import heroVideo from "../assets/farm-video.mp4";
+// import heroVideo from "../assets/farm-video.mp4";
+import heroVideo from "../assets/compressed-video.mp4";
 import overlayimg from "../assets/overlay.png";
 
 const Hero: React.FC = () => {
