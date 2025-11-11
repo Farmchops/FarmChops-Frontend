@@ -121,9 +121,7 @@ const Navbar: React.FC = () => {
                         <Link to="/products" className="hover:text-[#20571E]">
                             Products
                         </Link>
-                        <Link to="/bulk-buying" className="hover:text-[#20571E]">
-                            Bulk Buying
-                        </Link>
+                        {/* Bulk Buying removed from main nav */}
                         <Link to="/contact" className="hover:text-[#20571E]">
                             Contact us
                         </Link>
@@ -242,16 +240,7 @@ const Navbar: React.FC = () => {
                                 <span>Products</span>
                             </Link>
                         </li>
-                        <li>
-                            <Link
-                                to="/bulk-buying"
-                                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50"
-                                onClick={() => setIsOpen(false)}
-                            >
-                                <ShoppingBag size={18} className="mr-3 text-gray-500" />
-                                <span>Bulk Buying</span>
-                            </Link>
-                        </li>
+                        {/* Bulk Buying removed from mobile nav */}
                         <li>
                             <Link
                                 to="/about"

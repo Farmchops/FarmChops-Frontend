@@ -38,12 +38,22 @@ export const DealBanner = () => {
                     Deal of the Day
                 </Link>
                 {quickOptions.map((option) => (
-                    <span
-                        key={option.label}
-                        className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"}`}
-                    >
-                        {option.label}
-                    </span>
+                    option.label === "Bulk Buying" ? (
+                        <Link
+                            key={option.label}
+                            to="/bulk-buying"
+                            className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-emerald-200`}
+                        >
+                            {option.label}
+                        </Link>
+                    ) : (
+                        <span
+                            key={option.label}
+                            className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"}`}
+                        >
+                            {option.label}
+                        </span>
+                    )
                 ))}
             </div>
         );
