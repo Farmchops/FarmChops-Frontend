@@ -304,6 +304,12 @@ const AdminLayout = () => {
                 permission: "view_users",
             },
             {
+                path: "vendors",
+                label: "Vendors",
+                icon: UserCog,
+                permission: "manage_vendors",
+            },
+            {
                 path: "admins",
                 label: "Admin Management",
                 icon: UserCog,
@@ -352,8 +358,8 @@ const AdminLayout = () => {
     return (
         <div className="min-h-screen bg-green-50">
             {/* Top Navigation Bar */}
-            <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-sm">
-                <div className="flex items-center justify-between px-4 py-3">
+            <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+                <div className="flex items-center justify-between px-6 py-2">
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -374,15 +380,15 @@ const AdminLayout = () => {
 
                     {/* User Info and Avatar */}
                     <div className="flex items-center gap-3 ml-auto">
-                        <div className="hidden sm:block text-right">
-                            <p className="text-sm font-medium">
+                        <div className="hidden sm:block text-right mr-3">
+                            <p className="text-sm font-medium text-gray-800">
                                 {user?.firstName || "Admin"} {user?.lastName || ""}
                             </p>
-                            <p className="text-xs text-gray-700">
+                            <p className="text-xs text-gray-600">
                                 {user?.adminRole ? getAdminRoleDisplay(user.adminRole) : "Admin"}
                             </p>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-[#1D7B3C] text-white flex items-center justify-center text-sm font-semibold shadow-md">
+                        <div className="w-9 h-9 rounded-full bg-[#1D7B3C] text-white flex items-center justify-center text-sm font-semibold shadow">
                             {getUserInitials()}
                         </div>
                     </div>

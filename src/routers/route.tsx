@@ -21,6 +21,7 @@ import Login from "../pages/auth/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
 import ProfileCompletion from "../pages/auth/ProfileCompletion";
 import BulkBuyingPage from "../pages/BulkBuying";
+import BecomeVendor from "../pages/BecomeVendor";
 
 // Profile Pages
 import ProfileLayout from "../pages/profile/ProfileLayout";
@@ -49,6 +50,8 @@ import AdminManagement from "@/pages/admin/AdminManagement";
 import OrderSuccess from "@/components/Checkout/OrderSuccess";
 import RiderDashboard from "@/pages/admin/RiderDashboard";
 import Deals from "@/pages/admin/Deals";
+import VendorsList from "../pages/admin/VendorsList";
+import VendorDetail from "../pages/admin/VendorDetail";
 
 const router = createBrowserRouter([
     {
@@ -111,6 +114,7 @@ const router = createBrowserRouter([
                 ],
             },
             { path: "/bulk-buying", element: <BulkBuyingPage /> },
+            { path: "/become-vendor", element: <BecomeVendor /> },
         ],
     },
 
@@ -206,6 +210,24 @@ const router = createBrowserRouter([
                 element: (
                     <AdminRoute requiredPermission="manage_admins">
                         <AdminManagement />
+                    </AdminRoute>
+                ),
+            },
+
+            // Vendors - requires manage_vendors permission
+            {
+                path: "vendors",
+                element: (
+                    <AdminRoute requiredPermission="manage_vendors">
+                        <VendorsList />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "vendors/:id",
+                element: (
+                    <AdminRoute requiredPermission="manage_vendors">
+                        <VendorDetail />
                     </AdminRoute>
                 ),
             },

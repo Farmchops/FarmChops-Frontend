@@ -15,7 +15,7 @@ const AboutUs: React.FC = () => {
         {
             title: "Our Mission",
             description:
-                "Our mission is to create products that  always prioritize health over profit.",
+                "Our mission is to create products that always prioritize health over profit.",
             icon: icon2,
         },
         {

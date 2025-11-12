@@ -34,8 +34,9 @@ const AdminForgotPassword = () => {
             } else {
                 setError(result.message || "Failed to send reset code");
             }
-        } catch (error: any) {
-            setError(error?.data?.message || "Failed to send reset code. Please try again.");
+        } catch (err: unknown) {
+            console.error('Forgot password error:', err);
+            setError('Failed to send reset code. Please try again.');
         }
     };
 

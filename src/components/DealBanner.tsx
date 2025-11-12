@@ -38,10 +38,10 @@ export const DealBanner = () => {
                     Deal of the Day
                 </Link>
                 {quickOptions.map((option) => (
-                    option.label === "Bulk Buying" ? (
+                    (option.label === "Bulk Buying" || option.label === "Become a vendor") ? (
                         <Link
                             key={option.label}
-                            to="/bulk-buying"
+                            to={option.label === "Bulk Buying" ? "/bulk-buying" : "/become-vendor"}
                             className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-emerald-200`}
                         >
                             {option.label}
@@ -81,10 +81,10 @@ export const DealBanner = () => {
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-emerald-100 sm:gap-3 sm:text-xs">
                 {quickOptions.map((option) => (
-                    option.label === "Bulk Buying" ? (
+                    (option.label === "Bulk Buying" || option.label === "Become a vendor") ? (
                         <Link
                             key={option.label}
-                            to="/bulk-buying"
+                            to={option.label === "Bulk Buying" ? "/bulk-buying" : "/become-vendor"}
                             className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-white`}
                         >
                             {option.label}
