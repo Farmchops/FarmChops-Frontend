@@ -145,8 +145,7 @@ const VendorsList: React.FC = () => {
             </tbody>
           </table>
 
-          <div className="mt-4 flex items-center justify-between">
-            <div>Showing {vendors.length} vendors</div>
+          <div className="mt-4 flex items-center justify-end">
             <div className="flex gap-2">
               <button
                 disabled={page <= 1 || isFetching}

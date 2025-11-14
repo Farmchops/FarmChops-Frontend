@@ -34,6 +34,7 @@ import {
 	type OrderWorkflowAction,
 	type OrderActionConfig,
 } from "@/utils/orderWorkflow";
+import useAdminPermissions from "@/hooks/useAdminPermission";
 import type { OrderItem, OrderStatus, StageOwnerRole } from "@/types/orders";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
@@ -674,8 +675,13 @@ const ownerRoleOptions: Array<{ key: StageOwnerRole | "all"; label: string }> = 
 ];
 
 const AdminOrders = () => {
+	const adminPerms = useAdminPermissions();
+	const isSuper = adminPerms.isSuperAdmin();
+	const adminRoleFromUser = adminPerms.adminRole as StageOwnerRole | undefined;
 	const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
-	const [ownerFilter, setOwnerFilter] = useState<StageOwnerRole | "all">("all");
+	const [ownerFilter, setOwnerFilter] = useState<StageOwnerRole | "all">(
+		isSuper ? "all" : (adminRoleFromUser ?? "all")
+	);
 	const [searchInput, setSearchInput] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
@@ -690,10 +696,18 @@ const AdminOrders = () => {
 	const queryArgs = useMemo<GetOrdersQueryArgs>(() => {
 		const args: GetOrdersQueryArgs = { limit: PAGE_SIZE, page: DEFAULT_PAGE };
 		if (statusFilter !== "all") args.status = statusFilter;
-		if (ownerFilter !== "all") args.ownerRole = ownerFilter;
+
+		// Non-super-admins should only see orders relevant to their team by default.
+		if (!isSuper) {
+			// Force ownerRole to the user's team role to reduce payload from the server.
+			if (adminRoleFromUser) args.ownerRole = adminRoleFromUser;
+		} else {
+			if (ownerFilter !== "all") args.ownerRole = ownerFilter;
+		}
+
 		if (searchQuery.trim()) args.search = searchQuery.trim();
 		return args;
-	}, [ownerFilter, searchQuery, statusFilter]);
+	}, [ownerFilter, searchQuery, statusFilter, isSuper, adminRoleFromUser]);
 
 	const { data: ordersResponse, isLoading, isFetching, refetch } = useGetOrdersQuery(queryArgs);
 	const [triggerOrderAction, { isLoading: isActionSubmitting }] = useTriggerOrderActionMutation();
@@ -769,10 +783,23 @@ const AdminOrders = () => {
 		const apiActions = serverActions.filter(
 			(action): action is OrderWorkflowAction => Boolean(ORDER_ACTION_CONFIG[action])
 		);
-		if (apiActions.length) return apiActions;
-		if (!selectedOrder) return [];
-		return getStatusConfig(selectedOrder.orderStatus)?.nextActions ?? [];
-	}, [selectedOrder, serverActions]);
+		let baseActions: OrderWorkflowAction[] = [];
+		if (apiActions.length) baseActions = apiActions;
+		else if (selectedOrder) baseActions = getStatusConfig(selectedOrder.orderStatus)?.nextActions ?? [];
+
+		// Filter actions by user permissions / role unless super admin
+		if (isSuper) return baseActions;
+
+		return baseActions.filter((action) => {
+			const cfg = ORDER_ACTION_CONFIG[action];
+			if (!cfg) return false;
+			// Allow if the user has the explicit permission
+			if (adminPerms.hasPermission(cfg.permission)) return true;
+			// Allow if the user's adminRole is listed as an owner role for this action
+			if (adminRoleFromUser && cfg.ownerRoles.includes(adminRoleFromUser)) return true;
+			return false;
+		});
+	}, [selectedOrder, serverActions, isSuper, adminPerms, adminRoleFromUser]);
 
 	const activeStatuses = statusFilter === "all" ? ORDER_STATUS_LIST : [statusFilter];
 	const isActionModalOpen = Boolean(requestedAction && selectedOrder);
@@ -916,6 +943,8 @@ const AdminOrders = () => {
 						value={ownerFilter}
 						onChange={(event) => setOwnerFilter(event.target.value as StageOwnerRole | "all")}
 						className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 focus:border-[#1D7B3C] focus:outline-none"
+						disabled={!isSuper}
+						title={!isSuper ? "Viewing orders limited to your team" : undefined}
 					>
 						{ownerRoleOptions.map((option) => (
 							<option key={option.key} value={option.key}>
