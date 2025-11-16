@@ -39,7 +39,7 @@ export const groupOrdersApi = createApi({
     // Get group details
     getGroupById: builder.query<{ group: GroupOrder }, string>({
       query: (groupId) => `/group-orders/${groupId}`,
-      providesTags: (result, error, groupId) => [{ type: 'GroupOrders', id: groupId }],
+      providesTags: (_result, _error, groupId) => [{ type: 'GroupOrders', id: groupId }],
     }),
 
     // Join a group

@@ -8,9 +8,7 @@ import {
   CheckCircle,
   XCircle,
   Search,
-  Filter,
-  Eye,
-  AlertCircle
+  Eye
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
@@ -55,7 +53,6 @@ interface AdminGroupOrder {
 const AdminGroupOrders = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [productFilter, setProductFilter] = useState<string>("all");
 
   // TODO: Replace with actual API call
   const isLoading = false;
@@ -96,13 +93,8 @@ const AdminGroupOrders = () => {
       filtered = filtered.filter((g) => g.status === statusFilter);
     }
 
-    // Product filter
-    if (productFilter !== "all") {
-      filtered = filtered.filter((g) => g.product._id === productFilter);
-    }
-
     return filtered;
-  }, [groups, searchTerm, statusFilter, productFilter]);
+  }, [groups, searchTerm, statusFilter]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {

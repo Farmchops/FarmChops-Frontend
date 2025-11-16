@@ -3,12 +3,10 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
-  Users,
   Package,
   Clock,
   CheckCircle,
   XCircle,
-  Mail,
   Phone,
   MapPin,
   AlertTriangle,
@@ -56,7 +54,7 @@ interface AdminGroupOrderDetail {
 }
 
 const AdminGroupDetail = () => {
-  const { groupId } = useParams<{ groupId: string }>();
+  useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -64,7 +62,8 @@ const AdminGroupDetail = () => {
 
   // TODO: Replace with actual API call
   const isLoading = false;
-  const group: AdminGroupOrderDetail | null = null;
+  // Temporary mock data for development - replace with actual API call
+  const group: AdminGroupOrderDetail | null = null as AdminGroupOrderDetail | null;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -153,12 +152,15 @@ const AdminGroupDetail = () => {
     );
   }
 
-  const progress = (group.filledSlots / group.totalSlots) * 100;
-  const totalRevenue = group.filledSlots * group.pricePerSlot;
-  const slotsLeft = group.totalSlots - group.filledSlots;
+  // Type assertion after null check
+  const groupData = group as AdminGroupOrderDetail;
+
+  const progress = (groupData.filledSlots / groupData.totalSlots) * 100;
+  const totalRevenue = groupData.filledSlots * groupData.pricePerSlot;
+  const slotsLeft = groupData.totalSlots - groupData.filledSlots;
 
   const getStatusBadge = () => {
-    switch (group.status) {
+    switch (groupData.status) {
       case 'active':
         return (
           <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
@@ -198,13 +200,13 @@ const AdminGroupDetail = () => {
           <div>
             <h1 className="text-3xl font-semibold">Group Order Details</h1>
             <p className="text-sm text-gray-700 mt-1">
-              Group ID: <span className="font-mono">{group.groupId}</span>
+              Group ID: <span className="font-mono">{groupData.groupId}</span>
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {getStatusBadge()}
-          {group.status === 'active' && (
+          {groupData.status === 'active' && (
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
@@ -223,20 +225,20 @@ const AdminGroupDetail = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Product Information</h3>
           <div className="space-y-4">
-            {group.product.images?.[0] && (
+            {groupData.product.images?.[0] && (
               <img
-                src={group.product.images[0]}
-                alt={group.product.name}
+                src={groupData.product.images[0]}
+                alt={groupData.product.name}
                 className="w-full h-48 object-cover rounded-lg"
               />
             )}
             <div>
-              <p className="text-2xl font-bold text-gray-900">{group.product.name}</p>
+              <p className="text-2xl font-bold text-gray-900">{groupData.product.name}</p>
               <p className="text-sm text-gray-600 mt-2">
-                Quantity per slot: {group.quantityPerSlot}{group.product.unit}
+                Quantity per slot: {groupData.quantityPerSlot}{groupData.product.unit}
               </p>
               <p className="text-sm text-gray-600">
-                Price per slot: {formatCurrency(group.pricePerSlot)}
+                Price per slot: {formatCurrency(groupData.pricePerSlot)}
               </p>
             </div>
           </div>
@@ -250,7 +252,7 @@ const AdminGroupDetail = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Filled Slots</span>
                 <span className="text-2xl font-bold text-gray-900">
-                  {group.filledSlots}/{group.totalSlots}
+                  {groupData.filledSlots}/{groupData.totalSlots}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
@@ -264,7 +266,7 @@ const AdminGroupDetail = () => {
               </p>
             </div>
 
-            {group.status === 'active' && (
+            {groupData.status === 'active' && (
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm font-medium text-blue-900">
                   {slotsLeft} {slotsLeft === 1 ? 'slot' : 'slots'} remaining
@@ -290,17 +292,17 @@ const AdminGroupDetail = () => {
             <div className="pt-4 border-t border-gray-200 space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Participants</span>
-                <span className="font-medium">{group.filledSlots}</span>
+                <span className="font-medium">{groupData.filledSlots}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Price/Slot</span>
-                <span className="font-medium">{formatCurrency(group.pricePerSlot)}</span>
+                <span className="font-medium">{formatCurrency(groupData.pricePerSlot)}</span>
               </div>
-              {group.status === 'active' && (
+              {groupData.status === 'active' && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Potential Revenue</span>
                   <span className="font-medium text-green-600">
-                    {formatCurrency(group.totalSlots * group.pricePerSlot)}
+                    {formatCurrency(groupData.totalSlots * groupData.pricePerSlot)}
                   </span>
                 </div>
               )}
@@ -319,32 +321,32 @@ const AdminGroupDetail = () => {
             </div>
             <div>
               <p className="font-medium text-gray-900">Group Created</p>
-              <p className="text-sm text-gray-600">{formatDate(group.createdAt)}</p>
+              <p className="text-sm text-gray-600">{formatDate(groupData.createdAt)}</p>
             </div>
           </div>
 
-          {group.confirmedAt && (
+          {groupData.confirmedAt && (
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <p className="font-medium text-gray-900">Group Confirmed</p>
-                <p className="text-sm text-gray-600">{formatDate(group.confirmedAt)}</p>
+                <p className="text-sm text-gray-600">{formatDate(groupData.confirmedAt)}</p>
               </div>
             </div>
           )}
 
-          {group.cancelledAt && (
+          {groupData.cancelledAt && (
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <XCircle className="h-5 w-5 text-red-600" />
               </div>
               <div>
                 <p className="font-medium text-gray-900">Group Cancelled</p>
-                <p className="text-sm text-gray-600">{formatDate(group.cancelledAt)}</p>
-                {group.cancelledReason && (
-                  <p className="text-sm text-red-600 mt-1">Reason: {group.cancelledReason}</p>
+                <p className="text-sm text-gray-600">{formatDate(groupData.cancelledAt)}</p>
+                {groupData.cancelledReason && (
+                  <p className="text-sm text-red-600 mt-1">Reason: {groupData.cancelledReason}</p>
                 )}
               </div>
             </div>
@@ -355,7 +357,7 @@ const AdminGroupDetail = () => {
       {/* Participants Table */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Participants ({group.participants.length})</h3>
+          <h3 className="text-lg font-semibold">Participants ({groupData.participants.length})</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -372,7 +374,7 @@ const AdminGroupDetail = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {group.participants.map((participant) => (
+              {groupData.participants.map((participant) => (
                 <tr key={participant._id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div>
@@ -398,7 +400,7 @@ const AdminGroupDetail = () => {
                   </td>
                   <td className="p-4">
                     <span className="text-sm font-medium">
-                      {participant.quantity}{group.product.unit}
+                      {participant.quantity}{groupData.product.unit}
                     </span>
                   </td>
                   <td className="p-4">
@@ -451,7 +453,7 @@ const AdminGroupDetail = () => {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Cancel Group Order</h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    This action will refund all {group.filledSlots} participants
+                    This action will refund all {groupData.filledSlots} participants
                   </p>
                 </div>
               </div>
@@ -476,7 +478,7 @@ const AdminGroupDetail = () => {
                   <strong>Warning:</strong> Cancelling this group will:
                 </p>
                 <ul className="text-sm text-red-700 mt-2 space-y-1 ml-4 list-disc">
-                  <li>Issue refunds to all {group.filledSlots} participants</li>
+                  <li>Issue refunds to all {groupData.filledSlots} participants</li>
                   <li>Send cancellation emails to all members</li>
                   <li>Mark the group as permanently cancelled</li>
                 </ul>

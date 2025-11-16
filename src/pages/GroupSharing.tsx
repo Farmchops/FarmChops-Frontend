@@ -1,5 +1,4 @@
 // src/pages/GroupSharing.tsx
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Users, Clock, Package, Sparkles } from "lucide-react";
 import { useGetActiveGroupsQuery } from "@/redux/api/groupOrdersApi";
@@ -7,24 +6,9 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import type { GroupOrder } from "@/types/groupOrder";
 
 const GroupSharing = () => {
-  const [productFilter, setProductFilter] = useState<string>("");
-  const { data, isLoading, error } = useGetActiveGroupsQuery({
-    productId: productFilter || undefined
-  });
+  const { data, isLoading, error } = useGetActiveGroupsQuery({});
 
   const groups = data?.groups || [];
-
-  const calculateProgress = (filledSlots: number, totalSlots: number) => {
-    return (filledSlots / totalSlots) * 100;
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -204,7 +188,7 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
         {group.participants.length > 0 && (
           <div className="flex items-center gap-2 mb-4">
             <div className="flex -space-x-2">
-              {group.participants.slice(0, 3).map((participant, index) => (
+              {group.participants.slice(0, 3).map((participant) => (
                 <div
                   key={participant.id}
                   className="w-8 h-8 rounded-full bg-[#1D7B3C] text-white flex items-center justify-center text-xs font-medium border-2 border-white"
@@ -222,7 +206,7 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
         )}
 
         {/* CTA Button */}
-        <button className="w-full bg-[#1D7B3C] hover:bg-[#166430] text-white font-medium py-3 px-4 rounded-full transition-colors">
+        <button type="button" className="w-full bg-[#1D7B3C] hover:bg-[#166430] text-white font-medium py-3 px-4 rounded-full transition-colors">
           Join for {formatCurrency(group.pricePerSlot)} →
         </button>
 

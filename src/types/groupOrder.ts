@@ -54,14 +54,16 @@ export interface GroupOrder {
 }
 
 export interface JoinGroupRequest {
-  deliveryInfo: {
+  deliveryAddress?: string;
+  phoneNumber?: string;
+  deliveryInfo?: {
     address: string;
     city: string;
     state: string;
     phoneNumber: string;
   };
-  paymentReference: string;
-  paymentMethod: 'paystack' | 'pay_later';
+  paymentReference?: string;
+  paymentMethod?: 'paystack' | 'pay_later';
 }
 
 export interface MyGroupParticipation {
@@ -74,8 +76,27 @@ export interface MyGroupParticipation {
   orderId?: string;
 }
 
-export interface MyGroupOrder extends GroupOrder {
-  myParticipation: MyGroupParticipation;
+export interface MyGroupOrder {
+  _id: string;
+  groupId: string;
+  quantity: number;
+  amountPaid: number;
+  deliveryAddress: string;
+  joinedAt: string;
+  orderId?: string;
+  product: {
+    _id: string;
+    name: string;
+    images: string[];
+    unit: string;
+  };
+  status: GroupOrderStatus;
+  totalSlots: number;
+  filledSlots: number;
+  pricePerSlot: number;
+  quantityPerSlot: number;
+  createdAt: string;
+  confirmedAt?: string;
 }
 
 export interface GroupOrderListResponse {
@@ -91,6 +112,10 @@ export interface GroupOrderListResponse {
 export interface JoinGroupResponse {
   success: boolean;
   message: string;
+  payment?: {
+    authorizationUrl: string;
+    reference: string;
+  };
   group?: {
     groupId: string;
     filledSlots: number;

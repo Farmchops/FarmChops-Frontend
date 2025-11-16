@@ -8,27 +8,11 @@ import type { MyGroupOrder } from "@/types/groupOrder";
 
 const MyGroups = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const { data, isLoading, error } = useGetMyGroupsQuery({
+  const { data, isLoading } = useGetMyGroupsQuery({
     status: statusFilter || undefined
   });
 
   const groups = data?.groups || [];
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -74,7 +58,7 @@ const MyGroups = () => {
         <div className="flex justify-center py-20">
           <LoadingSpinner size="lg" />
         </div>
-      ) : error ? (
+      ) : groups.length === 0 ? (
         <div className="bg-white rounded-3xl shadow-sm p-12 text-center">
           <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-900 mb-2">No Groups Yet</h3>
@@ -120,8 +104,8 @@ const MyGroups = () => {
 // Group Card Component
 const GroupCard = ({ group }: { group: MyGroupOrder }) => {
   const [leaveGroup, { isLoading: isLeaving }] = useLeaveGroupMutation();
-  const progress = (group.group.filledSlots / group.group.totalSlots) * 100;
-  const slotsLeft = group.group.totalSlots - group.group.filledSlots;
+  const progress = (group.filledSlots / group.totalSlots) * 100;
+  const slotsLeft = group.totalSlots - group.filledSlots;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -140,7 +124,7 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
   };
 
   const handleLeaveGroup = async () => {
-    if (group.group.status !== 'active') {
+    if (group.status !== 'active') {
       alert('You can only leave active groups');
       return;
     }
@@ -150,7 +134,7 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
     }
 
     try {
-      await leaveGroup(group.group.groupId).unwrap();
+      await leaveGroup(group.groupId).unwrap();
       alert('Successfully left the group. Your refund is being processed.');
     } catch (err: any) {
       console.error('Leave group failed:', err);
@@ -160,7 +144,7 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
   };
 
   const getStatusBadge = () => {
-    switch (group.group.status) {
+    switch (group.status) {
       case 'active':
         return (
           <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
@@ -193,10 +177,10 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
         <div className="flex items-start gap-4">
           {/* Product Image */}
           <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-            {group.group.product.images?.[0] ? (
+            {group.product.images?.[0] ? (
               <img
-                src={group.group.product.images[0]}
-                alt={group.group.product.name}
+                src={group.product.images[0]}
+                alt={group.product.name}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -211,7 +195,7 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">
-                  {group.group.product.name}
+                  {group.product.name}
                 </h3>
                 {getStatusBadge()}
               </div>
@@ -220,17 +204,17 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
                   {formatCurrency(group.amountPaid)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {group.quantity}{group.group.product.unit}
+                  {group.quantity}{group.product.unit}
                 </p>
               </div>
             </div>
 
             {/* Progress Bar (only for active groups) */}
-            {group.group.status === 'active' && (
+            {group.status === 'active' && (
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-600">
-                    {group.group.filledSlots}/{group.group.totalSlots} members
+                    {group.filledSlots}/{group.totalSlots} members
                   </span>
                   <span className="font-medium text-gray-900">{Math.round(progress)}%</span>
                 </div>
@@ -271,7 +255,7 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
                 Joined {formatDate(group.joinedAt)}
               </span>
               <div className="flex items-center gap-2">
-                {group.group.status === 'active' && (
+                {group.status === 'active' && (
                   <button
                     type="button"
                     onClick={handleLeaveGroup}
@@ -282,7 +266,7 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
                   </button>
                 )}
                 <Link
-                  to={`/group/${group.group.groupId}`}
+                  to={`/group/${group.groupId}`}
                   className="text-xs text-[#1D7B3C] hover:text-[#166430] font-medium flex items-center gap-1"
                 >
                   View Details <ArrowRight className="h-3 w-3" />
