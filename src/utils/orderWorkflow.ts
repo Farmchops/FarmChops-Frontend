@@ -11,6 +11,29 @@ export type OrderWorkflowAction =
 	| "cancel"
 	| "close";
 
+/**
+ * Maps admin role (from user.adminRole) to workflow stage owner role.
+ * This handles the discrepancy between admin system roles and order workflow roles.
+ */
+export const mapAdminRoleToStageOwnerRole = (adminRole?: string): StageOwnerRole | undefined => {
+	if (!adminRole) return undefined;
+
+	const mapping: Record<string, StageOwnerRole> = {
+		'operations_officer': 'operations',
+		'logistics': 'logistics',
+		'customer_support': 'support',
+		'rider': 'rider',
+		'supervisor': 'supervisor',
+		// Processing and packaging roles (if they exist in your system)
+		'processing': 'processing',
+		'packaging': 'packaging',
+		// Finance has read-only access, maps to finance role
+		'finance': 'finance',
+	};
+
+	return mapping[adminRole];
+};
+
 export interface OrderStatusConfig {
   key: OrderStatus;
   label: string;
@@ -44,6 +67,12 @@ export interface OrderActionConfig {
   riderLabel?: string;
 }
 
+/**
+ * Order status configuration defining workflow stages.
+ *
+ * NOTE: Finance role has read-only access to orders for reporting purposes.
+ * They are not assigned as stage owners and cannot perform workflow actions.
+ */
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, OrderStatusConfig> = {
   pending: {
     key: "pending",
@@ -188,7 +217,7 @@ export const ORDER_ACTION_CONFIG: Record<OrderWorkflowAction, OrderActionConfig>
     label: "Mark Failed Delivery",
     targetStatus: "failed_delivery",
     permission: "orders.dispatch.fail",
-    ownerRoles: ["logistics", "support", "supervisor"],
+    ownerRoles: ["logistics", "support", "supervisor", "customer_support"],
     requires: { note: true, reason: true },
     reasonLabel: "Failure reason",
   reasonPlaceholder: "e.g. Customer unreachable",
@@ -200,7 +229,7 @@ export const ORDER_ACTION_CONFIG: Record<OrderWorkflowAction, OrderActionConfig>
     label: "Return to Dispatch",
     targetStatus: "ready_for_dispatch",
     permission: "orders.dispatch.return",
-    ownerRoles: ["logistics", "support", "supervisor"],
+    ownerRoles: ["logistics", "support", "supervisor", "customer_support"],
     requires: { note: true, reason: true },
     reasonLabel: "Return reason",
     reasonPlaceholder: "Share why the order is returning to dispatch",
@@ -211,7 +240,7 @@ export const ORDER_ACTION_CONFIG: Record<OrderWorkflowAction, OrderActionConfig>
     label: "Cancel Order",
     targetStatus: "cancelled",
     permission: "orders.override.cancel",
-    ownerRoles: ["support", "supervisor"],
+    ownerRoles: ["support", "supervisor", "customer_support"],
     requires: { note: true, reason: true },
     reasonLabel: "Cancellation reason",
     reasonPlaceholder: "Brief reason for cancellation",
@@ -223,7 +252,7 @@ export const ORDER_ACTION_CONFIG: Record<OrderWorkflowAction, OrderActionConfig>
     label: "Close Order",
     targetStatus: "completed",
     permission: "orders.delivery.close",
-    ownerRoles: ["support", "supervisor"],
+    ownerRoles: ["support", "supervisor", "customer_support"],
     requires: { note: true },
     notePlaceholder: "Confirm successful fulfilment details",
   },
@@ -241,4 +270,55 @@ export const getActionConfig = (action: OrderWorkflowAction): OrderActionConfig 
 export const getAccentClass = (status?: string | null): string => {
   const config = getStatusConfig(status ?? undefined);
   return config?.accent ?? "bg-gray-400";
+};
+
+/**
+ * Returns the list of order statuses that a given role is allowed to view.
+ * Super admins can see all statuses.
+ *
+ * @param role - The stage owner role of the user
+ * @param isSuperAdmin - Whether the user is a super admin
+ * @returns Array of order statuses the role can view
+ */
+export const getVisibleStatusesForRole = (
+	role?: StageOwnerRole,
+	isSuperAdmin: boolean = false
+): OrderStatus[] => {
+	// Super admin sees everything
+	if (isSuperAdmin) return ORDER_STATUS_LIST;
+
+	// Finance sees all statuses (read-only for reporting)
+	if (role === 'finance') return ORDER_STATUS_LIST;
+
+	if (!role) return [];
+
+	// Map each role to the statuses they should see
+	const roleStatusMap: Record<StageOwnerRole, OrderStatus[]> = {
+		// Operations sees early-stage orders
+		operations: ['pending', 'ready_for_processing', 'processing'],
+
+		// Processing team sees orders they're working on
+		processing: ['processing', 'packed', 'ready_for_dispatch'],
+
+		// Packaging sees orders ready to pack and packed orders
+		packaging: ['packed', 'ready_for_dispatch'],
+
+		// Logistics sees dispatch-related statuses
+		logistics: ['ready_for_dispatch', 'awaiting_pickup', 'failed_delivery'],
+
+		// Riders see only delivery-related statuses
+		rider: ['awaiting_pickup', 'en_route', 'failed_delivery'],
+
+		// Support (customer_support) sees completed/problem orders
+		support: ['delivered', 'completed', 'cancelled', 'failed_delivery'],
+		customer_support: ['delivered', 'completed', 'cancelled', 'failed_delivery'],
+
+		// Supervisors see everything
+		supervisor: ORDER_STATUS_LIST,
+
+		// Finance sees everything (read-only)
+		finance: ORDER_STATUS_LIST,
+	};
+
+	return roleStatusMap[role] || [];
 };

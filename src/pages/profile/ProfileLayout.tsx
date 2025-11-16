@@ -9,6 +9,7 @@ import {
     LogOut,
     Menu,
     X,
+    Users,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
@@ -41,6 +42,7 @@ const ProfileLayout = () => {
     const menuItems = [
         { path: "personal-info", label: "Personal Information", icon: User },
         { path: "orders", label: "Order History", icon: Package },
+        { path: "groups", label: "My Groups", icon: Users },
         { path: "notifications", label: "Notifications", icon: Bell },
         { path: "payment-methods", label: "Payment Methods", icon: CreditCard },
         { path: "settings", label: "Settings", icon: Settings },

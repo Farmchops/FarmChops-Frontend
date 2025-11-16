@@ -6,7 +6,8 @@ import type {
     ProductsListResponse,
     ProductStatsResponse,
     SearchProductsResponse,
-    UpdateProductPayload
+    UpdateProductPayload,
+    GroupConfig
 } from '@/types/product';
 import type { ApiResponse } from '@/types/api';
 
@@ -107,6 +108,25 @@ export const productApi = createApi({
                 { type: 'ProductStats', id: 'STATS' }
             ],
         }),
+
+        // Configure group buying for product (Admin only)
+        configureGroupBuying: builder.mutation<
+            ApiResponse<Product>,
+            { productId: string; config: GroupConfig }
+        >({
+            query: ({ productId, config }) => ({
+                url: `/products/${productId}/group-config`,
+                method: 'PUT',
+                body: config,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }),
+            invalidatesTags: (_result, _error, { productId }) => [
+                { type: 'Product', id: productId },
+                { type: 'Products', id: 'LIST' },
+            ],
+        }),
     }),
 });
 
@@ -118,4 +138,5 @@ export const {
     useCreateProductMutation,
     useUpdateProductMutation,
     useDeleteProductMutation,
+    useConfigureGroupBuyingMutation,
 } = productApi;

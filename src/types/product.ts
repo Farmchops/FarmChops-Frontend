@@ -44,6 +44,14 @@ export interface BulkSavings {
 }
 
 // Full product type as returned from API
+export interface GroupConfig {
+    enabled: boolean;
+    totalSlots: number;
+    quantityPerSlot: number;
+    pricePerSlot: number;
+    maxActiveGroups: number;
+}
+
 export interface Product {
     _id: string;
     name: string;
@@ -67,6 +75,7 @@ export interface Product {
     __v?: number;
     isLowStock: boolean;
     bulkSavings: BulkSavings | null; // Can be null if no bulk tiers
+    groupConfig?: GroupConfig;
     id: string;
 }
 

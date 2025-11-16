@@ -2,7 +2,7 @@
 // src/types/order.ts
 import type { PaginationMeta } from "./api";
 
-export type StageOwnerRole = 'operations' | 'processing' | 'packaging' | 'logistics' | 'rider' | 'support' | 'supervisor';
+export type StageOwnerRole = 'operations' | 'processing' | 'packaging' | 'logistics' | 'rider' | 'support' | 'supervisor' | 'customer_support' | 'finance';
 
 export type OrderStatus =
     | 'pending'

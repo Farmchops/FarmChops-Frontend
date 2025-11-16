@@ -20,6 +20,7 @@ import { riderOrdersApi } from './api/riderOrdersApi';
 import { adminRidersApi } from './api/adminRidersApi';
 import { dealsApi } from './api/dealsApi';
 import { vendorsApi } from './api/vendorsApi';
+import { groupOrdersApi } from './api/groupOrdersApi';
 
 
 export const store = configureStore({
@@ -42,8 +43,9 @@ export const store = configureStore({
         [adminOrdersApi.reducerPath]: adminOrdersApi.reducer,
     [riderOrdersApi.reducerPath]: riderOrdersApi.reducer,
     [adminRidersApi.reducerPath]: adminRidersApi.reducer,
-    [dealsApi.reducerPath]: dealsApi.reducer
-        ,[vendorsApi.reducerPath]: vendorsApi.reducer
+    [dealsApi.reducerPath]: dealsApi.reducer,
+        [vendorsApi.reducerPath]: vendorsApi.reducer,
+        [groupOrdersApi.reducerPath]: groupOrdersApi.reducer
 
     },
     middleware: (getDefaultMiddleware) =>
@@ -58,8 +60,9 @@ export const store = configureStore({
             adminOrdersApi.middleware,
             riderOrdersApi.middleware,
             adminRidersApi.middleware,
-            dealsApi.middleware
-            ,vendorsApi.middleware
+            dealsApi.middleware,
+            vendorsApi.middleware,
+            groupOrdersApi.middleware
 
         ),
 });

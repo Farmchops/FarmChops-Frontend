@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { Product, BulkTier } from "../../types/product";
 import cartImg from "../../assets/cart.svg";
 import { BulkBuying } from "./BulkBuying";
-import { ChevronDown, CheckCircle } from "lucide-react";
+import { ChevronDown, CheckCircle, Users } from "lucide-react";
 
 interface ProductCardProps {
     product: Product;
@@ -84,6 +84,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <div className="max-w-72 bg-white rounded-xl shadow hover:-translate-y-2 hover:shadow-lg transition-transform duration-300 overflow-hidden relative p-1 md:p-3 flex flex-col h-full">
                 {/* Badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                    {product.groupConfig?.enabled && (
+                        <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-md shadow font-medium flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            GROUP SHARING
+                        </span>
+                    )}
                     {canBuyBulk && bulkSavings > 0 && (
                         <span className="bg-[#1D7B3C] text-white text-xs px-2 py-1 rounded-md shadow font-medium">
                             SAVE {bulkSavings}%

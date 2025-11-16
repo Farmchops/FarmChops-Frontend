@@ -97,10 +97,10 @@ const Navbar: React.FC = () => {
 
     return (
         <nav className="shadow-md relative z-50">
-            <div className="max-w-7xl mx-auto">
+            <div className="w-full">
                 <div className="flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8">
                     {/* Left - Logo */}
-                    <div className="py-3">
+                    <div className="py-3 flex-shrink-0">
                         <Link to="/" onClick={() => setIsOpen(false)}>
                             <img
                                 src={logo}

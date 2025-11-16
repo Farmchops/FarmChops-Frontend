@@ -26,11 +26,12 @@ import {
 } from "@/redux/api/adminOrdersApi";
 import { useGetAdminRidersQuery, type RiderDirectoryEntry } from "@/redux/api/adminRidersApi";
 import {
-	ORDER_STATUS_LIST,
 	ORDER_ACTION_CONFIG,
 	ORDER_STATUS_CONFIG,
 	getAccentClass,
 	getStatusConfig,
+	mapAdminRoleToStageOwnerRole,
+	getVisibleStatusesForRole,
 	type OrderWorkflowAction,
 	type OrderActionConfig,
 } from "@/utils/orderWorkflow";
@@ -661,8 +662,6 @@ const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLo
 	);
 };
 
-const statusFilterOptions = [{ key: "all" as const, label: "All orders" }, ...ORDER_STATUS_LIST.map((status) => ({ key: status, label: ORDER_STATUS_CONFIG[status].label }))];
-
 const ownerRoleOptions: Array<{ key: StageOwnerRole | "all"; label: string }> = [
 	{ key: "all", label: "All teams" },
 	{ key: "operations", label: "Operations" },
@@ -671,16 +670,36 @@ const ownerRoleOptions: Array<{ key: StageOwnerRole | "all"; label: string }> = 
 	{ key: "logistics", label: "Logistics" },
 	{ key: "rider", label: "Rider" },
 	{ key: "support", label: "Support" },
+	{ key: "customer_support", label: "Customer Support" },
 	{ key: "supervisor", label: "Supervisors" },
+	{ key: "finance", label: "Finance" },
 ];
 
 const AdminOrders = () => {
 	const adminPerms = useAdminPermissions();
 	const isSuper = adminPerms.isSuperAdmin();
-	const adminRoleFromUser = adminPerms.adminRole as StageOwnerRole | undefined;
+	// Map admin role to stage owner role (e.g., 'operations_officer' -> 'operations')
+	const mappedAdminRole = mapAdminRoleToStageOwnerRole(adminPerms.adminRole);
+
+	// Get statuses visible to this role
+	const visibleStatuses = useMemo(
+		() => getVisibleStatusesForRole(mappedAdminRole, isSuper),
+		[mappedAdminRole, isSuper]
+	);
+
+	// Filter status options based on role
+	const statusFilterOptions = useMemo(() => {
+		const allOption = { key: "all" as const, label: "All orders" };
+		const statusOptions = visibleStatuses.map((status) => ({
+			key: status,
+			label: ORDER_STATUS_CONFIG[status].label,
+		}));
+		return [allOption, ...statusOptions];
+	}, [visibleStatuses]);
+
 	const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
 	const [ownerFilter, setOwnerFilter] = useState<StageOwnerRole | "all">(
-		isSuper ? "all" : (adminRoleFromUser ?? "all")
+		isSuper ? "all" : (mappedAdminRole ?? "all")
 	);
 	const [searchInput, setSearchInput] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
@@ -700,14 +719,14 @@ const AdminOrders = () => {
 		// Non-super-admins should only see orders relevant to their team by default.
 		if (!isSuper) {
 			// Force ownerRole to the user's team role to reduce payload from the server.
-			if (adminRoleFromUser) args.ownerRole = adminRoleFromUser;
+			if (mappedAdminRole) args.ownerRole = mappedAdminRole;
 		} else {
 			if (ownerFilter !== "all") args.ownerRole = ownerFilter;
 		}
 
 		if (searchQuery.trim()) args.search = searchQuery.trim();
 		return args;
-	}, [ownerFilter, searchQuery, statusFilter, isSuper, adminRoleFromUser]);
+	}, [ownerFilter, searchQuery, statusFilter, isSuper, mappedAdminRole]);
 
 	const { data: ordersResponse, isLoading, isFetching, refetch } = useGetOrdersQuery(queryArgs);
 	const [triggerOrderAction, { isLoading: isActionSubmitting }] = useTriggerOrderActionMutation();
@@ -795,13 +814,22 @@ const AdminOrders = () => {
 			if (!cfg) return false;
 			// Allow if the user has the explicit permission
 			if (adminPerms.hasPermission(cfg.permission)) return true;
-			// Allow if the user's adminRole is listed as an owner role for this action
-			if (adminRoleFromUser && cfg.ownerRoles.includes(adminRoleFromUser)) return true;
+			// Allow if the user's mapped admin role is listed as an owner role for this action
+			if (mappedAdminRole && cfg.ownerRoles.includes(mappedAdminRole)) return true;
 			return false;
 		});
-	}, [selectedOrder, serverActions, isSuper, adminPerms, adminRoleFromUser]);
+	}, [selectedOrder, serverActions, isSuper, adminPerms, mappedAdminRole]);
 
-	const activeStatuses = statusFilter === "all" ? ORDER_STATUS_LIST : [statusFilter];
+	// Filter active statuses based on role visibility
+	const activeStatuses = useMemo(() => {
+		if (statusFilter === "all") {
+			// Show only statuses visible to this role
+			return visibleStatuses;
+		}
+		// If a specific status is selected, only show it if it's visible to the role
+		return visibleStatuses.includes(statusFilter) ? [statusFilter] : [];
+	}, [statusFilter, visibleStatuses]);
+
 	const isActionModalOpen = Boolean(requestedAction && selectedOrder);
 
 	const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {

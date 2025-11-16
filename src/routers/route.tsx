@@ -22,6 +22,9 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import ProfileCompletion from "../pages/auth/ProfileCompletion";
 import BulkBuyingPage from "../pages/BulkBuying";
 import BecomeVendor from "../pages/BecomeVendor";
+import GroupSharing from "../pages/GroupSharing";
+import GroupDetail from "../pages/GroupDetail";
+import MyGroups from "../pages/profile/MyGroups";
 
 // Profile Pages
 import ProfileLayout from "../pages/profile/ProfileLayout";
@@ -52,6 +55,9 @@ import RiderDashboard from "@/pages/admin/RiderDashboard";
 import Deals from "@/pages/admin/Deals";
 import VendorsList from "../pages/admin/VendorsList";
 import VendorDetail from "../pages/admin/VendorDetail";
+import AdminGroupOrders from "../pages/admin/AdminGroupOrders";
+import AdminGroupDetail from "../pages/admin/AdminGroupDetail";
+import CreateGroupOrder from "../pages/admin/CreateGroupOrder";
 
 const router = createBrowserRouter([
     {
@@ -66,6 +72,10 @@ const router = createBrowserRouter([
             { path: "/cart", element: <CartPage /> },
             { path: "/verifyemail", element: <VerifyEmail /> },
             { path: "/products/:slug", element: <ProductDetail /> },
+
+            // Group Sharing
+            { path: "/group-sharing", element: <GroupSharing /> },
+            { path: "/group/:groupId", element: <GroupDetail /> },
 
             // Auth routes
             { path: "/register", element: <Register /> },
@@ -108,6 +118,7 @@ const router = createBrowserRouter([
                     { index: true, element: <Navigate to="personal-info" replace /> },
                     { path: "personal-info", element: <PersonalInfo /> },
                     { path: "orders", element: <OrderHistory /> },
+                    { path: "groups", element: <MyGroups /> },
                     { path: "notifications", element: <Notifications /> },
                     { path: "settings", element: <ProfileSettings /> },
                     { path: "payment-methods", element: <PaymentMethods /> },
@@ -167,6 +178,33 @@ const router = createBrowserRouter([
                     </AdminRoute>
                 ),
             },
+
+            // Group Orders - requires view_orders permission
+            {
+                path: "group-orders",
+                element: (
+                    <AdminRoute requiredPermission="view_orders">
+                        <AdminGroupOrders />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "group-orders/create",
+                element: (
+                    <AdminRoute requiredPermission="view_orders">
+                        <CreateGroupOrder />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "group-orders/:groupId",
+                element: (
+                    <AdminRoute requiredPermission="view_orders">
+                        <AdminGroupDetail />
+                    </AdminRoute>
+                ),
+            },
+
             {
                 path: "deals",
                 element: (

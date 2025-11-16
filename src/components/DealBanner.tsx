@@ -37,11 +37,18 @@ export const DealBanner = () => {
                 <Link to="/deals" className="font-medium tracking-wide text-white transition hover:text-emerald-200">
                     Deal of the Day
                 </Link>
-                {quickOptions.map((option) => (
-                    (option.label === "Bulk Buying" || option.label === "Become a vendor") ? (
+                {quickOptions.map((option) => {
+                    const linkMap: Record<string, string> = {
+                        "Bulk Buying": "/bulk-buying",
+                        "Group Sharing": "/group-sharing",
+                        "Become a vendor": "/become-vendor"
+                    };
+                    const link = linkMap[option.label];
+
+                    return link ? (
                         <Link
                             key={option.label}
-                            to={option.label === "Bulk Buying" ? "/bulk-buying" : "/become-vendor"}
+                            to={link}
                             className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-emerald-200`}
                         >
                             {option.label}
@@ -53,8 +60,8 @@ export const DealBanner = () => {
                         >
                             {option.label}
                         </span>
-                    )
-                ))}
+                    );
+                })}
             </div>
         );
     }
@@ -80,11 +87,18 @@ export const DealBanner = () => {
                 </Link>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-emerald-100 sm:gap-3 sm:text-xs">
-                {quickOptions.map((option) => (
-                    (option.label === "Bulk Buying" || option.label === "Become a vendor") ? (
+                {quickOptions.map((option) => {
+                    const linkMap: Record<string, string> = {
+                        "Bulk Buying": "/bulk-buying",
+                        "Group Sharing": "/group-sharing",
+                        "Become a vendor": "/become-vendor"
+                    };
+                    const link = linkMap[option.label];
+
+                    return link ? (
                         <Link
                             key={option.label}
-                            to={option.label === "Bulk Buying" ? "/bulk-buying" : "/become-vendor"}
+                            to={link}
                             className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-white`}
                         >
                             {option.label}
@@ -92,12 +106,12 @@ export const DealBanner = () => {
                     ) : (
                         <span
                             key={option.label}
-                            className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"} cursor-pointer transition hover:text-white`}
+                            className={`${option.alwaysVisible ? "" : "hidden"} ${option.breakpoint === "sm" ? "sm:inline" : "md:inline"}`}
                         >
                             {option.label}
                         </span>
-                    )
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

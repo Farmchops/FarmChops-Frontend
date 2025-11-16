@@ -286,6 +286,12 @@ const AdminLayout = () => {
                 permission: "view_orders",
             },
             {
+                path: "group-orders",
+                label: "Group Orders",
+                icon: Users,
+                permission: "view_orders",
+            },
+            {
                 path: "deals",
                 label: "Deals",
                 icon: Tag,
