@@ -30,7 +30,7 @@ const features = [
         icon: shop,
         title: "PayLater",
         description:
-            "Buy now. Pay conveniently. Farmchops’ Buy Now, Pay Later feature lets verified government employees enjoy the freshest produce today and pay later - seamlessly deducted from your monthly paycheck."
+            "Buy now, pay later — split your purchase into simple instalments at checkout. PayLater offers eligible customers flexible, transparent payment plans so you can enjoy fresh produce today and pay over time."
     },
     {
         id: 5,
@@ -40,8 +40,8 @@ const features = [
     },
     {
         id: 6,
-        icon: shop,
-        title: "PayLater",
+    icon: group,
+    title: "Become a Vendor",
         description:
             "Grow with Farmchops. Are you a farmer or producer passionate about sustainability and quality? Join our growing network of local vendors and showcase your harvest to thousands of happy customers."
     }

@@ -8,20 +8,32 @@ const AboutUs: React.FC = () => {
     const cards = [
         {
             title: "Our Story",
-            description:
-                "We launched Paleovalley with the belief that every ingredient is an opportunity to improve your health.",
+            description: (
+                <>
+                    We grow produce on our own farms and deliver it directly to customers,
+                    making it easy for people to get fresh farm products.
+                </>
+            ),
             icon: icon1,
         },
         {
             title: "Our Mission",
-            description:
-                "Our mission is to create products that always prioritize health over profit.",
+            description: (
+                <>
+                    <strong className="font-semibold">Freshness, affordability and trust.</strong> We make high-quality,
+                    traceable produce accessible to every home while creating sustainable income for farmers.
+                </>
+            ),
             icon: icon2,
         },
         {
-            title: "100% Organic",
-            description:
-                "Many products claimed that their products are100% pure, but our products are 100% Original.",
+            title: "Quality & Sourcing",
+            description: (
+                <>
+                    <strong className="font-semibold">Carefully sourced.</strong> We partner with vetted local growers and
+                    manage handling end-to-end so you receive the best produce, responsibly grown and packed with care.
+                </>
+            ),
             icon: icon3,
         },
     ];
@@ -41,13 +53,7 @@ const AboutUs: React.FC = () => {
                         </h2>
                     </div>
 
-                    <p className="text-[#525252] text-sm md:text-sm md:w-1/2">
-                        At Farm Chops, our mission is to help people reclaim vibrant health.
-                        We provide products that prioritize nutrient density in an industry
-                        that prioritizes everything else. We believe that every dietary choice
-                        and every added ingredient is a powerful opportunity to love and care
-                        for oneself.
-                    </p>
+                    {/* intro intentionally removed */}
                 </div>
 
             </div>
@@ -78,11 +84,6 @@ const AboutUs: React.FC = () => {
                         <p className="text-[#525252] text-sm mb-6 flex-grow">
                             {card.description}
                         </p>
-
-                        {/* Button */}
-                        <button className="self-start mt-auto py-2 text-[#4A8F7D]">
-                            Learn More
-                        </button>
                     </div>
 
                 ))}

@@ -35,14 +35,15 @@ export interface GroupOrder {
     _id: string;
     name: string;
     images: string[];
-    unit: string;
+    unit?: string;
   };
 
   totalSlots: number;
   quantityPerSlot: number;
   pricePerSlot: number;
 
-  participants: GroupParticipant[];
+  participants?: GroupParticipant[];
+  participantsCount?: number;
   filledSlots: number;
 
   status: GroupOrderStatus;

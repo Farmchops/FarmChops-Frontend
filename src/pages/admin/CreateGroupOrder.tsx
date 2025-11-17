@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Package, Users, AlertCircle } from "lucide-react";
 import { alertService } from "@/lib/alertService";
+import { resolveErrorMessage } from "@/lib/utils";
 import { useGetProductsQuery } from "@/redux/api/productApi";
+import { useCreateAdminGroupOrderMutation } from "@/redux/api/groupOrdersApi";
 
 const CreateGroupOrder = () => {
   const navigate = useNavigate();
@@ -17,7 +19,9 @@ const CreateGroupOrder = () => {
   const products = productsData?.data?.products || [];
 
   // Filter products that have group buying enabled
-  const groupEnabledProducts = products.filter(p => p.groupConfig?.enabled);
+  const groupEnabledProducts = products.filter(p =>
+    p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
+  );
 
   const selectedProduct = products.find(p => p._id === selectedProductId);
 
@@ -26,6 +30,8 @@ const CreateGroupOrder = () => {
       setSelectedProductId(preselectedProductId);
     }
   }, [preselectedProductId]);
+
+  const [createGroup] = useCreateAdminGroupOrderMutation();
 
   const handleCreateGroup = async () => {
     if (!selectedProduct) {
@@ -37,7 +43,7 @@ const CreateGroupOrder = () => {
       return;
     }
 
-    if (!selectedProduct.groupConfig?.enabled) {
+  if (!selectedProduct.groupConfig?.enabled && !((selectedProduct as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)) {
       alertService.show({
         type: "error",
         title: "Invalid Product",
@@ -53,23 +59,22 @@ const CreateGroupOrder = () => {
       onConfirm: async () => {
         setIsCreating(true);
         try {
-          // TODO: Call API to create group
-          // POST /api/admin/group-orders
-          // Body: { productId: selectedProduct._id }
-
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-
-          alertService.show({
-            type: "success",
-            title: "Group Created",
-            message: "New group order has been created successfully",
-          });
-          navigate("/admin/group-orders");
-        } catch (error: any) {
+          const result = await createGroup({ productId: selectedProduct._id }).unwrap();
+          if (result?.success) {
+            alertService.show({
+              type: "success",
+              title: "Group Created",
+              message: "New group order has been created successfully",
+            });
+            navigate("/admin/group-orders");
+          } else {
+            throw new Error('Create group failed');
+          }
+        } catch (error: unknown) {
           alertService.show({
             type: "error",
             title: "Creation Failed",
-            message: error?.data?.message || "Failed to create group order",
+            message: resolveErrorMessage(error) || 'Failed to create group order',
           });
         } finally {
           setIsCreating(false);

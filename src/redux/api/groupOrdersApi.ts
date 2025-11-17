@@ -9,16 +9,13 @@ import type {
   MyGroupOrder
 } from '@/types/groupOrder';
 
-const getApiBaseUrl = (): string => {
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-};
-
 export const groupOrdersApi = createApi({
   reducerPath: 'groupOrdersApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${getApiBaseUrl()}/api`,
+    baseUrl: 'https://api.farmchops.com/api',
     prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
+      const state = getState() as RootState;
+      const token = state.adminAuth?.token || state.auth?.token;
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
@@ -33,12 +30,34 @@ export const groupOrdersApi = createApi({
         url: '/group-orders/active',
         params: productId ? { productId } : undefined,
       }),
+      transformResponse: (response: { success?: boolean; data?: GroupOrderListResponse; groups?: GroupOrder[] }) => {
+        // Handle wrapped response: { success: true, data: { groups: [...] } }
+        if (response.data && response.data.groups) {
+          return response.data;
+        }
+        // Handle direct response: { groups: [...] }
+        if (response.groups) {
+          return { groups: response.groups };
+        }
+        return { groups: [] };
+      },
       providesTags: ['GroupOrders'],
     }),
 
     // Get group details
     getGroupById: builder.query<{ group: GroupOrder }, string>({
       query: (groupId) => `/group-orders/${groupId}`,
+      transformResponse: (response: { success?: boolean; data?: { group: GroupOrder }; group?: GroupOrder }) => {
+        // Handle wrapped response: { success: true, data: { group: {...} } }
+        if (response.data && response.data.group) {
+          return response.data;
+        }
+        // Handle direct response: { group: {...} }
+        if (response.group) {
+          return { group: response.group };
+        }
+        return { group: {} as GroupOrder };
+      },
       providesTags: (_result, _error, groupId) => [{ type: 'GroupOrders', id: groupId }],
     }),
 
@@ -53,7 +72,7 @@ export const groupOrdersApi = createApi({
     }),
 
     // Leave a group
-    leaveGroup: builder.mutation<{ success: boolean; refund: any }, string>({
+    leaveGroup: builder.mutation<{ success: boolean; refund: Record<string, unknown> | null }, string>({
       query: (groupId) => ({
         url: `/group-orders/${groupId}/leave`,
         method: 'POST',
@@ -67,7 +86,44 @@ export const groupOrdersApi = createApi({
         url: '/group-orders/user/my-groups',
         params: status ? { status } : undefined,
       }),
+      transformResponse: (response: { success?: boolean; data?: { groups: MyGroupOrder[] }; groups?: MyGroupOrder[] }) => {
+        if (response.data && response.data.groups) {
+          return response.data;
+        }
+        if (response.groups) {
+          return { groups: response.groups };
+        }
+        return { groups: [] };
+      },
       providesTags: ['MyGroups'],
+    }),
+
+    // Admin: fetch all group orders (for admin dashboard)
+    getAdminGroupOrders: builder.query<import('@/types/groupOrder').GroupOrderListResponse, { status?: string; search?: string } | void>({
+      query: (q) => ({
+        url: '/admin/group-orders',
+        params: q ? { ...(q.status ? { status: q.status } : {}), ...(q.search ? { search: q.search } : {}) } : undefined,
+      }),
+      transformResponse: (response: { success?: boolean; data?: GroupOrderListResponse; groups?: GroupOrder[] }) => {
+        if (response.data && response.data.groups) {
+          return response.data;
+        }
+        if (response.groups) {
+          return { groups: response.groups };
+        }
+        return { groups: [] };
+      },
+      providesTags: ['GroupOrders'],
+    }),
+    // Admin: create a new group order
+    createAdminGroupOrder: builder.mutation<{ success: boolean; group: import('@/types/groupOrder').GroupOrder }, { productId: string }>({
+      query: ({ productId }) => ({
+        url: '/admin/group-orders',
+        method: 'POST',
+        body: { productId },
+        headers: { 'Content-Type': 'application/json' },
+      }),
+      invalidatesTags: ['GroupOrders', 'MyGroups'],
     }),
   }),
 });
@@ -78,4 +134,6 @@ export const {
   useJoinGroupMutation,
   useLeaveGroupMutation,
   useGetMyGroupsQuery,
+  useGetAdminGroupOrdersQuery,
+  useCreateAdminGroupOrderMutation,
 } = groupOrdersApi;

@@ -84,7 +84,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <div className="max-w-72 bg-white rounded-xl shadow hover:-translate-y-2 hover:shadow-lg transition-transform duration-300 overflow-hidden relative p-1 md:p-3 flex flex-col h-full">
                 {/* Badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                    {product.groupConfig?.enabled && (
+                    {(product.groupConfig?.enabled || (product as any).groupBuyingEnabled) && (
                         <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-md shadow font-medium flex items-center gap-1">
                             <Users className="h-3 w-3" />
                             GROUP SHARING

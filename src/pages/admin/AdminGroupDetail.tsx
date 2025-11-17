@@ -14,56 +14,21 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { alertService } from "@/lib/alertService";
-
-// TODO: Replace with actual API types
-interface AdminGroupOrderDetail {
-  _id: string;
-  groupId: string;
-  product: {
-    _id: string;
-    name: string;
-    images: string[];
-    unit: string;
-  };
-  totalSlots: number;
-  filledSlots: number;
-  quantityPerSlot: number;
-  pricePerSlot: number;
-  status: 'active' | 'confirmed' | 'cancelled';
-  participants: Array<{
-    _id: string;
-    userId: string;
-    user: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-    };
-    quantity: number;
-    amountPaid: number;
-    deliveryAddress: string;
-    phoneNumber: string;
-    paymentStatus: string;
-    joinedAt: string;
-    orderId?: string;
-  }>;
-  createdAt: string;
-  confirmedAt?: string;
-  cancelledAt?: string;
-  cancelledReason?: string;
-}
+import { resolveErrorMessage } from "@/lib/utils";
+import { useGetGroupByIdQuery } from "@/redux/api/groupOrdersApi";
 
 const AdminGroupDetail = () => {
-  useParams<{ groupId: string }>();
+  const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // TODO: Replace with actual API call
-  const isLoading = false;
-  // Temporary mock data for development - replace with actual API call
-  const group: AdminGroupOrderDetail | null = null as AdminGroupOrderDetail | null;
+  const { data, isLoading } = useGetGroupByIdQuery(groupId || '', {
+    skip: !groupId,
+  });
+
+  const group = data?.group;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -110,11 +75,11 @@ const AdminGroupDetail = () => {
           });
           setShowCancelModal(false);
           navigate("/admin/group-orders");
-        } catch (error: any) {
+        } catch (error: unknown) {
           alertService.show({
             type: "error",
             title: "Cancellation Failed",
-            message: error?.data?.message || "Failed to cancel group",
+            message: resolveErrorMessage(error) || "Failed to cancel group",
           });
         } finally {
           setIsCancelling(false);
@@ -152,8 +117,7 @@ const AdminGroupDetail = () => {
     );
   }
 
-  // Type assertion after null check
-  const groupData = group as AdminGroupOrderDetail;
+  const groupData = group;
 
   const progress = (groupData.filledSlots / groupData.totalSlots) * 100;
   const totalRevenue = groupData.filledSlots * groupData.pricePerSlot;
@@ -375,7 +339,7 @@ const AdminGroupDetail = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {groupData.participants.map((participant) => (
-                <tr key={participant._id} className="hover:bg-gray-50">
+                <tr key={participant.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div>
                       <p className="font-medium text-gray-900">
@@ -387,14 +351,14 @@ const AdminGroupDetail = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="h-4 w-4" />
-                      {participant.phoneNumber}
+                      {participant.deliveryInfo.phoneNumber}
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-start gap-2 max-w-xs">
                       <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
                       <p className="text-sm text-gray-600 line-clamp-2">
-                        {participant.deliveryAddress}
+                        {participant.deliveryInfo.address}, {participant.deliveryInfo.city}, {participant.deliveryInfo.state}
                       </p>
                     </div>
                   </td>
@@ -405,7 +369,7 @@ const AdminGroupDetail = () => {
                   </td>
                   <td className="p-4">
                     <span className="text-sm font-bold text-[#1D7B3C]">
-                      {formatCurrency(participant.amountPaid)}
+                      {formatCurrency(participant.amount)}
                     </span>
                   </td>
                   <td className="p-4">

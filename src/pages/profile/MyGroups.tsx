@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Users, Package, Clock, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { useGetMyGroupsQuery, useLeaveGroupMutation } from "@/redux/api/groupOrdersApi";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { resolveErrorMessage } from "@/lib/utils";
 import type { MyGroupOrder } from "@/types/groupOrder";
 
 const MyGroups = () => {
@@ -136,9 +137,9 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
     try {
       await leaveGroup(group.groupId).unwrap();
       alert('Successfully left the group. Your refund is being processed.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Leave group failed:', err);
-      const errorMessage = err?.data?.message || err?.message || 'Failed to leave group. Please try again.';
+      const errorMessage = resolveErrorMessage(err) || 'Failed to leave group. Please try again.';
       alert(errorMessage);
     }
   };
@@ -220,9 +221,9 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5">
                   <div
-                    className="bg-[#1D7B3C] h-1.5 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
+                      className="bg-[#1D7B3C] h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   {slotsLeft} {slotsLeft === 1 ? 'slot' : 'slots'} remaining

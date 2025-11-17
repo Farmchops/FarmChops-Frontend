@@ -5,6 +5,7 @@ import {
   ArrowLeft, Users, Package, Clock, Share2,
   MapPin, Phone, CheckCircle, AlertCircle, Truck
 } from "lucide-react";
+import { resolveErrorMessage } from "@/lib/utils";
 import { useGetGroupByIdQuery, useJoinGroupMutation } from "@/redux/api/groupOrdersApi";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useSelector } from "react-redux";
@@ -17,9 +18,11 @@ const GroupDetail = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
 
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [deliveryAddress, setDeliveryAddress] = useState({
+  const [deliveryInfo, setDeliveryInfo] = useState({
     address: user?.profile?.address || "",
-    phone: user?.phone || "",
+    city: "",
+    state: "",
+    phoneNumber: user?.phone || "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [joinGroup] = useJoinGroupMutation();
@@ -62,7 +65,7 @@ const GroupDetail = () => {
   const isFull = group.filledSlots >= group.totalSlots;
   const isConfirmed = group.status === 'confirmed';
   const isCancelled = group.status === 'cancelled';
-  const alreadyJoined = group.participants.some(p => p.userId === user?._id);
+  const alreadyJoined = group.participants?.some(p => p.userId === user?._id) || false;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -82,7 +85,7 @@ const GroupDetail = () => {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
+      } catch {
         // Fallback to copy
         navigator.clipboard.writeText(window.location.href);
         alert('Link copied to clipboard!');
@@ -251,9 +254,9 @@ const GroupDetail = () => {
             <div className="bg-white rounded-3xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Users className="h-6 w-6" />
-                Participants ({group.participants.length})
+                Participants ({group.participants?.length || group.filledSlots || 0})
               </h2>
-              {group.participants.length === 0 ? (
+              {!group.participants || group.participants.length === 0 ? (
                 <p className="text-gray-600 text-center py-8">No participants yet. Be the first!</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -393,17 +396,19 @@ const GroupDetail = () => {
 
       {/* Join Modal */}
       {showJoinModal && group && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 my-8">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-semibold text-gray-900">Join Group</h3>
               <button
                 type="button"
                 onClick={() => {
                   setShowJoinModal(false);
-                  setDeliveryAddress({
+                  setDeliveryInfo({
                     address: user?.profile?.address || "",
-                    phone: user?.phone || "",
+                    city: "",
+                    state: "",
+                    phoneNumber: user?.phone || "",
                   });
                 }}
                 disabled={isProcessing}
@@ -447,9 +452,9 @@ const GroupDetail = () => {
                   <input
                     id="join-phone"
                     type="tel"
-                    value={deliveryAddress.phone}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })}
-                    placeholder="+234 812 345 6789"
+                    value={deliveryInfo.phoneNumber}
+                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, phoneNumber: e.target.value })}
+                    placeholder="08012345678"
                     className="flex-1 outline-none text-sm"
                     required
                     disabled={isProcessing}
@@ -459,24 +464,55 @@ const GroupDetail = () => {
 
               <div>
                 <label htmlFor="join-address" className="block text-sm font-medium text-gray-700 mb-2">
-                  Delivery Address *
+                  Street Address *
                 </label>
                 <div className="flex items-start gap-2 px-4 py-3 border border-gray-300 rounded-lg bg-white">
                   <MapPin className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <textarea
+                  <input
                     id="join-address"
-                    value={deliveryAddress.address}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address: e.target.value })}
-                    placeholder="Enter your full delivery address"
-                    rows={3}
-                    className="flex-1 outline-none text-sm resize-none"
+                    type="text"
+                    value={deliveryInfo.address}
+                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, address: e.target.value })}
+                    placeholder="123 Main Street, Ikeja"
+                    className="flex-1 outline-none text-sm"
                     required
                     disabled={isProcessing}
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Include street, area, city, and state
-                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="join-city" className="block text-sm font-medium text-gray-700 mb-2">
+                    City *
+                  </label>
+                  <input
+                    id="join-city"
+                    type="text"
+                    value={deliveryInfo.city}
+                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, city: e.target.value })}
+                    placeholder="Lagos"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none text-sm"
+                    required
+                    disabled={isProcessing}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="join-state" className="block text-sm font-medium text-gray-700 mb-2">
+                    State *
+                  </label>
+                  <input
+                    id="join-state"
+                    type="text"
+                    value={deliveryInfo.state}
+                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, state: e.target.value })}
+                    placeholder="Lagos"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none text-sm"
+                    required
+                    disabled={isProcessing}
+                  />
+                </div>
               </div>
             </div>
 
@@ -511,7 +547,8 @@ const GroupDetail = () => {
                 type="button"
                 onClick={async () => {
                   // Validation
-                  if (!deliveryAddress.phone.trim() || !deliveryAddress.address.trim()) {
+                  if (!deliveryInfo.phoneNumber.trim() || !deliveryInfo.address.trim() ||
+                      !deliveryInfo.city.trim() || !deliveryInfo.state.trim()) {
                     alert('Please fill in all required fields');
                     return;
                   }
@@ -519,13 +556,25 @@ const GroupDetail = () => {
                   setIsProcessing(true);
 
                   try {
+                    const requestData = {
+                      deliveryInfo: {
+                        address: deliveryInfo.address,
+                        city: deliveryInfo.city,
+                        state: deliveryInfo.state,
+                        phoneNumber: deliveryInfo.phoneNumber,
+                      }
+                    };
+
+                    console.log('Sending join request:', JSON.stringify(requestData, null, 2));
+                    console.log('Group ID:', group.groupId);
+                    console.log('Full URL:', `/group-orders/${group.groupId}/join`);
+
                     const response = await joinGroup({
                       groupId: group.groupId,
-                      data: {
-                        deliveryAddress: deliveryAddress.address,
-                        phoneNumber: deliveryAddress.phone,
-                      }
+                      data: requestData
                     }).unwrap();
+
+                    console.log('Join response:', JSON.stringify(response, null, 2));
 
                     if (response.success && response.payment?.authorizationUrl) {
                       // Redirect to Paystack
@@ -533,9 +582,10 @@ const GroupDetail = () => {
                     } else {
                       throw new Error('Payment initialization failed');
                     }
-                  } catch (err: any) {
-                    console.error('Join group failed:', err);
-                    const errorMessage = err?.data?.message || err?.message || 'Failed to join group. Please try again.';
+                  } catch (err: unknown) {
+                    console.error('Full error object:', err);
+                    console.error('Error details:', JSON.stringify(err, null, 2));
+                    const errorMessage = resolveErrorMessage(err) || 'Failed to join group. Please try again.';
                     alert(errorMessage);
                     setIsProcessing(false);
                   }
@@ -556,9 +606,11 @@ const GroupDetail = () => {
                 type="button"
                 onClick={() => {
                   setShowJoinModal(false);
-                  setDeliveryAddress({
+                  setDeliveryInfo({
                     address: user?.profile?.address || "",
-                    phone: user?.phone || "",
+                    city: "",
+                    state: "",
+                    phoneNumber: user?.phone || "",
                   });
                 }}
                 disabled={isProcessing}

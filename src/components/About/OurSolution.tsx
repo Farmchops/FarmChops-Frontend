@@ -1,7 +1,9 @@
 import React from 'react'
 import forfarmer from "../../assets/AboutIcon/forfarmer.png";
 
-import forconsumer from "../../assets/AboutIcon/forconsumer.png"
+// New consumer image provided by user (copied from Downloads)
+import consumerNew2 from "../../assets/AboutIcon/Gemini_Generated_Image_gzvu9xgzvu9xgzvu.png"
+// (old fallback image kept on disk but no longer imported)
 import checker from "../../assets/AboutIcon/aboutcheck.png"
 
 const OurSolution: React.FC = () => {
@@ -18,15 +20,13 @@ const OurSolution: React.FC = () => {
                         <p className="text-[#4A8F7D] uppercase tracking-wide text-sm mb-4">
                             About Us
                         </p>
-                        <h2 className="text-3xl text-[#4A8F7D] md:text-4xl font-medium mt-2 mb-4">
+                        <h2 className="text-3xl text-[#20571E] md:text-4xl font-semibold mt-2 mb-4">
                             For Farmers
                         </h2>
-                        <p className="text-[#525252]">
-                            At Paleovalley, our mission is to help people reclaim vibrant health.
-                            We provide products that prioritize nutrient density in an industry that
-                            prioritizes everything else. We believe that every dietary choice and
-                            every added ingredient is a powerful opportunity to love and care for
-                            oneself.
+                        <p className="text-gray-700 text-lg leading-relaxed">
+                            FarmChops grows produce on our own family farms and delivers fresh
+                            products directly to customers. We manage harvesting, orders and
+                            delivery to ensure quality, fair pricing and reduced food waste.
                         </p>
 
                         <div className="mt-3 space-y-3">
@@ -56,7 +56,7 @@ const OurSolution: React.FC = () => {
 
                     {/* Image Section */}
                     <div className="md:w-1/2 flex justify-center m-4 md:mt-0">
-                        <img src={forfarmer} alt="for_farmer" className="max-w-full h-auto" />
+                        <img src={forfarmer} alt="for_farmer" className="max-w-[420px] w-full h-auto object-cover" />
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@ const OurSolution: React.FC = () => {
                    
                     {/* Image Section */}
                     <div className="md:w-1/2 flex justify-center m-4 md:mt-0">
-                        <img src={forconsumer} alt="for_farmer" className="max-w-full h-auto" />
+                        <img src={consumerNew2} alt="for_consumer" className="max-w-[420px] w-full h-auto object-cover" />
                     </div>
                    
                     {/* Text Section */}
@@ -83,37 +83,33 @@ const OurSolution: React.FC = () => {
                         <p className="text-[#4A8F7D] uppercase tracking-wide text-sm mb-4">
                             About Us
                         </p>
-                        <h2 className="text-3xl text-[#4A8F7D] md:text-4xl font-medium mt-2 mb-4">
-                            For Farmers
+                        <h2 className="text-3xl text-[#20571E] md:text-4xl font-semibold mt-2 mb-4">
+                            For Consumers
                         </h2>
-                        <p className="text-[#525252]">
-                            At Paleovalley, our mission is to help people reclaim vibrant health.
-                            We provide products that prioritize nutrient density in an industry that
-                            prioritizes everything else. We believe that every dietary choice and
-                            every added ingredient is a powerful opportunity to love and care for
-                            oneself.
+                        <p className="text-gray-700 text-lg leading-relaxed">
+                            Buy fresh, seasonal produce directly from local farmers. Enjoy higher
+                            quality, clear sourcing information, and great value — delivered to
+                            your doorstep.
                         </p>
 
                         <div className="mt-3 space-y-3">
                             <div className="flex items-start gap-3 text-[#525252]">
                                 <img src={checker} alt="check" className="mt-1" />
                                 <p>
-                                    Sell directly, potentially increasing profit margins by cutting out
-                                    intermediaries.
+                                    Access fresher, seasonal produce harvested by local growers.
                                 </p>
                             </div>
                             <div className="flex items-start gap-3 text-[#525252]">
                                 <img src={checker} alt="check" className="mt-1" />
                                 <p>
-                                    Reach buyers in different cities or even states, expanding sales
-                                    opportunities.
+                                    Support local farms and strengthen the regional food economy.
                                 </p>
                             </div>
                             <div className="flex items-start gap-3 text-[#525252]">
                                 <img src={checker} alt="check" className="mt-1" />
                                 <p>
-                                    Gain insights into market trends and buyer preferences to optimize
-                                    pricing and production.
+                                    See where your food comes from with transparent sourcing and farm
+                                    details.
                                 </p>
                             </div>
                         </div>

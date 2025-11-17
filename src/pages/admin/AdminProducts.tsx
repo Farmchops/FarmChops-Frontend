@@ -13,20 +13,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { alertService } from "@/lib/alertService";
-import type { GroupConfig } from "@/types/product";
+import { resolveErrorMessage } from "@/lib/utils";
+import type { GroupConfig, Product } from "@/types/product";
 
 
 const AdminProducts = () => {
   const [page, setPage] = useState(1);
   const [mode, setMode] = useState<"list" | "form">("list");
-  const [editProduct, setEditProduct] = useState<any | null>(null);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "in_stock" | "out_of_stock">("all");
   const [sortBy, setSortBy] = useState<"name" | "price" | "stock">("name");
 
   // Group Buying Modal State
   const [showGroupModal, setShowGroupModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [groupConfig, setGroupConfig] = useState<GroupConfig>({
     enabled: false,
     totalSlots: 10,
@@ -125,21 +126,22 @@ const AdminProducts = () => {
             });
             refetch();
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           alertService.show({
             type: "error",
             title: "Product Deletion Failed",
-            message: error?.data?.message || "Failed to delete product",
+            message: resolveErrorMessage(error) || "Failed to delete product",
           });
         }
       },
     });
   };
 
-  const handleOpenGroupModal = (product: any) => {
+  const handleOpenGroupModal = (product: Product) => {
     setSelectedProduct(product);
     setGroupConfig({
-      enabled: product.groupConfig?.enabled || false,
+      // support legacy boolean `groupBuyingEnabled` if `groupConfig` is not present
+      enabled: product.groupConfig?.enabled ?? ((product as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled ?? false),
       totalSlots: product.groupConfig?.totalSlots || 10,
       quantityPerSlot: product.groupConfig?.quantityPerSlot || 10,
       pricePerSlot: product.groupConfig?.pricePerSlot || product.pricing?.retail?.price || 0,
@@ -167,13 +169,14 @@ const AdminProducts = () => {
         });
         setShowGroupModal(false);
         setSelectedProduct(null);
-        refetch();
+        // Refetch to update the UI with new groupConfig data
+        await refetch();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       alertService.show({
         type: "error",
         title: "Configuration Failed",
-        message: error?.data?.message || "Failed to configure group buying",
+        message: resolveErrorMessage(error) || "Failed to configure group buying",
       });
     }
   };
@@ -435,11 +438,11 @@ const AdminProducts = () => {
                         type="button"
                         onClick={() => handleOpenGroupModal(p)}
                         className={`p-2 rounded transition-colors ${
-                          p.groupConfig?.enabled
+                          p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
                             ? "text-[#1D7B3C] bg-green-50"
                             : "hover:text-[#1D7B3C] hover:bg-green-50"
                         }`}
-                        title={p.groupConfig?.enabled ? "Group buying enabled" : "Configure group buying"}
+                        title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
                       >
                         <Users className="w-4 h-4" />
                       </button>

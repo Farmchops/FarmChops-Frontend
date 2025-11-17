@@ -110,13 +110,14 @@ export const productApi = createApi({
         }),
 
         // Configure group buying for product (Admin only)
+        // NOTE: backend exposes this as POST /api/admin/products/:productId/group-config
         configureGroupBuying: builder.mutation<
             ApiResponse<Product>,
             { productId: string; config: GroupConfig }
         >({
             query: ({ productId, config }) => ({
-                url: `/products/${productId}/group-config`,
-                method: 'PUT',
+                url: `/admin/products/${productId}/group-config`,
+                method: 'POST',
                 body: config,
                 headers: {
                     'Content-Type': 'application/json',

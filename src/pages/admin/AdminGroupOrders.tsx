@@ -1,15 +1,7 @@
 // src/pages/admin/AdminGroupOrders.tsx
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import {
-  Users,
-  Package,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Search,
-  Eye
-} from "lucide-react";
+import { Users, Package, Clock, CheckCircle, XCircle, Search, Eye } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Select,
@@ -18,45 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// TODO: Create admin API endpoint for group orders
-// For now, we'll use a placeholder structure
-interface AdminGroupOrder {
-  _id: string;
-  groupId: string;
-  product: {
-    _id: string;
-    name: string;
-    images: string[];
-  };
-  totalSlots: number;
-  filledSlots: number;
-  quantityPerSlot: number;
-  pricePerSlot: number;
-  status: 'active' | 'confirmed' | 'cancelled';
-  participants: Array<{
-    userId: string;
-    user: {
-      firstName: string;
-      lastName: string;
-      email: string;
-    };
-    quantity: number;
-    amountPaid: number;
-  }>;
-  createdAt: string;
-  confirmedAt?: string;
-  cancelledAt?: string;
-  cancelledReason?: string;
-}
+import { useGetAdminGroupOrdersQuery } from "@/redux/api/groupOrdersApi";
+import type { GroupOrder } from "@/types/groupOrder";
 
 const AdminGroupOrders = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // TODO: Replace with actual API call
-  const isLoading = false;
-  const groups: AdminGroupOrder[] = [];
+  // Fetch admin group orders
+  const { data, isLoading } = useGetAdminGroupOrdersQuery(
+    statusFilter === 'all' ? { search: searchTerm || undefined } : { status: statusFilter, search: searchTerm || undefined }
+  );
+
+  const groups: GroupOrder[] = useMemo(() => data?.groups || [], [data?.groups]);
 
   const stats = useMemo(() => {
     return {

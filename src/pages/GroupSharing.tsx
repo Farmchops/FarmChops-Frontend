@@ -164,7 +164,7 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
             <span className="text-sm text-gray-500">per person</span>
           </div>
           <p className="text-sm text-gray-600">
-            Get {group.quantityPerSlot}{group.product.unit}
+            Get {group.quantityPerSlot}{group.product.unit || 'kg'}
           </p>
         </div>
 
@@ -185,7 +185,7 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
         </div>
 
         {/* Participants Preview */}
-        {group.participants.length > 0 && (
+        {group.participants && group.participants.length > 0 && (
           <div className="flex items-center gap-2 mb-4">
             <div className="flex -space-x-2">
               {group.participants.slice(0, 3).map((participant) => (
