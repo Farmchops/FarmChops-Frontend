@@ -321,7 +321,7 @@ const AdminGroupDetail = () => {
       {/* Participants Table */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Participants ({groupData.participants.length})</h3>
+          <h3 className="text-lg font-semibold">Participants ({groupData.participants?.length || 0})</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -338,7 +338,7 @@ const AdminGroupDetail = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {groupData.participants.map((participant) => (
+              {groupData.participants?.map((participant) => (
                 <tr key={participant.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div>

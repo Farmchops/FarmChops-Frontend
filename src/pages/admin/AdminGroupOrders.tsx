@@ -46,7 +46,7 @@ const AdminGroupOrders = () => {
         (g) =>
           g.groupId.toLowerCase().includes(search) ||
           g.product.name.toLowerCase().includes(search) ||
-          g.participants.some(p =>
+          g.participants?.some(p =>
             p.user.firstName?.toLowerCase().includes(search) ||
             p.user.lastName?.toLowerCase().includes(search) ||
             p.user.email?.toLowerCase().includes(search)
