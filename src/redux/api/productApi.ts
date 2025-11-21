@@ -27,7 +27,7 @@ export const productApi = createApi({
     baseQuery,
     tagTypes: ['Product', 'Products', 'ProductStats'],
     endpoints: (builder) => ({
-        // Get all products with pagination
+        // Get all products with pagination (public endpoint)
         getProducts: builder.query<
             ApiResponse<ProductsListResponse>,
             { page?: number; limit?: number }
@@ -43,6 +43,24 @@ export const productApi = createApi({
                         { type: 'Products', id: 'LIST' },
                     ]
                     : [{ type: 'Products', id: 'LIST' }],
+        }),
+
+        // Get all products for admin (includes out_of_stock) - requires authentication
+        getAdminProducts: builder.query<
+            ApiResponse<ProductsListResponse>,
+            { page?: number; limit?: number }
+        >({
+            query: ({ page = 1, limit = 20 }) => `/products/admin?page=${page}&limit=${limit}`,
+            providesTags: (result) =>
+                result?.data?.products
+                    ? [
+                        ...result.data.products.map(({ _id }) => ({
+                            type: 'Product' as const,
+                            id: _id
+                        })),
+                        { type: 'Products', id: 'ADMIN_LIST' },
+                    ]
+                    : [{ type: 'Products', id: 'ADMIN_LIST' }],
         }),
 
         // Get single product by slug
@@ -133,6 +151,7 @@ export const productApi = createApi({
 
 export const {
     useGetProductsQuery,
+    useGetAdminProductsQuery,
     useGetProductBySlugQuery,
     useSearchProductsQuery,
     useGetProductStatsQuery,

@@ -34,7 +34,7 @@ export const DealBanner = () => {
     if (error || !hasActiveDeal) {
         return (
             <div className="flex w-full items-center justify-end gap-6 bg-[#1D7B3C] px-4 py-2 text-xs text-white">
-                <Link to="/deals" className="font-medium tracking-wide text-white transition hover:text-emerald-200">
+                <Link to="/deals" className="hidden sm:inline font-medium tracking-wide text-white transition hover:text-emerald-200">
                     Deal of the Day
                 </Link>
                 {quickOptions.map((option) => {

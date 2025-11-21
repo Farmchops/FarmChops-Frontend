@@ -1,9 +1,9 @@
 // src/pages/admin/AdminProducts.tsx
 import { useState, useMemo } from "react";
 // import { useGetProductsQuery, useDeleteProductMutation } from "../../store/api/productApi";
-import { Trash2, Pencil, Search, Package, Users, X } from "lucide-react";
+import { Trash2, Pencil, Search, Package, Users, X, AlertTriangle } from "lucide-react";
 import ProductForm from "./ProductForm";
-import { useDeleteProductMutation, useGetProductsQuery, useConfigureGroupBuyingMutation } from "@/redux/api/productApi";
+import { useDeleteProductMutation, useGetAdminProductsQuery, useConfigureGroupBuyingMutation, useUpdateProductMutation } from "@/redux/api/productApi";
 //import type { Product } from "../../types";
 import {
   Select,
@@ -43,9 +43,10 @@ const AdminProducts = () => {
     checkoutWindowHours: 48,
   });
 
-  const { data, isLoading, refetch } = useGetProductsQuery({ page, limit: 100 }); // Fetch more for client-side filtering
+  const { data, isLoading, refetch } = useGetAdminProductsQuery({ page, limit: 100 }); // Fetch more for client-side filtering
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const [configureGroupBuying, { isLoading: isConfiguringGroup }] = useConfigureGroupBuyingMutation();
+  const [updateProduct] = useUpdateProductMutation();
 
   const allProducts = useMemo(() => data?.data?.products || [], [data?.data?.products]);
 
@@ -190,6 +191,43 @@ const AdminProducts = () => {
         message: resolveErrorMessage(error) || "Failed to configure group buying",
       });
     }
+  };
+
+  const handleToggleStatus = async (product: Product) => {
+    // treat both 'inactive' and 'out_of_stock' as out-of-stock states coming from the API
+    const isCurrentlyOut = product.status === 'out_of_stock' || product.status === 'inactive';
+    const newStatus = isCurrentlyOut ? 'active' : 'out_of_stock';
+    const actionText = newStatus === 'out_of_stock' ? 'mark as out of stock' : 'mark as in stock';
+
+    alertService.show({
+      type: "confirm",
+      title: `${newStatus === 'out_of_stock' ? 'Mark Out of Stock' : 'Mark In Stock'}`,
+      message: `Are you sure you want to ${actionText} "${product.name}"?`,
+      onConfirm: async () => {
+        try {
+          const result = await updateProduct({
+            id: product._id,
+            body: { status: newStatus },
+          }).unwrap();
+
+          if (result.success) {
+            alertService.show({
+              type: "success",
+              title: "Status Updated",
+              message: `${product.name} is now ${newStatus === 'out_of_stock' ? 'out of stock' : 'in stock'}`,
+            });
+            // Refetch the products list - keep the current filter unchanged
+            await refetch();
+          }
+        } catch (error: unknown) {
+          alertService.show({
+            type: "error",
+            title: "Update Failed",
+            message: resolveErrorMessage(error) || "Failed to update product status",
+          });
+        }
+      },
+    });
   };
 
 
@@ -380,7 +418,19 @@ const AdminProducts = () => {
           {/* Mobile Card View */}
           <div className="md:hidden space-y-4">
             {filteredProducts.map((p) => (
-              <div key={p._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div key={p._id} className={`bg-white rounded-lg shadow-sm border overflow-hidden ${
+                p.isLowStock ? 'border-orange-300 ring-2 ring-orange-100' : 'border-gray-200'
+              }`}>
+                {/* Low Stock Warning Banner */}
+                {p.isLowStock && (
+                  <div className="bg-orange-50 border-b border-orange-200 px-4 py-2 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    <span className="text-xs font-medium text-orange-800">
+                      Low Stock Alert: Only {p.inventory?.availableStock || 0} {p.inventory?.unit || 'units'} left
+                    </span>
+                  </div>
+                )}
+
                 {/* Product Image and Name */}
                 <div className="p-4 flex items-start gap-3">
                   <img
@@ -422,21 +472,24 @@ const AdminProducts = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Status:</span>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(p)}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all cursor-pointer hover:ring-2 ${
                         p.status === "active"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-green-100 text-green-800 hover:bg-green-200 hover:ring-green-300"
                           : p.status === "out_of_stock" || p.status === "inactive"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-700"
+                            ? "bg-red-100 text-red-800 hover:bg-red-200 hover:ring-red-300"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:ring-gray-300"
                       }`}
+                      title="Click to toggle status"
                     >
                       {p.status === "active"
                         ? "In Stock"
                         : p.status === "out_of_stock" || p.status === "inactive"
                           ? "Out of Stock"
                           : "Unknown"}
-                    </span>
+                    </button>
                   </div>
                 </div>
 
@@ -498,18 +551,25 @@ const AdminProducts = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredProducts.map((p, idx) => (
-                  <tr key={p._id} className="">
+                  <tr key={p._id} className={p.isLowStock ? "bg-orange-50" : ""}>
                     <td className="p-3">{idx + 1}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={p.images?.[0] || "/placeholder.png"}
-                          alt={p.name}
-                          className="w-10 h-10 rounded object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder.png";
-                          }}
-                        />
+                        <div className="relative">
+                          <img
+                            src={p.images?.[0] || "/placeholder.png"}
+                            alt={p.name}
+                            className="w-10 h-10 rounded object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/placeholder.png";
+                            }}
+                          />
+                          {p.isLowStock && (
+                            <div className="absolute -top-1 -right-1 bg-orange-500 rounded-full p-0.5">
+                              <AlertTriangle className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                        </div>
                         <div>
                           <p className="font-medium">{p.name}</p>
                           <p className="text-xs line-clamp-1">{p.description}</p>
@@ -520,35 +580,42 @@ const AdminProducts = () => {
                       ₦{p.pricing?.retail?.price?.toLocaleString() || "N/A"}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`inline-flex items-center ${(p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
-                          ? "text-red-600"
-                          : ""
-                          }`}
-                      >
-                        {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
-                      </span>
-                      {p.isLowStock && (
-                        <span className="ml-2 text-xs text-red-600 font-medium">Low!</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center ${(p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
+                            ? "text-red-600 font-semibold"
+                            : ""
+                            }`}
+                        >
+                          {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
+                        </span>
+                        {p.isLowStock && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                            <AlertTriangle className="w-3 h-3" />
+                            Low
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-3">{p.category?.name || "N/A"}</td>
                     <td className="p-3">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status === "active"
-                          ? "bg-green-100 text-green-800"
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(p)}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all cursor-pointer hover:ring-2 ${p.status === "active"
+                          ? "bg-green-100 text-green-800 hover:bg-green-200 hover:ring-green-300"
                           : p.status === "out_of_stock" || p.status === "inactive"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-700"
+                            ? "bg-red-100 text-red-800 hover:bg-red-200 hover:ring-red-300"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:ring-gray-300"
                           }`}
+                        title="Click to toggle status"
                       >
                         {p.status === "active"
                           ? "In Stock"
                           : p.status === "out_of_stock" || p.status === "inactive"
                             ? "Out of Stock"
                             : "Unknown"}
-                      </span>
-
+                      </button>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">

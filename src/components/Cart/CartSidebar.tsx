@@ -137,18 +137,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                         </div>
                     ) : (
                         <>
-                            {/* Cart Items Header */}
-                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
-                                <div className="grid grid-cols-12 w-full text-xs sm:text-sm font-medium text-gray-600">
-                                    <div className="col-span-6">Product</div>
-                                    <div className="col-span-3 text-center">Price</div>
-                                    <div className="col-span-2 text-center">Quantity</div>
-                                    <div className="col-span-1"></div>
-                                </div>
-                            </div>
-
                             {/* Cart Items */}
-                            <div className="space-y-3 mb-6">
+                            <div className="space-y-4 mb-6">
                                 {items.map((item) => {
                                     const key = item._id || `${item.productId}-${item.tierName ?? "retail"}`;
                                     const itemSubtotal = typeof item.total === "number"
@@ -160,106 +150,90 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                                     return (
                                     <div
                                         key={key}
-                                        className="grid grid-cols-12 gap-2 items-center bg-white border border-gray-200 p-3 rounded-lg shadow-sm"
+                                        className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
                                     >
-                                        {/* Product Info */}
-                                        <div className="col-span-6 flex items-center gap-2">
+                                        {/* Product Row */}
+                                        <div className="p-3 flex items-center gap-3">
                                             <img
                                                 src={item.image}
                                                 alt={item.name}
-                                                className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg flex-shrink-0"
+                                                className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                                             />
-                                            <div className="min-w-0">
-                                                <p className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2">
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-sm text-gray-900 line-clamp-1">
                                                     {item.name}
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-0.5">
                                                     {item.unit}
                                                     {item.tierName === "deal-of-the-day" && (
-                                                        <span className="text-[#1D7B3C] font-medium ml-1">• Deal price</span>
+                                                        <span className="text-[#1D7B3C] font-medium ml-1">• Deal</span>
                                                     )}
                                                 </p>
+                                                <p className="text-sm font-semibold text-[#1D7B3C] mt-1">
+                                                    ₦{formatNaira(item.price)}
+                                                </p>
                                             </div>
+                                            {/* Delete Button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveItem(item)}
+                                                disabled={removingKey === key}
+                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                                aria-label="Remove item"
+                                            >
+                                                <Trash2 size={18} className={removingKey === key ? "opacity-50" : undefined} />
+                                            </button>
                                         </div>
 
-                                        {/* Price */}
-                                        <div className="col-span-3 text-center">
-                                            <p className="text-xs sm:text-sm font-semibold text-gray-900">
-                                                ₦{formatNaira(item.price)}
-                                            </p>
-                                            {item.tierName === "deal-of-the-day" && (
-                                                <p className="text-[11px] text-amber-600 mt-1">Limited-time offer</p>
+                                        {/* Quantity Controls & Subtotal Row */}
+                                        <div className="px-3 pb-3 flex items-center justify-between">
+                                            {showQuantityControls ? (
+                                                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                                                    <button
+                                                        type="button"
+                                                        className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50 text-lg font-medium shadow-sm"
+                                                        disabled={isUpdating || item.quantity <= 1}
+                                                        onClick={async () => {
+                                                            if (item.quantity > 1) {
+                                                                await updateCartItem({
+                                                                    productId: item.productId,
+                                                                    quantity: item.quantity - 1,
+                                                                    priceType: item.priceType,
+                                                                    dealId: item.dealId,
+                                                                    tierName: item.tierName,
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <span className="text-sm font-semibold text-gray-900 min-w-[32px] text-center">{item.quantity}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50 text-lg font-medium shadow-sm"
+                                                        disabled={isUpdating}
+                                                        onClick={async () => {
+                                                            await updateCartItem({
+                                                                productId: item.productId,
+                                                                quantity: item.quantity + 1,
+                                                                priceType: item.priceType,
+                                                                dealId: item.dealId,
+                                                                tierName: item.tierName,
+                                                            });
+                                                        }}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div />
                                             )}
-                                        </div>
-
-                                                                                {/* Remove button only, no quantity controls if showQuantityControls is false */}
-                                                                                {showQuantityControls ? (
-                                                                                    <div className="col-span-3 flex items-center justify-center gap-2">
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            className="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                                                                                            disabled={isUpdating || item.quantity <= 1}
-                                                                                            onClick={async () => {
-                                                                                                if (item.quantity > 1) {
-                                                                                                    await updateCartItem({
-                                                                                                        productId: item.productId,
-                                                                                                        quantity: item.quantity - 1,
-                                                                                                        priceType: item.priceType,
-                                                                                                        dealId: item.dealId,
-                                                                                                        tierName: item.tierName,
-                                                                                                    });
-                                                                                                }
-                                                                                            }}
-                                                                                        >
-                                                                                            -
-                                                                                        </button>
-                                                                                        <span className="text-xs sm:text-sm font-medium text-gray-700 min-w-[28px] text-center">{item.quantity}</span>
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            className="px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                                                                                            disabled={isUpdating}
-                                                                                            onClick={async () => {
-                                                                                                await updateCartItem({
-                                                                                                    productId: item.productId,
-                                                                                                    quantity: item.quantity + 1,
-                                                                                                    priceType: item.priceType,
-                                                                                                    dealId: item.dealId,
-                                                                                                    tierName: item.tierName,
-                                                                                                });
-                                                                                            }}
-                                                                                        >
-                                                                                            +
-                                                                                        </button>
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => handleRemoveItem(item)}
-                                                                                            disabled={removingKey === key}
-                                                                                            className="ml-2 text-red-500 hover:text-red-700 p-1"
-                                                                                            aria-label="Remove item"
-                                                                                        >
-                                                                                            <Trash2 size={16} className={removingKey === key ? "opacity-50" : undefined} />
-                                                                                        </button>
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <div className="col-span-3 flex items-center justify-end">
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => handleRemoveItem(item)}
-                                                                                            disabled={removingKey === key}
-                                                                                            className="text-red-500 hover:text-red-700 p-1"
-                                                                                            aria-label="Remove item"
-                                                                                        >
-                                                                                            <Trash2 size={16} className={removingKey === key ? "opacity-50" : undefined} />
-                                                                                        </button>
-                                                                                    </div>
-                                                                                )}
-
-                                        {/* Subtotal - Full width below on mobile */}
-                                        <div className="col-span-12 mt-2 pt-2 border-t border-gray-100 flex justify-between items-center bg-gray-50 rounded">
-                                            <span className="text-xs text-gray-500">Subtotal</span>
-                                            <span className="text-sm font-bold text-green-700">
-                                                ₦{formatNaira(itemSubtotal)}
-                                            </span>
+                                            <div className="text-right">
+                                                <p className="text-xs text-gray-500">Subtotal</p>
+                                                <p className="text-sm font-bold text-green-700">
+                                                    ₦{formatNaira(itemSubtotal)}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                     );
