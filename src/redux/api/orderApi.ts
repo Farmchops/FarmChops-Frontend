@@ -28,7 +28,7 @@ const baseQuery = fetchBaseQuery({
 export const orderApi = createApi({
     reducerPath: 'orderApi',
     baseQuery,
-    tagTypes: ['Order', 'Orders'],
+    tagTypes: ['Order', 'Orders', 'ActiveDeal'],
     endpoints: (builder) => ({
         // Step 1: Checkout - Validate cart and calculate delivery
         checkout: builder.mutation<ApiResponse<CheckoutResponse>, CheckoutRequest>({
@@ -58,7 +58,8 @@ export const orderApi = createApi({
                 url: `/orders/paystack/verify/${reference}`,
                 method: 'GET',
             }),
-            invalidatesTags: ['Orders', 'Order'],
+            // Also invalidate ActiveDeal to refresh deal stock after purchase
+            invalidatesTags: ['Orders', 'Order', 'ActiveDeal'],
         }),
 
         // Get Order History with pagination

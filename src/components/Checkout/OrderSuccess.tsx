@@ -3,9 +3,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, Package, AlertCircle } from "lucide-react";
 import { useVerifyPaymentMutation } from "@/redux/api/orderApi";
+import { dealsApi } from "@/redux/api/dealsApi";
+import { useDispatch } from "react-redux";
 
 const OrderSuccess: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
     const [verifyPayment, { isLoading }] = useVerifyPaymentMutation();
 
@@ -30,18 +33,20 @@ const OrderSuccess: React.FC = () => {
         try {
             const response = await verifyPayment(reference).unwrap();
 
-                        if (response.success && response.data) {
+            if (response.success && response.data) {
                 setVerificationState("success");
                 setOrderNumber(response.data.order.orderNumber);
+                // Invalidate deals cache to refresh stock after purchase
+                dispatch(dealsApi.util.invalidateTags([{ type: 'ActiveDeal', id: 'CURRENT' }]));
             } else {
-
                 setVerificationState("error");
                 setErrorMessage("Payment verification failed");
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Payment verification failed:", error);
             setVerificationState("error");
-            setErrorMessage(error?.data?.message || "Failed to verify payment");
+            const err = error as { data?: { message?: string } };
+            setErrorMessage(err?.data?.message || "Failed to verify payment");
         }
     };
 
