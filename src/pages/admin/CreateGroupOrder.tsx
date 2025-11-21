@@ -5,7 +5,7 @@ import { ArrowLeft, Package, Users, AlertCircle } from "lucide-react";
 import { alertService } from "@/lib/alertService";
 import { resolveErrorMessage } from "@/lib/utils";
 import { useGetProductsQuery } from "@/redux/api/productApi";
-import { useCreateAdminGroupOrderMutation } from "@/redux/api/groupOrdersApi";
+import { useCreateGroupMutation } from "@/redux/api/groupOrdersApi";
 
 const CreateGroupOrder = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const CreateGroupOrder = () => {
     }
   }, [preselectedProductId]);
 
-  const [createGroup] = useCreateAdminGroupOrderMutation();
+  const [createGroup] = useCreateGroupMutation();
 
   const handleCreateGroup = async () => {
     if (!selectedProduct) {
@@ -59,7 +59,7 @@ const CreateGroupOrder = () => {
       onConfirm: async () => {
         setIsCreating(true);
         try {
-          const result = await createGroup({ productId: selectedProduct._id }).unwrap();
+          const result = await createGroup(selectedProduct._id).unwrap();
           if (result?.success) {
             alertService.show({
               type: "success",
@@ -141,7 +141,7 @@ const CreateGroupOrder = () => {
                 <option value="">-- Select a product --</option>
                 {groupEnabledProducts.map((product) => (
                   <option key={product._id} value={product._id}>
-                    {product.name} - ₦{product.groupConfig?.pricePerSlot?.toLocaleString()} per slot
+                    {product.name} - ₦{(product.groupConfig?.bulkPricePerUnit || 0) / 100} per {product.inventory?.unit || 'unit'}
                   </option>
                 ))}
               </select>
@@ -171,34 +171,34 @@ const CreateGroupOrder = () => {
                 <div className="p-3 bg-white rounded-lg border border-gray-200">
                   <div className="flex items-center gap-2 mb-1">
                     <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-xs font-medium text-gray-600">Total Slots</span>
+                    <span className="text-xs font-medium text-gray-600">Max Participants</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
-                    {selectedProduct.groupConfig.totalSlots} members
+                    {selectedProduct.groupConfig.maxParticipants} members
                   </p>
                 </div>
 
                 <div className="p-3 bg-white rounded-lg border border-gray-200">
                   <div className="flex items-center gap-2 mb-1">
                     <Package className="h-4 w-4 text-gray-500" />
-                    <span className="text-xs font-medium text-gray-600">Quantity/Slot</span>
+                    <span className="text-xs font-medium text-gray-600">Quantity Range</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
-                    {selectedProduct.groupConfig.quantityPerSlot}{selectedProduct.inventory?.unit || 'kg'}
+                    {selectedProduct.groupConfig.quantityPerPerson?.min || 0}-{selectedProduct.groupConfig.quantityPerPerson?.max || 0}{selectedProduct.inventory?.unit || 'kg'}
                   </p>
                 </div>
 
                 <div className="p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-xs font-medium text-gray-600 block mb-1">Price per Slot</span>
+                  <span className="text-xs font-medium text-gray-600 block mb-1">Bulk Price per Unit</span>
                   <p className="text-lg font-bold text-[#1D7B3C]">
-                    ₦{selectedProduct.groupConfig.pricePerSlot.toLocaleString()}
+                    ₦{((selectedProduct.groupConfig.bulkPricePerUnit || 0) / 100).toLocaleString()}
                   </p>
                 </div>
 
                 <div className="p-3 bg-white rounded-lg border border-gray-200">
-                  <span className="text-xs font-medium text-gray-600 block mb-1">Total Revenue</span>
+                  <span className="text-xs font-medium text-gray-600 block mb-1">Target Quantity</span>
                   <p className="text-lg font-bold text-[#1D7B3C]">
-                    ₦{(selectedProduct.groupConfig.totalSlots * selectedProduct.groupConfig.pricePerSlot).toLocaleString()}
+                    {selectedProduct.groupConfig.targetQuantity || 0}{selectedProduct.inventory?.unit || 'kg'}
                   </p>
                 </div>
               </div>
@@ -206,7 +206,7 @@ const CreateGroupOrder = () => {
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-xs text-blue-800">
                   <strong>Note:</strong> This group will appear on the customer-facing Group Sharing page immediately after creation.
-                  It will remain active until all {selectedProduct.groupConfig.totalSlots} slots are filled.
+                  It will remain active until all {selectedProduct.groupConfig.maxParticipants} participants join.
                 </p>
               </div>
             </div>

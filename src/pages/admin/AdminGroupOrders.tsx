@@ -10,31 +10,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetAdminGroupOrdersQuery } from "@/redux/api/groupOrdersApi";
+import { useGetAdminGroupsQuery } from "@/redux/api/groupOrdersApi";
 import type { GroupOrder } from "@/types/groupOrder";
 
 const AdminGroupOrders = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [phaseFilter, setPhaseFilter] = useState<string>("all");
 
   // Fetch admin group orders
-  const { data, isLoading } = useGetAdminGroupOrdersQuery(
-    statusFilter === 'all' ? { search: searchTerm || undefined } : { status: statusFilter, search: searchTerm || undefined }
+  const { data, isLoading } = useGetAdminGroupsQuery(
+    phaseFilter === 'all' ? undefined : { phase: phaseFilter }
   );
 
   const groups: GroupOrder[] = useMemo(() => data?.groups || [], [data?.groups]);
+  const statsData = data?.stats;
 
   const stats = useMemo(() => {
+    if (statsData) return statsData;
+
     return {
-      total: groups.length,
-      active: groups.filter(g => g.status === 'active').length,
-      confirmed: groups.filter(g => g.status === 'confirmed').length,
-      cancelled: groups.filter(g => g.status === 'cancelled').length,
+      totalFillingGroups: groups.filter(g => g.phase === 'filling').length,
+      totalCheckoutWindowGroups: groups.filter(g => g.phase === 'checkout_window').length,
+      totalConfirmedGroups: groups.filter(g => g.phase === 'confirmed').length,
+      totalExpiredGroups: groups.filter(g => g.phase === 'expired').length,
+      totalCancelledGroups: groups.filter(g => g.phase === 'cancelled').length,
       totalRevenue: groups
-        .filter(g => g.status !== 'cancelled')
-        .reduce((sum, g) => sum + (g.filledSlots * g.pricePerSlot), 0),
+        .filter(g => g.phase !== 'cancelled')
+        .reduce((sum, g) => sum + (g.paidSlots * g.bulkPricePerUnit), 0),
     };
-  }, [groups]);
+  }, [groups, statsData]);
 
   const filteredGroups = useMemo(() => {
     let filtered = [...groups];
@@ -54,20 +58,20 @@ const AdminGroupOrders = () => {
       );
     }
 
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((g) => g.status === statusFilter);
+    // Phase filter
+    if (phaseFilter !== "all") {
+      filtered = filtered.filter((g) => g.phase === phaseFilter);
     }
 
     return filtered;
-  }, [groups, searchTerm, statusFilter]);
+  }, [groups, searchTerm, phaseFilter]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount / 100); // Backend sends in kobo
   };
 
   const formatDate = (dateString: string) => {
@@ -80,13 +84,20 @@ const AdminGroupOrders = () => {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
+  const getStatusBadge = (phase: string) => {
+    switch (phase) {
+      case 'filling':
         return (
           <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
             <Clock className="h-3.5 w-3.5" />
-            Active
+            Filling
+          </span>
+        );
+      case 'checkout_window':
+        return (
+          <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
+            <Clock className="h-3.5 w-3.5" />
+            Checkout
           </span>
         );
       case 'confirmed':
@@ -94,6 +105,13 @@ const AdminGroupOrders = () => {
           <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
             <CheckCircle className="h-3.5 w-3.5" />
             Confirmed
+          </span>
+        );
+      case 'expired':
+        return (
+          <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">
+            <XCircle className="h-3.5 w-3.5" />
+            Expired
           </span>
         );
       case 'cancelled':
@@ -140,18 +158,18 @@ const AdminGroupOrders = () => {
         <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Groups</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+              <p className="text-sm text-gray-600">Filling</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalFillingGroups}</p>
             </div>
-            <Users className="h-10 w-10 text-blue-500 opacity-20" />
+            <Clock className="h-10 w-10 text-blue-500 opacity-20" />
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-yellow-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.active}</p>
+              <p className="text-sm text-gray-600">Checkout Window</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalCheckoutWindowGroups}</p>
             </div>
             <Clock className="h-10 w-10 text-yellow-500 opacity-20" />
           </div>
@@ -161,7 +179,7 @@ const AdminGroupOrders = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Confirmed</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.confirmed}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalConfirmedGroups}</p>
             </div>
             <CheckCircle className="h-10 w-10 text-green-500 opacity-20" />
           </div>
@@ -171,7 +189,7 @@ const AdminGroupOrders = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Cancelled</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.cancelled}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalCancelledGroups}</p>
             </div>
             <XCircle className="h-10 w-10 text-red-500 opacity-20" />
           </div>
@@ -205,17 +223,19 @@ const AdminGroupOrders = () => {
             />
           </div>
 
-          {/* Status Filter */}
+          {/* Phase Filter */}
           <div className="w-full md:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={phaseFilter} onValueChange={setPhaseFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder="Filter by phase" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active Only</SelectItem>
-                <SelectItem value="confirmed">Confirmed Only</SelectItem>
-                <SelectItem value="cancelled">Cancelled Only</SelectItem>
+                <SelectItem value="all">All Phases</SelectItem>
+                <SelectItem value="filling">Filling</SelectItem>
+                <SelectItem value="checkout_window">Checkout Window</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -228,7 +248,7 @@ const AdminGroupOrders = () => {
           <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-900 mb-2">No Groups Found</h3>
           <p className="text-gray-600">
-            {searchTerm || statusFilter !== "all"
+            {searchTerm || phaseFilter !== "all"
               ? "Try adjusting your search or filters"
               : "No group orders have been created yet"}
           </p>
@@ -251,8 +271,8 @@ const AdminGroupOrders = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredGroups.map((group) => {
-                  const progress = (group.filledSlots / group.totalSlots) * 100;
-                  const revenue = group.filledSlots * group.pricePerSlot;
+                  const totalFilled = group.reservedSlots + group.paidSlots;
+                  const revenue = group.paidSlots * group.bulkPricePerUnit;
 
                   return (
                     <tr key={group._id} className="hover:bg-gray-50">
@@ -281,19 +301,28 @@ const AdminGroupOrders = () => {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
                             <Users className="h-4 w-4 text-gray-500" />
-                            <span className="font-medium">{group.filledSlots}/{group.totalSlots}</span>
+                            <span className="font-medium">{totalFilled}/{group.maxParticipants}</span>
                           </div>
                           <div className="w-32 bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-[#1D7B3C] h-2 rounded-full transition-all"
-                              style={{ width: `${progress}%` }}
-                            />
+                            <div className="flex h-2 rounded-full overflow-hidden">
+                              <div
+                                className="bg-green-600 transition-all"
+                                style={{ width: `${(group.paidSlots / group.maxParticipants) * 100}%` }}
+                              />
+                              <div
+                                className="bg-yellow-400 transition-all"
+                                style={{ width: `${(group.reservedSlots / group.maxParticipants) * 100}%` }}
+                              />
+                            </div>
                           </div>
+                          <p className="text-xs text-gray-500">
+                            {group.paidSlots} paid • {group.reservedSlots} reserved
+                          </p>
                         </div>
                       </td>
                       <td className="p-4">
                         <span className="text-sm font-medium">
-                          {formatCurrency(group.pricePerSlot)}
+                          {formatCurrency(group.bulkPricePerUnit)}/{group.product.unit || 'unit'}
                         </span>
                       </td>
                       <td className="p-4">
@@ -302,7 +331,7 @@ const AdminGroupOrders = () => {
                         </span>
                       </td>
                       <td className="p-4">
-                        {getStatusBadge(group.status)}
+                        {getStatusBadge(group.phase)}
                       </td>
                       <td className="p-4">
                         <span className="text-sm text-gray-600">

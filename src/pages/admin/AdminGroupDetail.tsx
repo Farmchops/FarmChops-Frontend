@@ -119,17 +119,25 @@ const AdminGroupDetail = () => {
 
   const groupData = group;
 
-  const progress = (groupData.filledSlots / groupData.totalSlots) * 100;
-  const totalRevenue = groupData.filledSlots * groupData.pricePerSlot;
-  const slotsLeft = groupData.totalSlots - groupData.filledSlots;
+  const totalFilled = groupData.reservedSlots + groupData.paidSlots;
+  const progress = (totalFilled / groupData.maxParticipants) * 100;
+  const totalRevenue = groupData.paidSlots * groupData.bulkPricePerUnit;
+  const spotsLeft = groupData.maxParticipants - totalFilled;
 
   const getStatusBadge = () => {
-    switch (groupData.status) {
-      case 'active':
+    switch (groupData.phase) {
+      case 'filling':
         return (
           <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
             <Clock className="h-4 w-4" />
-            Active
+            Filling
+          </span>
+        );
+      case 'checkout_window':
+        return (
+          <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-medium">
+            <Clock className="h-4 w-4" />
+            Checkout Open
           </span>
         );
       case 'confirmed':
@@ -170,7 +178,7 @@ const AdminGroupDetail = () => {
         </div>
         <div className="flex items-center gap-3">
           {getStatusBadge()}
-          {groupData.status === 'active' && (
+          {(groupData.phase === 'filling' || groupData.phase === 'checkout_window') && (
             <button
               type="button"
               onClick={() => setShowCancelModal(true)}
@@ -199,10 +207,10 @@ const AdminGroupDetail = () => {
             <div>
               <p className="text-2xl font-bold text-gray-900">{groupData.product.name}</p>
               <p className="text-sm text-gray-600 mt-2">
-                Quantity per slot: {groupData.quantityPerSlot}{groupData.product.unit}
+                Quantity per person: {groupData.quantityPerPerson?.min ?? 0}-{groupData.quantityPerPerson?.max ?? 0}{groupData.product.unit}
               </p>
               <p className="text-sm text-gray-600">
-                Price per slot: {formatCurrency(groupData.pricePerSlot)}
+                Bulk price: {formatCurrency(groupData.bulkPricePerUnit)}/{groupData.product.unit}
               </p>
             </div>
           </div>
@@ -214,29 +222,35 @@ const AdminGroupDetail = () => {
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">Filled Slots</span>
+                <span className="text-sm text-gray-600">Participants</span>
                 <span className="text-2xl font-bold text-gray-900">
-                  {groupData.filledSlots}/{groupData.totalSlots}
+                  {totalFilled}/{groupData.maxParticipants}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-[#1D7B3C] h-3 rounded-full transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="flex h-3 rounded-full overflow-hidden">
+                  <div
+                    className="bg-green-600 transition-all"
+                    style={{ width: `${(groupData.paidSlots / groupData.maxParticipants) * 100}%` }}
+                  />
+                  <div
+                    className="bg-yellow-400 transition-all"
+                    style={{ width: `${(groupData.reservedSlots / groupData.maxParticipants) * 100}%` }}
+                  />
+                </div>
               </div>
               <p className="text-sm text-gray-600 mt-2">
-                {Math.round(progress)}% complete
+                {groupData.paidSlots} paid • {groupData.reservedSlots} reserved • {Math.round(progress)}% complete
               </p>
             </div>
 
-            {groupData.status === 'active' && (
+            {(groupData.phase === 'filling' || groupData.phase === 'checkout_window') && (
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm font-medium text-blue-900">
-                  {slotsLeft} {slotsLeft === 1 ? 'slot' : 'slots'} remaining
+                  {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} remaining
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                  Group will auto-confirm when full
+                  {groupData.phase === 'filling' ? 'Group will open checkout when minimum reached' : 'Checkout window is open'}
                 </p>
               </div>
             )}
@@ -255,18 +269,22 @@ const AdminGroupDetail = () => {
             </div>
             <div className="pt-4 border-t border-gray-200 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Participants</span>
-                <span className="font-medium">{groupData.filledSlots}</span>
+                <span className="text-gray-600">Paid Participants</span>
+                <span className="font-medium">{groupData.paidSlots}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Price/Slot</span>
-                <span className="font-medium">{formatCurrency(groupData.pricePerSlot)}</span>
+                <span className="text-gray-600">Reserved Participants</span>
+                <span className="font-medium">{groupData.reservedSlots}</span>
               </div>
-              {groupData.status === 'active' && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Price per {groupData.product.unit}</span>
+                <span className="font-medium">{formatCurrency(groupData.bulkPricePerUnit)}</span>
+              </div>
+              {(groupData.phase === 'filling' || groupData.phase === 'checkout_window') && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Potential Revenue</span>
                   <span className="font-medium text-green-600">
-                    {formatCurrency(groupData.totalSlots * groupData.pricePerSlot)}
+                    {formatCurrency(groupData.maxParticipants * groupData.bulkPricePerUnit)}
                   </span>
                 </div>
               )}
@@ -351,16 +369,20 @@ const AdminGroupDetail = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="h-4 w-4" />
-                      {participant.deliveryInfo.phoneNumber}
+                      {participant.deliveryInfo?.phoneNumber || 'N/A'}
                     </div>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-start gap-2 max-w-xs">
-                      <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {participant.deliveryInfo.address}, {participant.deliveryInfo.city}, {participant.deliveryInfo.state}
-                      </p>
-                    </div>
+                    {participant.deliveryInfo ? (
+                      <div className="flex items-start gap-2 max-w-xs">
+                        <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {participant.deliveryInfo.address}, {participant.deliveryInfo.city}, {participant.deliveryInfo.state}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">Not provided yet</span>
+                    )}
                   </td>
                   <td className="p-4">
                     <span className="text-sm font-medium">
@@ -374,16 +396,18 @@ const AdminGroupDetail = () => {
                   </td>
                   <td className="p-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      participant.paymentStatus === 'paid'
+                      participant.status === 'paid'
                         ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                        : participant.status === 'reserved'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {participant.paymentStatus}
+                      {participant.status}
                     </span>
                   </td>
                   <td className="p-4">
                     <span className="text-sm text-gray-600">
-                      {formatDate(participant.joinedAt)}
+                      {formatDate(participant.reservedAt)}
                     </span>
                   </td>
                   <td className="p-4">
@@ -417,7 +441,7 @@ const AdminGroupDetail = () => {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Cancel Group Order</h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    This action will refund all {groupData.filledSlots} participants
+                    This action will refund all {groupData.paidSlots} paid participants
                   </p>
                 </div>
               </div>
@@ -442,7 +466,7 @@ const AdminGroupDetail = () => {
                   <strong>Warning:</strong> Cancelling this group will:
                 </p>
                 <ul className="text-sm text-red-700 mt-2 space-y-1 ml-4 list-disc">
-                  <li>Issue refunds to all {groupData.filledSlots} participants</li>
+                  <li>Issue refunds to all {groupData.paidSlots} paid participants</li>
                   <li>Send cancellation emails to all members</li>
                   <li>Mark the group as permanently cancelled</li>
                 </ul>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User, Home, ShoppingBag, Info, Phone } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Home, ShoppingBag, Info, Phone, Users, CreditCard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import cartnav from "../assets/cartnav.png";
@@ -240,7 +240,32 @@ const Navbar: React.FC = () => {
                                 <span>Products</span>
                             </Link>
                         </li>
-                        {/* Bulk Buying removed from mobile nav */}
+                        <li>
+                            <Link
+                                to="/group-sharing"
+                                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <Users size={18} className="mr-3 text-gray-500" />
+                                <span>Group Sharing</span>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                to="/bulk-buying"
+                                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <ShoppingBag size={18} className="mr-3 text-gray-500" />
+                                <span>Bulk Buying</span>
+                            </Link>
+                        </li>
+                        <li>
+                            <span className="flex items-center px-4 py-3 text-gray-400">
+                                <CreditCard size={18} className="mr-3" />
+                                <span>Pay Later (Coming Soon)</span>
+                            </span>
+                        </li>
                         <li>
                             <Link
                                 to="/about"

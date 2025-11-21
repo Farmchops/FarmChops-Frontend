@@ -94,7 +94,7 @@ const MyGroups = () => {
       ) : (
         <div className="space-y-4">
           {groups.map((group) => (
-            <GroupCard key={group._id} group={group} />
+            <GroupCard key={group.groupId} group={group} />
           ))}
         </div>
       )}
@@ -105,15 +105,16 @@ const MyGroups = () => {
 // Group Card Component
 const GroupCard = ({ group }: { group: MyGroupOrder }) => {
   const [leaveGroup, { isLoading: isLeaving }] = useLeaveGroupMutation();
-  const progress = (group.filledSlots / group.totalSlots) * 100;
-  const slotsLeft = group.totalSlots - group.filledSlots;
+  const totalFilled = group.reservedSlots + group.paidSlots;
+  const progress = (totalFilled / group.maxParticipants) * 100;
+  const spotsLeft = group.maxParticipants - totalFilled;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount / 100); // Backend sends in kobo
   };
 
   const formatDate = (dateString: string) => {
@@ -125,18 +126,18 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
   };
 
   const handleLeaveGroup = async () => {
-    if (group.status !== 'active') {
-      alert('You can only leave active groups');
+    if (group.myParticipation.status !== 'reserved') {
+      alert('You can only leave if you have not paid yet');
       return;
     }
 
-    if (!confirm('Are you sure you want to leave this group? You will receive a full refund.')) {
+    if (!confirm('Are you sure you want to leave this group?')) {
       return;
     }
 
     try {
       await leaveGroup(group.groupId).unwrap();
-      alert('Successfully left the group. Your refund is being processed.');
+      alert('Successfully left the group.');
     } catch (err: unknown) {
       console.error('Leave group failed:', err);
       const errorMessage = resolveErrorMessage(err) || 'Failed to leave group. Please try again.';
@@ -145,12 +146,19 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
   };
 
   const getStatusBadge = () => {
-    switch (group.status) {
-      case 'active':
+    switch (group.phase) {
+      case 'filling':
         return (
           <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
             <Clock className="h-3.5 w-3.5" />
-            Active
+            Filling
+          </span>
+        );
+      case 'checkout_window':
+        return (
+          <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
+            <Clock className="h-3.5 w-3.5" />
+            Checkout Open
           </span>
         );
       case 'confirmed':
@@ -202,41 +210,66 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-[#1D7B3C]">
-                  {formatCurrency(group.amountPaid)}
+                  {formatCurrency(group.myParticipation.amount)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {group.quantity}{group.product.unit}
+                  {group.myParticipation.quantity}{group.product.unit}
+                </p>
+                <p className={`text-xs font-medium mt-1 ${
+                  group.myParticipation.status === 'paid' ? 'text-green-600' :
+                  group.myParticipation.status === 'reserved' ? 'text-yellow-600' :
+                  'text-gray-600'
+                }`}>
+                  {group.myParticipation.status === 'paid' ? '✓ Paid' :
+                   group.myParticipation.status === 'reserved' ? '⏳ Reserved' :
+                   'Removed'}
                 </p>
               </div>
             </div>
 
-            {/* Progress Bar (only for active groups) */}
-            {group.status === 'active' && (
+            {/* Checkout Deadline Warning */}
+            {group.myParticipation.status === 'reserved' && group.myParticipation.checkoutDeadline && (
+              <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-xs font-semibold text-yellow-800 mb-1">⚠️ Checkout Before:</p>
+                <p className="text-sm text-yellow-900">
+                  {new Date(group.myParticipation.checkoutDeadline).toLocaleString()}
+                </p>
+              </div>
+            )}
+
+            {/* Progress Bar */}
+            {(group.phase === 'filling' || group.phase === 'checkout_window') && (
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-600">
-                    {group.filledSlots}/{group.totalSlots} members
+                    {totalFilled}/{group.maxParticipants} members
                   </span>
                   <span className="font-medium text-gray-900">{Math.round(progress)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div
-                      className="bg-[#1D7B3C] h-1.5 rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
+                  <div className="flex h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-green-600 transition-all duration-300"
+                      style={{ width: `${(group.paidSlots / group.maxParticipants) * 100}%` }}
                     />
+                    <div
+                      className="bg-yellow-400 transition-all duration-300"
+                      style={{ width: `${(group.reservedSlots / group.maxParticipants) * 100}%` }}
+                    />
+                  </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {slotsLeft} {slotsLeft === 1 ? 'slot' : 'slots'} remaining
+                  {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} remaining • {group.paidSlots} paid, {group.reservedSlots} reserved
                 </p>
               </div>
             )}
 
             {/* Order Info */}
-            {group.orderId && (
+            {group.myParticipation.orderId && (
               <div className="mb-3 p-3 bg-green-50 rounded-lg">
                 <p className="text-xs text-gray-600 mb-1">Individual Order Created</p>
                 <Link
-                  to={`/orders/${group.orderId}`}
+                  to={`/orders/${group.myParticipation.orderId}`}
                   className="text-sm font-medium text-[#1D7B3C] hover:text-[#166430] flex items-center gap-1"
                 >
                   Track Order <ArrowRight className="h-3.5 w-3.5" />
@@ -245,18 +278,22 @@ const GroupCard = ({ group }: { group: MyGroupOrder }) => {
             )}
 
             {/* Delivery Address */}
-            <div className="text-xs text-gray-600 mb-3">
-              <p className="font-medium text-gray-700 mb-0.5">Delivery to:</p>
-              <p className="line-clamp-1">{group.deliveryAddress}</p>
-            </div>
+            {group.myParticipation.deliveryInfo && (
+              <div className="text-xs text-gray-600 mb-3">
+                <p className="font-medium text-gray-700 mb-0.5">Delivery to:</p>
+                <p className="line-clamp-1">
+                  {group.myParticipation.deliveryInfo.address}, {group.myParticipation.deliveryInfo.city}, {group.myParticipation.deliveryInfo.state}
+                </p>
+              </div>
+            )}
 
             {/* Actions & Dates */}
             <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <span className="text-xs text-gray-500">
-                Joined {formatDate(group.joinedAt)}
+                Joined {formatDate(group.myParticipation.reservedAt)}
               </span>
               <div className="flex items-center gap-2">
-                {group.status === 'active' && (
+                {group.myParticipation.status === 'reserved' && (
                   <button
                     type="button"
                     onClick={handleLeaveGroup}

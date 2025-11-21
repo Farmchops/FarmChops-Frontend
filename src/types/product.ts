@@ -46,10 +46,17 @@ export interface BulkSavings {
 // Full product type as returned from API
 export interface GroupConfig {
     enabled: boolean;
-    totalSlots: number;
-    quantityPerSlot: number;
-    pricePerSlot: number;
+    minParticipants: number;
+    maxParticipants: number;
+    quantityPerPerson: {
+        min: number;
+        max: number;
+    };
+    targetQuantity: number;
+    bulkPricePerUnit: number;
+    deadlineHours: number;
     maxActiveGroups: number;
+    checkoutWindowHours: number;
 }
 
 export interface Product {

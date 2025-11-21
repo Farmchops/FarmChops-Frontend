@@ -6,9 +6,9 @@ import { normalizeActiveDealPayload } from "@/lib/deals";
 
 
 const quickOptions = [
-    { label: "Bulk Buying", breakpoint: "sm" as const, alwaysVisible: true },
-    { label: "Pay Later", breakpoint: "sm" as const, alwaysVisible: true },
-    { label: "Group Sharing", breakpoint: "sm" as const, alwaysVisible: true },
+    { label: "Bulk Buying", breakpoint: "sm" as const, alwaysVisible: false },
+    { label: "Pay Later", breakpoint: "sm" as const, alwaysVisible: false },
+    { label: "Group Sharing", breakpoint: "sm" as const, alwaysVisible: false },
     { label: "Become a vendor", breakpoint: "md" as const, alwaysVisible: false },
 ] as const;
 

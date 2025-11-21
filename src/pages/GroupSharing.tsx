@@ -1,6 +1,6 @@
 // src/pages/GroupSharing.tsx
 import { Link } from "react-router-dom";
-import { Users, Clock, Package, Sparkles } from "lucide-react";
+import { Users, Clock, Package, Sparkles, Timer } from "lucide-react";
 import { useGetActiveGroupsQuery } from "@/redux/api/groupOrdersApi";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import type { GroupOrder } from "@/types/groupOrder";
@@ -37,22 +37,22 @@ const GroupSharing = () => {
               <div className="w-12 h-12 rounded-full bg-[#1D7B3C]/10 text-[#1D7B3C] flex items-center justify-center mx-auto mb-3 text-xl font-bold">
                 1
               </div>
-              <h3 className="font-medium text-gray-900 mb-1">Join a Group</h3>
-              <p className="text-sm text-gray-600">Pick a product and join an active group</p>
+              <h3 className="font-medium text-gray-900 mb-1">Reserve Your Spot</h3>
+              <p className="text-sm text-gray-600">Pick quantity and reserve (no payment yet!)</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-[#1D7B3C]/10 text-[#1D7B3C] flex items-center justify-center mx-auto mb-3 text-xl font-bold">
                 2
               </div>
-              <h3 className="font-medium text-gray-900 mb-1">Pay Your Share</h3>
-              <p className="text-sm text-gray-600">Pay only for your fixed portion</p>
+              <h3 className="font-medium text-gray-900 mb-1">Group Fills Up</h3>
+              <p className="text-sm text-gray-600">Wait for others to join (no time limit!)</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-[#1D7B3C]/10 text-[#1D7B3C] flex items-center justify-center mx-auto mb-3 text-xl font-bold">
                 3
               </div>
-              <h3 className="font-medium text-gray-900 mb-1">Group Fills Up</h3>
-              <p className="text-sm text-gray-600">Wait for others to join (no time limit!)</p>
+              <h3 className="font-medium text-gray-900 mb-1">Checkout & Pay</h3>
+              <p className="text-sm text-gray-600">48hr window opens when group is ready</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-[#1D7B3C]/10 text-[#1D7B3C] flex items-center justify-center mx-auto mb-3 text-xl font-bold">
@@ -112,15 +112,21 @@ const GroupSharing = () => {
 
 // Group Card Component
 const GroupCard = ({ group }: { group: GroupOrder }) => {
-  const progress = (group.filledSlots / group.totalSlots) * 100;
-  const slotsLeft = group.totalSlots - group.filledSlots;
+  const totalFilled = group.reservedSlots + group.paidSlots;
+  const progress = (totalFilled / group.maxParticipants) * 100;
+  const spotsLeft = group.spotsLeft ?? (group.maxParticipants - totalFilled);
+  const isCheckoutWindow = group.phase === 'checkout_window';
+  const isFilling = group.phase === 'filling';
 
   const formatCurrency = (amount: number) => {
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return '₦0';
+    }
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount / 100); // Backend sends in kobo
   };
 
   return (
@@ -141,10 +147,16 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
             <Package className="h-16 w-16 text-gray-300" />
           </div>
         )}
-        {slotsLeft <= 3 && slotsLeft > 0 && (
+        {spotsLeft <= 3 && spotsLeft > 0 && (
           <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
             <Sparkles className="h-3 w-3" />
-            Only {slotsLeft} left!
+            Only {spotsLeft} left!
+          </div>
+        )}
+        {isCheckoutWindow && (
+          <div className="absolute top-3 left-3 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <Timer className="h-3 w-3" />
+            Checkout Open
           </div>
         )}
       </div>
@@ -159,29 +171,40 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
         <div className="mb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-[#1D7B3C]">
-              {formatCurrency(group.pricePerSlot)}
+              {formatCurrency(group.bulkPricePerUnit)}
             </span>
-            <span className="text-sm text-gray-500">per person</span>
+            <span className="text-sm text-gray-500">per {group.product.unit || 'unit'}</span>
           </div>
-          <p className="text-sm text-gray-600">
-            Get {group.quantityPerSlot}{group.product.unit || 'kg'}
-          </p>
+          {group.quantityPerPerson && (
+            <p className="text-sm text-gray-600">
+              {group.quantityPerPerson.min}-{group.quantityPerPerson.max} {group.product.unit || 'kg'} per person
+            </p>
+          )}
         </div>
 
         {/* Progress */}
         <div className="mb-4">
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-gray-600">
-              {group.filledSlots}/{group.totalSlots} members
+              {totalFilled}/{group.maxParticipants} members
             </span>
             <span className="font-medium text-gray-900">{Math.round(progress)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-[#1D7B3C] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="flex h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-green-600 transition-all duration-300"
+                style={{ width: `${(group.paidSlots / group.maxParticipants) * 100}%` }}
+              />
+              <div
+                className="bg-yellow-400 transition-all duration-300"
+                style={{ width: `${(group.reservedSlots / group.maxParticipants) * 100}%` }}
+              />
+            </div>
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {group.paidSlots} paid • {group.reservedSlots} reserved
+          </p>
         </div>
 
         {/* Participants Preview */}
@@ -207,13 +230,27 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
 
         {/* CTA Button */}
         <button type="button" className="w-full bg-[#1D7B3C] hover:bg-[#166430] text-white font-medium py-3 px-4 rounded-full transition-colors">
-          Join for {formatCurrency(group.pricePerSlot)} →
+          {isFilling ? 'Reserve Spot (Free)' : isCheckoutWindow ? 'Checkout Now' : 'View Group'} →
         </button>
 
-        {/* No Time Limit Badge */}
+        {/* Status Badge */}
         <div className="mt-3 flex items-center justify-center gap-1 text-xs text-gray-500">
-          <Clock className="h-3.5 w-3.5" />
-          <span>No time limit - fills organically</span>
+          {isFilling ? (
+            <>
+              <Clock className="h-3.5 w-3.5" />
+              <span>Filling - {spotsLeft} spots left</span>
+            </>
+          ) : isCheckoutWindow ? (
+            <>
+              <Timer className="h-3.5 w-3.5 text-yellow-600" />
+              <span className="text-yellow-600">Checkout window open</span>
+            </>
+          ) : (
+            <>
+              <Clock className="h-3.5 w-3.5 text-green-600" />
+              <span className="text-green-600">Group confirmed</span>
+            </>
+          )}
         </div>
       </div>
     </Link>

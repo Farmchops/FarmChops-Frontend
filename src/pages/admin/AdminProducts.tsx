@@ -30,10 +30,17 @@ const AdminProducts = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [groupConfig, setGroupConfig] = useState<GroupConfig>({
     enabled: false,
-    totalSlots: 10,
-    quantityPerSlot: 10,
-    pricePerSlot: 0,
+    minParticipants: 5,
+    maxParticipants: 10,
+    quantityPerPerson: {
+      min: 5,
+      max: 15,
+    },
+    targetQuantity: 100,
+    bulkPricePerUnit: 0,
+    deadlineHours: 48,
     maxActiveGroups: 5,
+    checkoutWindowHours: 48,
   });
 
   const { data, isLoading, refetch } = useGetProductsQuery({ page, limit: 100 }); // Fetch more for client-side filtering
@@ -142,10 +149,14 @@ const AdminProducts = () => {
     setGroupConfig({
       // support legacy boolean `groupBuyingEnabled` if `groupConfig` is not present
       enabled: product.groupConfig?.enabled ?? ((product as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled ?? false),
-      totalSlots: product.groupConfig?.totalSlots || 10,
-      quantityPerSlot: product.groupConfig?.quantityPerSlot || 10,
-      pricePerSlot: product.groupConfig?.pricePerSlot || product.pricing?.retail?.price || 0,
+      minParticipants: product.groupConfig?.minParticipants || 5,
+      maxParticipants: product.groupConfig?.maxParticipants || 10,
+      quantityPerPerson: product.groupConfig?.quantityPerPerson || { min: 5, max: 15 },
+      targetQuantity: product.groupConfig?.targetQuantity || 100,
+      bulkPricePerUnit: product.groupConfig?.bulkPricePerUnit || (product.pricing?.retail?.price ? product.pricing.retail.price * 100 : 0),
+      deadlineHours: product.groupConfig?.deadlineHours || 48,
       maxActiveGroups: product.groupConfig?.maxActiveGroups || 5,
+      checkoutWindowHours: product.groupConfig?.checkoutWindowHours || 48,
     });
     setShowGroupModal(true);
   };
@@ -345,7 +356,7 @@ const AdminProducts = () => {
         )} */}
       </div>
 
-      {/* Table */}
+      {/* Table / Cards */}
       {filteredProducts.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-12 text-center">
           <div className="text-gray-400 text-5xl mb-4 flex items-center justify-center"><Package size={48} /></div>
@@ -365,64 +376,60 @@ const AdminProducts = () => {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr className="text-[#687182] text-sm">
-                <th className="p-3 text-left font-medium">#</th>
-                <th className="p-3 text-left font-medium">Product Name</th>
-                <th className="p-3 text-left font-medium">Price (Retail)</th>
-                <th className="p-3 text-left font-medium">Stock</th>
-                <th className="p-3 text-left font-medium">Category</th>
-                <th className="p-3 text-left font-medium">Status</th>
-                <th className="p-3 text-left font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredProducts.map((p, idx) => (
-                <tr key={p._id} className="">
-                  <td className="p-3">{idx + 1}</td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={p.images?.[0] || "/placeholder.png"}
-                        alt={p.name}
-                        className="w-10 h-10 rounded object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/placeholder.png";
-                        }}
-                      />
-                      <div>
-                        <p className="font-medium">{p.name}</p>
-                        <p className="text-xs line-clamp-1">{p.description}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    ₦{p.pricing?.retail?.price?.toLocaleString() || "N/A"}
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`inline-flex items-center ${(p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
-                        ? "text-red-600"
-                        : ""
-                        }`}
-                    >
-                      {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
+        <>
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filteredProducts.map((p) => (
+              <div key={p._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                {/* Product Image and Name */}
+                <div className="p-4 flex items-start gap-3">
+                  <img
+                    src={p.images?.[0] || "/placeholder.png"}
+                    alt={p.name}
+                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/placeholder.png";
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 mb-1">{p.name}</h3>
+                    <p className="text-sm text-gray-600 line-clamp-2">{p.description}</p>
+                  </div>
+                </div>
+
+                {/* Product Details */}
+                <div className="px-4 pb-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Price:</span>
+                    <span className="text-lg font-semibold text-[#1D7B3C]">
+                      ₦{p.pricing?.retail?.price?.toLocaleString() || "N/A"}
                     </span>
-                    {p.isLowStock && (
-                      <span className="ml-2 text-xs text-red-600 font-medium">Low!</span>
-                    )}
-                  </td>
-                  <td className="p-3">{p.category?.name || "N/A"}</td>
-                  <td className="p-3">
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Stock:</span>
+                    <span className={`text-sm font-medium ${
+                      (p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
+                        ? "text-red-600"
+                        : "text-gray-900"
+                    }`}>
+                      {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
+                      {p.isLowStock && <span className="ml-1 text-xs">(Low!)</span>}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Category:</span>
+                    <span className="text-sm text-gray-900">{p.category?.name || "N/A"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Status:</span>
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : p.status === "out_of_stock" || p.status === "inactive"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-gray-100 text-gray-700"
-                        }`}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        p.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : p.status === "out_of_stock" || p.status === "inactive"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-700"
+                      }`}
                     >
                       {p.status === "active"
                         ? "In Stock"
@@ -430,49 +437,161 @@ const AdminProducts = () => {
                           ? "Out of Stock"
                           : "Unknown"}
                     </span>
+                  </div>
+                </div>
 
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenGroupModal(p)}
-                        className={`p-2 rounded transition-colors ${
-                          p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
-                            ? "text-[#1D7B3C] bg-green-50"
-                            : "hover:text-[#1D7B3C] hover:bg-green-50"
-                        }`}
-                        title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
-                      >
-                        <Users className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditProduct(p);
-                          setMode("form");
-                        }}
-                        className="p-2  hover:text-[#1D7B3C] hover:bg-green-50 rounded transition-colors"
-                        title="Edit product"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(p._id, p.name)}
-                        disabled={isDeleting}
-                        className="p-2  hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                        title="Delete product"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                {/* Action Buttons */}
+                <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenGroupModal(p)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                      p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
+                        ? "text-[#1D7B3C] bg-green-100 font-medium"
+                        : "text-gray-700 bg-white border border-gray-300 hover:text-[#1D7B3C] hover:bg-green-50"
+                    }`}
+                    title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
+                  >
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm">Group</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditProduct(p);
+                      setMode("form");
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:text-[#1D7B3C] hover:bg-green-50 transition-colors"
+                    title="Edit product"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    <span className="text-sm">Edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p._id, p.name)}
+                    disabled={isDeleting}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    title="Delete product"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="text-sm">Delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto bg-white rounded-lg shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr className="text-[#687182] text-sm">
+                  <th className="p-3 text-left font-medium">#</th>
+                  <th className="p-3 text-left font-medium">Product Name</th>
+                  <th className="p-3 text-left font-medium">Price (Retail)</th>
+                  <th className="p-3 text-left font-medium">Stock</th>
+                  <th className="p-3 text-left font-medium">Category</th>
+                  <th className="p-3 text-left font-medium">Status</th>
+                  <th className="p-3 text-left font-medium">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredProducts.map((p, idx) => (
+                  <tr key={p._id} className="">
+                    <td className="p-3">{idx + 1}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={p.images?.[0] || "/placeholder.png"}
+                          alt={p.name}
+                          className="w-10 h-10 rounded object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.png";
+                          }}
+                        />
+                        <div>
+                          <p className="font-medium">{p.name}</p>
+                          <p className="text-xs line-clamp-1">{p.description}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      ₦{p.pricing?.retail?.price?.toLocaleString() || "N/A"}
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={`inline-flex items-center ${(p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
+                          ? "text-red-600"
+                          : ""
+                          }`}
+                      >
+                        {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
+                      </span>
+                      {p.isLowStock && (
+                        <span className="ml-2 text-xs text-red-600 font-medium">Low!</span>
+                      )}
+                    </td>
+                    <td className="p-3">{p.category?.name || "N/A"}</td>
+                    <td className="p-3">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${p.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : p.status === "out_of_stock" || p.status === "inactive"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-700"
+                          }`}
+                      >
+                        {p.status === "active"
+                          ? "In Stock"
+                          : p.status === "out_of_stock" || p.status === "inactive"
+                            ? "Out of Stock"
+                            : "Unknown"}
+                      </span>
+
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenGroupModal(p)}
+                          className={`p-2 rounded transition-colors ${
+                            p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
+                              ? "text-[#1D7B3C] bg-green-50"
+                              : "hover:text-[#1D7B3C] hover:bg-green-50"
+                          }`}
+                          title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
+                        >
+                          <Users className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditProduct(p);
+                            setMode("form");
+                          }}
+                          className="p-2  hover:text-[#1D7B3C] hover:bg-green-50 rounded transition-colors"
+                          title="Edit product"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(p._id, p.name)}
+                          disabled={isDeleting}
+                          className="p-2  hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                          title="Delete product"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Pagination Info */}
@@ -543,55 +662,143 @@ const AdminProducts = () => {
               {/* Configuration Fields (only show if enabled) */}
               {groupConfig.enabled && (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Total Slots per Group *
-                    </label>
-                    <input
-                      type="number"
-                      min="2"
-                      max="100"
-                      value={groupConfig.totalSlots}
-                      onChange={(e) => setGroupConfig({ ...groupConfig, totalSlots: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                      placeholder="10"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Number of members needed to fill a group (e.g., 10 people)</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Min Participants *
+                      </label>
+                      <input
+                        type="number"
+                        min="2"
+                        max="100"
+                        value={groupConfig.minParticipants}
+                        onChange={(e) => setGroupConfig({ ...groupConfig, minParticipants: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                        placeholder="5"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Minimum members to start checkout</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Max Participants *
+                      </label>
+                      <input
+                        type="number"
+                        min="2"
+                        max="100"
+                        value={groupConfig.maxParticipants}
+                        onChange={(e) => setGroupConfig({ ...groupConfig, maxParticipants: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                        placeholder="10"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Maximum members allowed</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Min Quantity per Person *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={groupConfig.quantityPerPerson.min}
+                        onChange={(e) => setGroupConfig({
+                          ...groupConfig,
+                          quantityPerPerson: { ...groupConfig.quantityPerPerson, min: parseInt(e.target.value) || 0 }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                        placeholder="5"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Min {selectedProduct?.inventory?.unit || 'kg'} per person</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Max Quantity per Person *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={groupConfig.quantityPerPerson.max}
+                        onChange={(e) => setGroupConfig({
+                          ...groupConfig,
+                          quantityPerPerson: { ...groupConfig.quantityPerPerson, max: parseInt(e.target.value) || 0 }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                        placeholder="15"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Max {selectedProduct?.inventory?.unit || 'kg'} per person</p>
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quantity per Slot *
+                      Target Quantity *
                     </label>
                     <input
                       type="number"
                       min="1"
-                      value={groupConfig.quantityPerSlot}
-                      onChange={(e) => setGroupConfig({ ...groupConfig, quantityPerSlot: parseInt(e.target.value) || 0 })}
+                      value={groupConfig.targetQuantity}
+                      onChange={(e) => setGroupConfig({ ...groupConfig, targetQuantity: parseInt(e.target.value) || 0 })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                      placeholder="10"
+                      placeholder="100"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Quantity each member receives (e.g., 10{selectedProduct.inventory?.unit || 'kg'} per person)
+                      Total quantity target for group (e.g., 100{selectedProduct?.inventory?.unit || 'kg'})
                     </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price per Slot *
+                      Bulk Price per Unit (in ₦) *
                     </label>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      value={groupConfig.pricePerSlot}
-                      onChange={(e) => setGroupConfig({ ...groupConfig, pricePerSlot: parseFloat(e.target.value) || 0 })}
+                      value={groupConfig.bulkPricePerUnit / 100}
+                      onChange={(e) => setGroupConfig({ ...groupConfig, bulkPricePerUnit: Math.round((parseFloat(e.target.value) || 0) * 100) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                      placeholder="4500"
+                      placeholder="450"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Amount each member pays (₦{groupConfig.pricePerSlot.toLocaleString()})
+                      Price per {selectedProduct?.inventory?.unit || 'unit'} (₦{(groupConfig.bulkPricePerUnit / 100).toLocaleString()})
                     </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Deadline Hours *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={groupConfig.deadlineHours}
+                        onChange={(e) => setGroupConfig({ ...groupConfig, deadlineHours: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                        placeholder="48"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Hours before group expires</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Checkout Window Hours *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={groupConfig.checkoutWindowHours}
+                        onChange={(e) => setGroupConfig({ ...groupConfig, checkoutWindowHours: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                        placeholder="48"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Hours to complete checkout</p>
+                    </div>
                   </div>
 
                   <div>
@@ -614,10 +821,11 @@ const AdminProducts = () => {
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-900 mb-2">Group Summary</h4>
                     <ul className="text-xs text-gray-700 space-y-1">
-                      <li>• Each group needs {groupConfig.totalSlots} members</li>
-                      <li>• Each member gets {groupConfig.quantityPerSlot}{selectedProduct.inventory?.unit || 'kg'}</li>
-                      <li>• Each member pays ₦{groupConfig.pricePerSlot.toLocaleString()}</li>
-                      <li>• Total revenue per group: ₦{(groupConfig.totalSlots * groupConfig.pricePerSlot).toLocaleString()}</li>
+                      <li>• Each group needs {groupConfig.minParticipants}-{groupConfig.maxParticipants} participants</li>
+                      <li>• Each member can order {groupConfig.quantityPerPerson.min}-{groupConfig.quantityPerPerson.max}{selectedProduct?.inventory?.unit || 'kg'}</li>
+                      <li>• Bulk price: ₦{(groupConfig.bulkPricePerUnit / 100).toLocaleString()} per {selectedProduct?.inventory?.unit || 'unit'}</li>
+                      <li>• Target quantity: {groupConfig.targetQuantity}{selectedProduct?.inventory?.unit || 'kg'}</li>
+                      <li>• Checkout window: {groupConfig.checkoutWindowHours} hours</li>
                       <li>• Up to {groupConfig.maxActiveGroups} active groups can run simultaneously</li>
                     </ul>
                   </div>
@@ -658,9 +866,16 @@ const AdminProducts = () => {
                   type="button"
                   onClick={handleSaveGroupConfig}
                   disabled={isConfiguringGroup || (groupConfig.enabled && (
-                    groupConfig.totalSlots < 2 ||
-                    groupConfig.quantityPerSlot < 1 ||
-                    groupConfig.pricePerSlot <= 0 ||
+                    groupConfig.minParticipants < 2 ||
+                    groupConfig.maxParticipants < 2 ||
+                    groupConfig.minParticipants > groupConfig.maxParticipants ||
+                    groupConfig.quantityPerPerson.min < 1 ||
+                    groupConfig.quantityPerPerson.max < 1 ||
+                    groupConfig.quantityPerPerson.min > groupConfig.quantityPerPerson.max ||
+                    groupConfig.targetQuantity < 1 ||
+                    groupConfig.bulkPricePerUnit <= 0 ||
+                    groupConfig.deadlineHours < 1 ||
+                    groupConfig.checkoutWindowHours < 1 ||
                     groupConfig.maxActiveGroups < 1
                   ))}
                   className="bg-[#1D7B3C] text-white px-6 py-2 rounded-lg hover:bg-[#166430] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

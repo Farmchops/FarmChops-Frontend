@@ -4,9 +4,20 @@ import type { RootState } from '../store';
 import type {
   GroupOrder,
   GroupOrderListResponse,
-  JoinGroupRequest,
-  JoinGroupResponse,
-  MyGroupOrder
+  ReserveSlotRequest,
+  ReserveSlotResponse,
+  CheckoutRequest,
+  CheckoutResponse,
+  VerifyPaymentResponse,
+  JoinWaitlistRequest,
+  JoinWaitlistResponse,
+  LeaveGroupResponse,
+  MyGroupsResponse,
+  AdminGroupsResponse,
+  CancelGroupRequest,
+  CancelGroupResponse,
+  ConfigureGroupBuyingRequest,
+  ProductWithGroupConfig,
 } from '@/types/groupOrder';
 
 export const groupOrdersApi = createApi({
@@ -22,20 +33,20 @@ export const groupOrdersApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['GroupOrders', 'MyGroups'],
+  tagTypes: ['GroupOrders', 'MyGroups', 'AdminGroups'],
   endpoints: (builder) => ({
+    // ==================== PUBLIC ENDPOINTS ====================
+
     // Get all active groups
-    getActiveGroups: builder.query<GroupOrderListResponse, { productId?: string }>({
-      query: ({ productId }) => ({
+    getActiveGroups: builder.query<GroupOrderListResponse, { productId?: string } | void>({
+      query: (params) => ({
         url: '/group-orders/active',
-        params: productId ? { productId } : undefined,
+        params: params?.productId ? { productId: params.productId } : undefined,
       }),
       transformResponse: (response: { success?: boolean; data?: GroupOrderListResponse; groups?: GroupOrder[] }) => {
-        // Handle wrapped response: { success: true, data: { groups: [...] } }
         if (response.data && response.data.groups) {
           return response.data;
         }
-        // Handle direct response: { groups: [...] }
         if (response.groups) {
           return { groups: response.groups };
         }
@@ -44,15 +55,28 @@ export const groupOrdersApi = createApi({
       providesTags: ['GroupOrders'],
     }),
 
-    // Get group details
-    getGroupById: builder.query<{ group: GroupOrder }, string>({
-      query: (groupId) => `/group-orders/${groupId}`,
+    // Get group by shareable code
+    getGroupByShareableCode: builder.query<{ group: GroupOrder }, string>({
+      query: (shareableCode) => `/group-orders/share/${shareableCode}`,
       transformResponse: (response: { success?: boolean; data?: { group: GroupOrder }; group?: GroupOrder }) => {
-        // Handle wrapped response: { success: true, data: { group: {...} } }
         if (response.data && response.data.group) {
           return response.data;
         }
-        // Handle direct response: { group: {...} }
+        if (response.group) {
+          return { group: response.group };
+        }
+        return { group: {} as GroupOrder };
+      },
+      providesTags: (_result, _error, code) => [{ type: 'GroupOrders', id: code }],
+    }),
+
+    // Get group details by groupId
+    getGroupById: builder.query<{ group: GroupOrder }, string>({
+      query: (groupId) => `/group-orders/${groupId}`,
+      transformResponse: (response: { success?: boolean; data?: { group: GroupOrder }; group?: GroupOrder }) => {
+        if (response.data && response.data.group) {
+          return response.data;
+        }
         if (response.group) {
           return { group: response.group };
         }
@@ -61,18 +85,46 @@ export const groupOrdersApi = createApi({
       providesTags: (_result, _error, groupId) => [{ type: 'GroupOrders', id: groupId }],
     }),
 
-    // Join a group
-    joinGroup: builder.mutation<JoinGroupResponse, { groupId: string; data: JoinGroupRequest }>({
+    // ==================== PROTECTED USER ENDPOINTS ====================
+
+    // Reserve a slot (Step 1: No payment)
+    reserveSlot: builder.mutation<ReserveSlotResponse, { groupId: string; data: ReserveSlotRequest }>({
       query: ({ groupId, data }) => ({
-        url: `/group-orders/${groupId}/join`,
+        url: `/group-orders/${groupId}/reserve`,
         method: 'POST',
         body: data,
       }),
       invalidatesTags: ['GroupOrders', 'MyGroups'],
     }),
 
-    // Leave a group
-    leaveGroup: builder.mutation<{ success: boolean; refund: Record<string, unknown> | null }, string>({
+    // Initiate checkout (Step 2: Get Paystack URL)
+    initiateCheckout: builder.mutation<CheckoutResponse, { groupId: string; data: CheckoutRequest }>({
+      query: ({ groupId, data }) => ({
+        url: `/group-orders/${groupId}/checkout`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['GroupOrders', 'MyGroups'],
+    }),
+
+    // Verify payment
+    verifyPayment: builder.query<VerifyPaymentResponse, string>({
+      query: (reference) => `/group-orders/verify-payment/${reference}`,
+      providesTags: ['MyGroups'],
+    }),
+
+    // Join waitlist
+    joinWaitlist: builder.mutation<JoinWaitlistResponse, { groupId: string; data: JoinWaitlistRequest }>({
+      query: ({ groupId, data }) => ({
+        url: `/group-orders/${groupId}/waitlist`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['GroupOrders', 'MyGroups'],
+    }),
+
+    // Leave group (before payment)
+    leaveGroup: builder.mutation<LeaveGroupResponse, string>({
       query: (groupId) => ({
         url: `/group-orders/${groupId}/leave`,
         method: 'POST',
@@ -81,12 +133,12 @@ export const groupOrdersApi = createApi({
     }),
 
     // Get my groups
-    getMyGroups: builder.query<{ groups: MyGroupOrder[] }, { status?: string }>({
-      query: ({ status }) => ({
+    getMyGroups: builder.query<MyGroupsResponse, { status?: string } | void>({
+      query: (params) => ({
         url: '/group-orders/user/my-groups',
-        params: status ? { status } : undefined,
+        params: params?.status ? { status: params.status } : undefined,
       }),
-      transformResponse: (response: { success?: boolean; data?: { groups: MyGroupOrder[] }; groups?: MyGroupOrder[] }) => {
+      transformResponse: (response: { success?: boolean; data?: MyGroupsResponse; groups?: MyGroupsResponse['groups'] }) => {
         if (response.data && response.data.groups) {
           return response.data;
         }
@@ -98,42 +150,113 @@ export const groupOrdersApi = createApi({
       providesTags: ['MyGroups'],
     }),
 
-    // Admin: fetch all group orders (for admin dashboard)
-    getAdminGroupOrders: builder.query<import('@/types/groupOrder').GroupOrderListResponse, { status?: string; search?: string } | void>({
-      query: (q) => ({
-        url: '/admin/group-orders',
-        params: q ? { ...(q.status ? { status: q.status } : {}), ...(q.search ? { search: q.search } : {}) } : undefined,
+    // ==================== ADMIN ENDPOINTS ====================
+
+    // Configure group buying for a product
+    configureGroupBuying: builder.mutation<{ success: boolean; data: { product: ProductWithGroupConfig } }, { productId: string; data: ConfigureGroupBuyingRequest }>({
+      query: ({ productId, data }) => ({
+        url: `/admin/products/${productId}/group-config`,
+        method: 'POST',
+        body: data,
       }),
-      transformResponse: (response: { success?: boolean; data?: GroupOrderListResponse; groups?: GroupOrder[] }) => {
-        if (response.data && response.data.groups) {
+      invalidatesTags: ['GroupOrders', 'AdminGroups'],
+    }),
+
+    // Get all groups (admin view with stats)
+    getAdminGroups: builder.query<AdminGroupsResponse, { phase?: string; productId?: string } | void>({
+      query: (params) => ({
+        url: '/admin/group-orders',
+        params: params ? {
+          ...(params.phase ? { phase: params.phase } : {}),
+          ...(params.productId ? { productId: params.productId } : {}),
+        } : undefined,
+      }),
+      transformResponse: (response: { success?: boolean; data?: AdminGroupsResponse; groups?: GroupOrder[]; stats?: AdminGroupsResponse['stats'] }) => {
+        if (response.data) {
           return response.data;
         }
         if (response.groups) {
-          return { groups: response.groups };
+          return {
+            groups: response.groups,
+            stats: response.stats || {
+              totalFillingGroups: 0,
+              totalCheckoutWindowGroups: 0,
+              totalConfirmedGroups: 0,
+              totalExpiredGroups: 0,
+              totalCancelledGroups: 0,
+              totalRevenue: 0,
+            },
+          };
         }
-        return { groups: [] };
+        return {
+          groups: [],
+          stats: {
+            totalFillingGroups: 0,
+            totalCheckoutWindowGroups: 0,
+            totalConfirmedGroups: 0,
+            totalExpiredGroups: 0,
+            totalCancelledGroups: 0,
+            totalRevenue: 0,
+          },
+        };
       },
-      providesTags: ['GroupOrders'],
+      providesTags: ['AdminGroups'],
     }),
-    // Admin: create a new group order
-    createAdminGroupOrder: builder.mutation<{ success: boolean; group: import('@/types/groupOrder').GroupOrder }, { productId: string }>({
-      query: ({ productId }) => ({
-        url: '/admin/group-orders',
+
+    // Get group details (admin view)
+    getAdminGroupById: builder.query<{ group: GroupOrder }, string>({
+      query: (groupId) => `/admin/group-orders/${groupId}`,
+      transformResponse: (response: { success?: boolean; data?: { group: GroupOrder }; group?: GroupOrder }) => {
+        if (response.data && response.data.group) {
+          return response.data;
+        }
+        if (response.group) {
+          return { group: response.group };
+        }
+        return { group: {} as GroupOrder };
+      },
+      providesTags: (_result, _error, groupId) => [{ type: 'AdminGroups', id: groupId }],
+    }),
+
+    // Cancel group (admin)
+    cancelGroup: builder.mutation<CancelGroupResponse, { groupId: string; data: CancelGroupRequest }>({
+      query: ({ groupId, data }) => ({
+        url: `/admin/group-orders/${groupId}/cancel`,
         method: 'POST',
-        body: { productId },
-        headers: { 'Content-Type': 'application/json' },
+        body: data,
       }),
-      invalidatesTags: ['GroupOrders', 'MyGroups'],
+      invalidatesTags: ['GroupOrders', 'AdminGroups', 'MyGroups'],
+    }),
+
+    // Create group manually (admin)
+    createGroup: builder.mutation<{ success: boolean; data: { group: GroupOrder } }, string>({
+      query: (productId) => ({
+        url: `/admin/products/${productId}/create-group`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['GroupOrders', 'AdminGroups'],
     }),
   }),
 });
 
 export const {
+  // Public
   useGetActiveGroupsQuery,
+  useGetGroupByShareableCodeQuery,
   useGetGroupByIdQuery,
-  useJoinGroupMutation,
+
+  // Protected User
+  useReserveSlotMutation,
+  useInitiateCheckoutMutation,
+  useVerifyPaymentQuery,
+  useJoinWaitlistMutation,
   useLeaveGroupMutation,
   useGetMyGroupsQuery,
-  useGetAdminGroupOrdersQuery,
-  useCreateAdminGroupOrderMutation,
+
+  // Admin
+  useConfigureGroupBuyingMutation,
+  useGetAdminGroupsQuery,
+  useGetAdminGroupByIdQuery,
+  useCancelGroupMutation,
+  useCreateGroupMutation,
 } = groupOrdersApi;
