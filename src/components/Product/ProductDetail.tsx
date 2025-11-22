@@ -89,6 +89,7 @@ const ProductDetail: React.FC = () => {
     const [showCartSidebar, setShowCartSidebar] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [recentlyAdded, setRecentlyAdded] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const [addToCart] = useAddToCartMutation();
     const dealRemainingUnits = activeDealForProduct
@@ -126,6 +127,13 @@ const ProductDetail: React.FC = () => {
         }) &&
         !isOutOfStock
     );
+
+    useEffect(() => {
+        if (errorMessage) {
+            const timer = setTimeout(() => setErrorMessage(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [errorMessage]);
 
     useEffect(() => {
         if (!canBuyBulk && showBulkDrawer) {
@@ -193,7 +201,7 @@ const ProductDetail: React.FC = () => {
         if (isOutOfStock && !activeDealForProduct) return;
         if (activeDealForProduct && dealSoldOut) return;
         if (activeDealForProduct && dealLimitReached) {
-            alert(`You have reached the limit for this deal.`);
+            setErrorMessage(`You have reached the limit for this deal.`);
             return;
         }
         if (isSubmitting) return;
@@ -203,7 +211,7 @@ const ProductDetail: React.FC = () => {
             : retailPrice;
 
         if (effectivePrice === null) {
-            alert("Price information for this product is unavailable. Please try again later.");
+            setErrorMessage("Price information for this product is unavailable. Please try again later.");
             return;
         }
 
@@ -213,7 +221,7 @@ const ProductDetail: React.FC = () => {
         if (activeDealForProduct && dealPerUserLimit !== null) {
             const maxAdditional = Math.max(dealPerUserLimit - dealUnitsInCart, 0);
             if (maxAdditional <= 0) {
-                alert(`You have already claimed the maximum of ${dealPerUserLimit} for this deal.`);
+                setErrorMessage(`You have already claimed the maximum of ${dealPerUserLimit} for this deal.`);
                 return;
             }
             if (quantity > maxAdditional) {
@@ -222,7 +230,7 @@ const ProductDetail: React.FC = () => {
         }
 
         if (quantity <= 0) {
-            alert("Unable to add more of this deal to your cart.");
+            setErrorMessage("Unable to add more of this deal to your cart.");
             return;
         }
 
@@ -249,9 +257,11 @@ const ProductDetail: React.FC = () => {
             refetchActiveDeal();
             setTimeout(() => setRecentlyAdded(false), 1500);
             setShowCartSidebar(true);
-        } catch (cartError) {
+        } catch (cartError: unknown) {
             console.error("Failed to add item to cart", cartError);
-            alert("Unable to add item to cart. Please try again.");
+            const err = cartError as { data?: { message?: string } };
+            const message = err?.data?.message || "Unable to add item to cart. Please try again.";
+            setErrorMessage(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -259,6 +269,29 @@ const ProductDetail: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Error Toast */}
+            {errorMessage && (
+                <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="bg-red-50 border border-red-200 rounded-lg shadow-lg p-4 flex items-start gap-3 max-w-md">
+                        <div className="flex-shrink-0 w-5 h-5 text-red-500">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <p className="text-sm text-red-800 flex-1">{errorMessage}</p>
+                        <button
+                            type="button"
+                            onClick={() => setErrorMessage(null)}
+                            className="flex-shrink-0 text-red-400 hover:text-red-600 transition"
+                        >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Back Button */}
             <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 py-4">
