@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle } from 'lucide-react';
 import { useGetGroupByShareableCodeQuery } from '@/redux/api/groupOrdersApi';
 
 const GroupOrderSuccess: React.FC = () => {
