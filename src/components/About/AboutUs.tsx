@@ -7,11 +7,10 @@ import leaf from "../../assets/AboutIcon/flower.png"
 const AboutUs: React.FC = () => {
     const cards = [
         {
-            title: "Our Story",
+            title: "Our Vision",
             description: (
                 <>
-                    We grow produce on our own farms and deliver it directly to customers,
-                    making it easy for people to get fresh farm products.
+                    To transform the farm-to-table experience by offering superior-quality, ethically grown produce and becoming the leading provider of fresh, sustainable farm products, fostering transparency in food sourcing and setting the benchmark for agricultural excellence.
                 </>
             ),
             icon: icon1,
@@ -20,8 +19,7 @@ const AboutUs: React.FC = () => {
             title: "Our Mission",
             description: (
                 <>
-                    <strong className="font-semibold">Freshness, affordability and trust.</strong> We make high-quality,
-                    traceable produce accessible to every home while creating sustainable income for farmers.
+                    To promote sustainable living and strengthen local economies by delivering premium, responsibly sourced products. We provide organic produce at competitive prices, procure from reputable local farmers, support local agricultural initiatives, and facilitate access to high-quality artisanal goods.
                 </>
             ),
             icon: icon2,
@@ -30,8 +28,7 @@ const AboutUs: React.FC = () => {
             title: "Quality & Sourcing",
             description: (
                 <>
-                    <strong className="font-semibold">Carefully sourced.</strong> We partner with vetted local growers and
-                    manage handling end-to-end so you receive the best produce, responsibly grown and packed with care.
+                    <strong className="font-semibold">Carefully sourced.</strong> We partner with vetted local growers and manage handling end-to-end so you receive the best produce, responsibly grown and packed with care.
                 </>
             ),
             icon: icon3,

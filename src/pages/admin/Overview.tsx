@@ -1,51 +1,239 @@
 // src/pages/admin/Overview.tsx
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, ChevronDown, Loader2 } from "lucide-react";
+import {
+  useGetTotalOrdersQuery,
+  useGetConversionRateQuery,
+  useGetOrderTrendQuery,
+  useGetUsersTrendQuery,
+  useGetRecentOrdersQuery,
+  type RecentOrder,
+} from "@/redux/api/adminDashboardApi";
+
+type DateFilterPreset = "today" | "this_week" | "this_month" | "last_30_days" | "this_year" | "all_time";
+
+interface DateRange {
+  startDate?: string;
+  endDate?: string;
+}
+
+const getDateRange = (preset: DateFilterPreset): DateRange => {
+  const today = new Date();
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+  switch (preset) {
+    case "today":
+      return { startDate: formatDate(today), endDate: formatDate(today) };
+    case "this_week": {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      return { startDate: formatDate(startOfWeek), endDate: formatDate(today) };
+    }
+    case "this_month": {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { startDate: formatDate(startOfMonth), endDate: formatDate(today) };
+    }
+    case "last_30_days": {
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      return { startDate: formatDate(thirtyDaysAgo), endDate: formatDate(today) };
+    }
+    case "this_year": {
+      const startOfYear = new Date(today.getFullYear(), 0, 1);
+      return { startDate: formatDate(startOfYear), endDate: formatDate(today) };
+    }
+    case "all_time":
+    default:
+      return {};
+  }
+};
+
+const formatMonth = (monthString: string): string => {
+  const [year, month] = monthString.split("-");
+  return new Date(parseInt(year), parseInt(month) - 1).toLocaleString("default", { month: "short" });
+};
+
+const formatCurrency = (amount: number): string => {
+  return `₦${amount.toLocaleString()}`;
+};
+
+const DATE_FILTER_OPTIONS: { value: DateFilterPreset; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "this_week", label: "This Week" },
+  { value: "this_month", label: "This Month" },
+  { value: "last_30_days", label: "Last 30 Days" },
+  { value: "this_year", label: "This Year" },
+  { value: "all_time", label: "All Time" },
+];
 
 const Overview: React.FC = () => {
-  // dummy data, replace with API later
+  const [dateFilter, setDateFilter] = useState<DateFilterPreset>("all_time");
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+
+  const dateRange = useMemo(() => getDateRange(dateFilter), [dateFilter]);
+
+  // API Queries
+  const { data: totalOrdersRes, isLoading: loadingOrders } = useGetTotalOrdersQuery(dateRange);
+  const { data: conversionRes, isLoading: loadingConversion } = useGetConversionRateQuery(dateRange);
+  const { data: orderTrendRes, isLoading: loadingOrderTrend } = useGetOrderTrendQuery(dateRange);
+  const { data: usersTrendRes, isLoading: loadingUsersTrend } = useGetUsersTrendQuery(dateRange);
+  const { data: recentOrdersRes, isLoading: loadingRecentOrders } = useGetRecentOrdersQuery({ ...dateRange, limit: 5 });
+
+  // Extract data - handle nested API response structure
+  const totalOrdersData = totalOrdersRes?.data;
+  const conversionData = conversionRes?.data;
+  const orderTrendData = orderTrendRes?.data ?? [];
+  const usersTrendData = usersTrendRes?.data ?? [];
+
+  // Recent orders might be nested: { success: true, data: [...] } or just [...]
+  const rawRecentOrders = recentOrdersRes?.data;
+  const recentOrdersData = Array.isArray(rawRecentOrders)
+    ? rawRecentOrders
+    : (rawRecentOrders as { data?: RecentOrder[] } | undefined)?.data ?? [];
+
+  // Stats cards data
   const stats = [
-    { title: "Total Revenue", value: "$7,825", change: "+22%" },
-    { title: "Total Orders", value: "$7,825", change: "+22%" },
-    { title: "Conversion Rate", value: "$7,825", change: "+22%" },
+    {
+      title: "Total Orders",
+      value: totalOrdersData?.totalOrders?.toLocaleString() ?? "—",
+      change: "+20%",
+      isPositive: true,
+      loading: loadingOrders,
+    },
+    {
+      title: "Conversion Rate",
+      value: conversionData ? `${Math.round(conversionData.conversionRate)}%` : "—",
+      change: "+20%",
+      isPositive: true,
+      loading: loadingConversion,
+    },
+    {
+      title: "Total Users",
+      value: conversionData?.totalUsers?.toLocaleString() ?? "—",
+      change: "+20%",
+      isPositive: true,
+      loading: loadingConversion,
+    },
   ];
 
-  const orderTrend = [
-    { name: "Jan", value: 4000 },
-    { name: "Feb", value: 8500 },
-    { name: "Mar", value: 5500 },
-    { name: "Apr", value: 7000 },
-    { name: "May", value: 4000 },
-    { name: "Jun", value: 4500 },
-    { name: "Jul", value: 5000 },
-    { name: "Aug", value: 3000 },
-    { name: "Sep", value: 6000 },
-    { name: "Oct", value: 8500 },
-    { name: "Nov", value: 7000 },
-    { name: "Dec", value: 4000 },
-  ];
+  // Order status pie chart data
+  const orderStatusData = useMemo(() => {
+    const byOrderStatus = totalOrdersData?.byOrderStatus as Record<string, number | { count?: number; percentage?: number; revenue?: number }> | undefined;
+    const totalOrders = totalOrdersData?.totalOrders ?? 0;
 
-  const orderStatus = [
-    { name: "Delivered", value: 64, color: "#16a34a" },
-    { name: "Pending", value: 20, color: "#facc15" },
-    { name: "Cancelled", value: 16, color: "#dc2626" },
-  ];
+    // Default structure when no data
+    const defaultData = [
+      { name: "Delivered", value: 0, count: 0, color: "#16a34a" },
+      { name: "Pending", value: 0, count: 0, color: "#facc15" },
+      { name: "Cancelled", value: 0, count: 0, color: "#dc2626" },
+    ];
 
-  const users = [
-    { name: "Jan", value: 3000 },
-    { name: "Feb", value: 5000 },
-    { name: "Mar", value: 2500 },
-    { name: "Apr", value: 4200 },
-    { name: "May", value: 3200 },
-    { name: "Jun", value: 2800 },
-    { name: "Jul", value: 3700 },
-  ];
+    if (!byOrderStatus || totalOrders === 0) return defaultData;
+
+    // Handle different API response structures
+    // Backend may return: { active: 90, completed: 1, cancelled: 1 } (counts)
+    // Or: { delivered: { count, percentage, revenue }, pending: {...}, cancelled: {...} }
+
+    const getStatusData = (key: string, altKey?: string) => {
+      const val = byOrderStatus[key] ?? (altKey ? byOrderStatus[altKey] : undefined);
+      if (typeof val === "number") {
+        return { count: val, percentage: totalOrders > 0 ? (val / totalOrders) * 100 : 0 };
+      }
+      if (val && typeof val === "object") {
+        return {
+          count: val.count ?? 0,
+          percentage: val.percentage ?? (totalOrders > 0 ? ((val.count ?? 0) / totalOrders) * 100 : 0)
+        };
+      }
+      return { count: 0, percentage: 0 };
+    };
+
+    // Map backend keys to display names
+    // Backend uses: completed/delivered, active/pending, cancelled
+    const delivered = getStatusData("completed", "delivered");
+    const pending = getStatusData("active", "pending");
+    const cancelled = getStatusData("cancelled");
+
+    return [
+      {
+        name: "Delivered",
+        value: delivered.percentage,
+        count: delivered.count,
+        color: "#16a34a"
+      },
+      {
+        name: "Pending",
+        value: pending.percentage,
+        count: pending.count,
+        color: "#facc15"
+      },
+      {
+        name: "Cancelled",
+        value: cancelled.percentage,
+        count: cancelled.count,
+        color: "#dc2626"
+      },
+    ];
+  }, [totalOrdersData]);
+
+  // Check if pie chart has any data to display
+  const hasOrderStatusData = orderStatusData.some(item => item.value > 0);
+
+  // Order trend chart data
+  const orderTrendChartData = useMemo(() => {
+    return orderTrendData.map((item) => ({
+      name: formatMonth(item.month),
+      value: item.orderCount,
+    }));
+  }, [orderTrendData]);
+
+  // Users trend chart data
+  const usersTrendChartData = useMemo(() => {
+    return usersTrendData.map((item) => ({
+      name: formatMonth(item.month),
+      value: item.userCount,
+    }));
+  }, [usersTrendData]);
+
+  const currentFilterLabel = DATE_FILTER_OPTIONS.find((opt) => opt.value === dateFilter)?.label ?? "All Time";
 
   return (
     <div className="p-6 mt-4 space-y-6">
-      <h1 className="text-3xl font-semibold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-semibold">Overview</h1>
+
+        {/* Date Filter Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowDateDropdown(!showDateDropdown)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition"
+          >
+            <span className="text-sm text-gray-700">{currentFilterLabel}</span>
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          </button>
+
+          {showDateDropdown && (
+            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              {DATE_FILTER_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setDateFilter(option.value);
+                    setShowDateDropdown(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition ${
+                    dateFilter === option.value ? "bg-gray-100 text-green-600 font-medium" : "text-gray-700"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Top Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -54,9 +242,18 @@ const Overview: React.FC = () => {
             <CardContent className="p-4 flex flex-col">
               <span className="text-gray-500 text-sm">{item.title}</span>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-2xl font-semibold">{item.value}</span>
-                <span className="flex items-center text-green-500 text-sm">
-                  {item.change} <ArrowUpRight className="w-4 h-4 ml-1" />
+                {item.loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                ) : (
+                  <span className="text-2xl font-semibold">{item.value}</span>
+                )}
+                <span className={`flex items-center text-sm ${item.isPositive ? "text-green-500" : "text-red-500"}`}>
+                  {item.change}
+                  {item.isPositive ? (
+                    <ArrowUpRight className="w-4 h-4 ml-1" />
+                  ) : (
+                    <ArrowDownRight className="w-4 h-4 ml-1" />
+                  )}
                 </span>
               </div>
             </CardContent>
@@ -64,111 +261,174 @@ const Overview: React.FC = () => {
         ))}
       </div>
 
-      {/* Charts & Orders */}
+      {/* Charts & Order Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Order Trend */}
         <Card className="lg:col-span-2 shadow rounded-2xl">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="font-semibold">Order Trend overtime</h2>
-              <button className="text-sm text-blue-500">Advanced Report</button>
             </div>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={orderTrend}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#f97316" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {loadingOrderTrend ? (
+              <div className="flex items-center justify-center h-[250px]">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              </div>
+            ) : orderTrendChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={orderTrendChartData}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip
+                    formatter={(value: number) => [value, "Orders"]}
+                    contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                  />
+                  <Bar dataKey="value" fill="#f97316" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[250px] text-gray-400">
+                No data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Order Status */}
+        {/* Order Status Pie Chart */}
         <Card className="shadow rounded-2xl">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="font-semibold">Order Status</h2>
-              <button className="text-sm text-blue-500">More</button>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={orderStatus}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={3}
-                >
-                  {orderStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+            {loadingOrders ? (
+              <div className="flex items-center justify-center h-[220px]">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    {hasOrderStatusData ? (
+                      <Pie
+                        data={orderStatusData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={50}
+                        outerRadius={70}
+                        paddingAngle={3}
+                      >
+                        {orderStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    ) : (
+                      <Pie
+                        data={[{ name: "No Data", value: 100 }]}
+                        dataKey="value"
+                        innerRadius={50}
+                        outerRadius={70}
+                      >
+                        <Cell fill="#e5e7eb" />
+                      </Pie>
+                    )}
+                    {hasOrderStatusData && (
+                      <Tooltip
+                        formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]}
+                        contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                      />
+                    )}
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-2 mt-2">
+                  {orderStatusData.map((s, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="flex items-center">
+                        <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: s.color }} />
+                        {s.name}
+                      </span>
+                      <span className="flex items-center gap-3">
+                        <span className="text-gray-500">{s.count} orders</span>
+                        <span className="font-medium">{s.value.toFixed(1)}%</span>
+                      </span>
+                    </div>
                   ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-2 mt-2">
-              {orderStatus.map((s, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span className="flex items-center">
-                    <span
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: s.color }}
-                    />
-                    {s.name}
-                  </span>
-                  <span>{s.value}%</span>
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Users & Recent Orders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Users */}
+        {/* Users Trend */}
         <Card className="shadow rounded-2xl">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="font-semibold">Users</h2>
-              <button className="text-sm text-blue-500">Advanced Report</button>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={users}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#f97316"
-                  strokeWidth={3}
-                  dot={true}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {loadingUsersTrend ? (
+              <div className="flex items-center justify-center h-[200px]">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              </div>
+            ) : usersTrendChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={usersTrendChartData}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip
+                    formatter={(value: number) => [value, "Users"]}
+                    contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                  />
+                  <Line type="monotone" dataKey="value" stroke="#f97316" strokeWidth={3} dot={true} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-gray-400">
+                No data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Recent Orders */}
         <Card className="shadow rounded-2xl">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="font-semibold">Recent Orders</h2>
-              <button className="text-sm text-blue-500">See all</button>
             </div>
-            <ul className="space-y-3 text-sm">
-              <li className="flex justify-between">
-                <span>Order #1234</span> <span>$350</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Order #1235</span> <span>$825</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Order #1236</span> <span>$420</span>
-              </li>
-            </ul>
+            {loadingRecentOrders ? (
+              <div className="flex items-center justify-center h-[150px]">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              </div>
+            ) : recentOrdersData.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-gray-500 font-medium pb-2 border-b">
+                  <span>Order Name & ID</span>
+                  <span>Amount</span>
+                </div>
+                <ul className="space-y-3 text-sm">
+                  {recentOrdersData.map((order, idx) => {
+                    // Generate order number from orderId if not provided
+                    const displayOrderNumber = order.orderNumber || `#${order.orderId?.slice(-6).toUpperCase() || idx + 1}`;
+                    const displayName = order.customerName || "Customer";
+
+                    return (
+                      <li key={order.orderId || idx} className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium text-gray-900">{displayName}</div>
+                          <div className="text-gray-500 text-xs">{displayOrderNumber}</div>
+                        </div>
+                        <span className="font-medium text-green-600">{formatCurrency(order.amount)}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[150px] text-gray-400">
+                No recent orders
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
