@@ -112,7 +112,12 @@ const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchop
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).adminAuth.token;
+    const state = getState() as RootState;
+    const token = state.adminAuth.token;
+    // Debug logging - check if token exists (can be removed in production)
+    if (!token) {
+      console.warn('[Dashboard API] No admin token found in Redux state. Check if you are logged in.');
+    }
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }

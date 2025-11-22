@@ -43,10 +43,13 @@ const AdminProducts = () => {
     checkoutWindowHours: 48,
   });
 
-  const { data, isLoading, refetch } = useGetAdminProductsQuery({ page, limit: 100 }); // Fetch more for client-side filtering
+  const { data, isLoading, refetch, error: productsError } = useGetAdminProductsQuery({ page, limit: 100 }); // Fetch more for client-side filtering
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const [configureGroupBuying, { isLoading: isConfiguringGroup }] = useConfigureGroupBuyingMutation();
   const [updateProduct] = useUpdateProductMutation();
+
+  // Log errors for debugging
+  if (productsError) console.error('Products API Error:', productsError);
 
   const allProducts = useMemo(() => data?.data?.products || [], [data?.data?.products]);
 
@@ -239,6 +242,26 @@ const AdminProducts = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1D7B3C] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if API failed
+  if (productsError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-5xl mb-4">!</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load products</h3>
+          <p className="text-gray-600 mb-4">Please check your connection and try again.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="bg-[#1D7B3C] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

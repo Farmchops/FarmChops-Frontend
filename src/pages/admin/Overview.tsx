@@ -74,12 +74,19 @@ const Overview: React.FC = () => {
 
   const dateRange = useMemo(() => getDateRange(dateFilter), [dateFilter]);
 
-  // API Queries
-  const { data: totalOrdersRes, isLoading: loadingOrders } = useGetTotalOrdersQuery(dateRange);
-  const { data: conversionRes, isLoading: loadingConversion } = useGetConversionRateQuery(dateRange);
-  const { data: orderTrendRes, isLoading: loadingOrderTrend } = useGetOrderTrendQuery(dateRange);
-  const { data: usersTrendRes, isLoading: loadingUsersTrend } = useGetUsersTrendQuery(dateRange);
-  const { data: recentOrdersRes, isLoading: loadingRecentOrders } = useGetRecentOrdersQuery({ ...dateRange, limit: 5 });
+  // API Queries - also capture errors for debugging
+  const { data: totalOrdersRes, isLoading: loadingOrders, error: ordersError } = useGetTotalOrdersQuery(dateRange);
+  const { data: conversionRes, isLoading: loadingConversion, error: conversionError } = useGetConversionRateQuery(dateRange);
+  const { data: orderTrendRes, isLoading: loadingOrderTrend, error: orderTrendError } = useGetOrderTrendQuery(dateRange);
+  const { data: usersTrendRes, isLoading: loadingUsersTrend, error: usersTrendError } = useGetUsersTrendQuery(dateRange);
+  const { data: recentOrdersRes, isLoading: loadingRecentOrders, error: recentOrdersError } = useGetRecentOrdersQuery({ ...dateRange, limit: 5 });
+
+  // Log errors for debugging (can be removed in production)
+  if (ordersError) console.error('Orders API Error:', ordersError);
+  if (conversionError) console.error('Conversion API Error:', conversionError);
+  if (orderTrendError) console.error('Order Trend API Error:', orderTrendError);
+  if (usersTrendError) console.error('Users Trend API Error:', usersTrendError);
+  if (recentOrdersError) console.error('Recent Orders API Error:', recentOrdersError);
 
   // Extract data - handle nested API response structure
   const totalOrdersData = totalOrdersRes?.data;
@@ -93,28 +100,31 @@ const Overview: React.FC = () => {
     ? rawRecentOrders
     : (rawRecentOrders as { data?: RecentOrder[] } | undefined)?.data ?? [];
 
-  // Stats cards data
+  // Stats cards data - show "Error" on API failure, "0" as default when data exists but value is missing
   const stats = [
     {
       title: "Total Orders",
-      value: totalOrdersData?.totalOrders?.toLocaleString() ?? "—",
+      value: ordersError ? "Error" : (totalOrdersData?.totalOrders?.toLocaleString() ?? (loadingOrders ? "—" : "0")),
       change: "+20%",
       isPositive: true,
       loading: loadingOrders,
+      hasError: !!ordersError,
     },
     {
       title: "Conversion Rate",
-      value: conversionData ? `${Math.round(conversionData.conversionRate)}%` : "—",
+      value: conversionError ? "Error" : (conversionData ? `${Math.round(conversionData.conversionRate)}%` : (loadingConversion ? "—" : "0%")),
       change: "+20%",
       isPositive: true,
       loading: loadingConversion,
+      hasError: !!conversionError,
     },
     {
       title: "Total Users",
-      value: conversionData?.totalUsers?.toLocaleString() ?? "—",
+      value: conversionError ? "Error" : (conversionData?.totalUsers?.toLocaleString() ?? (loadingConversion ? "—" : "0")),
       change: "+20%",
       isPositive: true,
       loading: loadingConversion,
+      hasError: !!conversionError,
     },
   ];
 

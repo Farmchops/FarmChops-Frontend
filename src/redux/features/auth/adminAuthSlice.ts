@@ -129,19 +129,28 @@ const initialState: AdminAuthState = {
 
 // Load from localStorage on app start
 const loadAuthFromStorage = (): Partial<AdminAuthState> => {
+    // Guard against SSR or environments without localStorage
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+        console.warn('[AdminAuth] localStorage not available');
+        return {};
+    }
+
     try {
         const savedToken = localStorage.getItem('adminToken');
         const savedUser = localStorage.getItem('adminUser');
 
         if (savedToken && savedUser) {
+            console.log('[AdminAuth] Loaded token from localStorage');
             return {
                 token: savedToken,
                 user: JSON.parse(savedUser),
                 isAuthenticated: true,
             };
+        } else {
+            console.log('[AdminAuth] No saved token found in localStorage');
         }
     } catch (error) {
-        console.error('Failed to load auth from storage:', error);
+        console.error('[AdminAuth] Failed to load auth from storage:', error);
     }
     return {};
 };

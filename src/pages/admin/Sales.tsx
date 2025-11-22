@@ -71,24 +71,32 @@ const Sales = () => {
   const [dateFilter, setDateFilter] = useState<DateFilterValue>("all");
   const dateRange = useMemo(() => getDateRange(dateFilter), [dateFilter]);
 
-  // API Queries
-  const { data: summaryData, isLoading: summaryLoading } =
+  // API Queries - also capture errors for debugging
+  const { data: summaryData, isLoading: summaryLoading, error: summaryError } =
     useGetDashboardSummaryQuery(dateRange);
-  const { data: conversionData, isLoading: conversionLoading } =
+  const { data: conversionData, isLoading: conversionLoading, error: conversionError } =
     useGetConversionRateQuery(dateRange);
-  const { data: revenueTrendData, isLoading: revenueTrendLoading } =
+  const { data: revenueTrendData, isLoading: revenueTrendLoading, error: revenueTrendError } =
     useGetRevenueTrendQuery(dateRange);
-  const { data: paymentMethodsData, isLoading: paymentMethodsLoading } =
+  const { data: paymentMethodsData, isLoading: paymentMethodsLoading, error: paymentMethodsError } =
     useGetPaymentMethodsQuery(dateRange);
-  const { data: aovData, isLoading: aovLoading } =
+  const { data: aovData, isLoading: aovLoading, error: aovError } =
     useGetAverageOrderValueQuery(dateRange);
-  const { data: topProductsData, isLoading: topProductsLoading } =
+  const { data: topProductsData, isLoading: topProductsLoading, error: topProductsError } =
     useGetTopProductsQuery({ ...dateRange, limit: 5 });
 
-  // Extract data
-  const totalRevenue = summaryData?.data?.totalRevenue ?? 0;
-  const totalSales = summaryData?.data?.totalOrders ?? 0;
-  const conversionRate = conversionData?.data?.conversionRate ?? 0;
+  // Log errors for debugging
+  if (summaryError) console.error('Summary API Error:', summaryError);
+  if (conversionError) console.error('Conversion API Error:', conversionError);
+  if (revenueTrendError) console.error('Revenue Trend API Error:', revenueTrendError);
+  if (paymentMethodsError) console.error('Payment Methods API Error:', paymentMethodsError);
+  if (aovError) console.error('AOV API Error:', aovError);
+  if (topProductsError) console.error('Top Products API Error:', topProductsError);
+
+  // Extract data - handle errors gracefully
+  const totalRevenue = summaryError ? 0 : (summaryData?.data?.totalRevenue ?? 0);
+  const totalSales = summaryError ? 0 : (summaryData?.data?.totalOrders ?? 0);
+  const conversionRate = conversionError ? 0 : (conversionData?.data?.conversionRate ?? 0);
 
   // Revenue Trend data
   const revenueTrendChartData = useMemo(() => {

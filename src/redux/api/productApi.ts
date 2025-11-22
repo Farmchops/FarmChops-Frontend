@@ -14,7 +14,12 @@ import type { ApiResponse } from '@/types/api';
 const baseQuery = fetchBaseQuery({
     baseUrl: 'https://api.farmchops.com/api',
     prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).adminAuth.token;
+        const state = getState() as RootState;
+        const token = state.adminAuth.token;
+        // Debug logging - check if token exists
+        if (!token) {
+            console.warn('[Product API] No admin token found in Redux state.');
+        }
         if (token) {
             headers.set('authorization', `Bearer ${token}`);
         }
