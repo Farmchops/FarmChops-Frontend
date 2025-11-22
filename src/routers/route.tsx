@@ -77,6 +77,8 @@ const router = createBrowserRouter([
             // Group Sharing
             { path: "/group-sharing", element: <GroupSharing /> },
             { path: "/group/:groupId", element: <GroupDetail /> },
+            // Shareable link route - resolves shareableCode and redirects to group detail
+            { path: "/group-buy/:groupId", element: <GroupOrderSuccess /> },
 
             // Auth routes
             { path: "/register", element: <Register /> },

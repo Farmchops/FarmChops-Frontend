@@ -1,11 +1,23 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetGroupByShareableCodeQuery } from '@/redux/api/groupOrdersApi';
+import { useGetGroupByShareableCodeQuery, useGetGroupByIdQuery } from '@/redux/api/groupOrdersApi';
 
 const GroupOrderSuccess: React.FC = () => {
     const navigate = useNavigate();
     const { groupId: shareableCode } = useParams<{ groupId: string }>();
-    const { data, error, isLoading, isError } = useGetGroupByShareableCodeQuery(shareableCode || '', { skip: !shareableCode });
+
+    // First try to look up by shareable code
+    const { data: shareData, error: shareError, isLoading: shareLoading } = useGetGroupByShareableCodeQuery(shareableCode || '', { skip: !shareableCode });
+
+    // If shareable code lookup fails, try treating the code as a direct groupId
+    const shouldTryDirectId = !shareLoading && (shareError || !shareData?.group?.groupId && !shareData?.group?._id);
+    const { data: directData, error: directError, isLoading: directLoading } = useGetGroupByIdQuery(shareableCode || '', { skip: !shareableCode || !shouldTryDirectId });
+
+    // Combine results - prefer shareable code lookup, fallback to direct ID
+    const data = shareData?.group?.groupId || shareData?.group?._id ? shareData : directData;
+    const isLoading = shareLoading || (shouldTryDirectId && directLoading);
+    const error = shouldTryDirectId ? directError : shareError;
+    const isError = !!(shareError && directError);
 
     // Get the group ID from the response - check both groupId and _id
     const group = data?.group;
@@ -30,8 +42,19 @@ const GroupOrderSuccess: React.FC = () => {
         );
     }
 
+    // Debug logging (can be removed in production)
+    if (process.env.NODE_ENV === 'development') {
+        console.log('[GroupOrderSuccess] shareableCode:', shareableCode);
+        console.log('[GroupOrderSuccess] shareData:', shareData);
+        console.log('[GroupOrderSuccess] shareError:', shareError);
+        console.log('[GroupOrderSuccess] directData:', directData);
+        console.log('[GroupOrderSuccess] directError:', directError);
+        console.log('[GroupOrderSuccess] resolvedGroupId:', resolvedGroupId);
+    }
+
     // Show error state if API call failed or group not found
-    if (isError || error || !group || (!group.groupId && !group._id)) {
+    const groupNotFound = isError || (error && !isLoading) || (!group && !isLoading) || (!isLoading && group && !group.groupId && !group._id);
+    if (groupNotFound) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
@@ -41,7 +64,10 @@ const GroupOrderSuccess: React.FC = () => {
                         </div>
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Group Not Found</h2>
-                    <p className="text-gray-600 mb-4">This shared group link is invalid or has expired.</p>
+                    <p className="text-gray-600 mb-4">
+                        This group may have been completed, cancelled, or the link has expired.
+                        Please ask the group creator for a new link or browse available groups.
+                    </p>
                     <div className="space-y-3">
                         <button type="button" onClick={() => navigate('/group-sharing')} className="w-full px-6 py-3 bg-[#1D7B3C] text-white rounded-lg hover:bg-[#166331] transition">Browse Groups</button>
                         <button type="button" onClick={() => navigate('/')} className="w-full px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Go Home</button>

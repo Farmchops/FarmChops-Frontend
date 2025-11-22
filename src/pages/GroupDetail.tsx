@@ -9,6 +9,7 @@ import { resolveErrorMessage } from "@/lib/utils";
 import { alertService } from "@/lib/alertService";
 import {
   useGetGroupByIdQuery,
+  useGetGroupByShareableCodeQuery,
   useReserveSlotMutation,
   useInitiateCheckoutMutation,
   useJoinWaitlistMutation,
@@ -36,10 +37,23 @@ const GroupDetail = () => {
   const [deliveryFee] = useState(0); // Can be calculated based on location
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { data, isLoading, error } = useGetGroupByIdQuery(groupId!, {
+  // First try to get group by ID
+  const { data: idData, isLoading: idLoading, error: idError } = useGetGroupByIdQuery(groupId!, {
     skip: !groupId,
     pollingInterval: 30000, // Refresh every 30 seconds
   });
+
+  // If ID lookup fails, try shareable code lookup
+  const shouldTryShareableCode = !idLoading && (idError || !idData?.group);
+  const { data: codeData, isLoading: codeLoading, error: codeError } = useGetGroupByShareableCodeQuery(groupId!, {
+    skip: !groupId || !shouldTryShareableCode,
+    pollingInterval: 30000,
+  });
+
+  // Combine results - prefer ID lookup, fallback to shareable code
+  const data = idData?.group ? idData : codeData;
+  const isLoading = idLoading || (shouldTryShareableCode && codeLoading);
+  const error = shouldTryShareableCode ? codeError : idError;
 
   const [reserveSlot] = useReserveSlotMutation();
   const [initiateCheckout] = useInitiateCheckoutMutation();
