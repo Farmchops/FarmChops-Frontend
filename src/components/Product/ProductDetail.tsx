@@ -78,7 +78,8 @@ const ProductDetail: React.FC = () => {
     }, [activeDealPayload.deal, productId, highlightedDealId]);
 
     const activeDealId = activeDealForProduct?._id
-        ?? (activeDealForProduct as { id?: string })?.id
+        ?? (activeDealForProduct as { id?: string; dealId?: string })?.id
+        ?? (activeDealForProduct as { dealId?: string })?.dealId
         ?? null;
 
     const dealMetrics = activeDealForProduct ? activeDealPayload.metrics ?? activeDealForProduct.metrics : undefined;

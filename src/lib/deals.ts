@@ -7,8 +7,8 @@ export type ActiveDealApiShape =
     | undefined;
 
 const resolveDealId = (deal: Deal): string | null => {
-    const typed = deal as Deal & { id?: string };
-    return typed._id ?? typed.id ?? null;
+    const typed = deal as Deal & { id?: string; dealId?: string };
+    return typed._id ?? typed.id ?? typed.dealId ?? null;
 };
 
 export const normalizeActiveDealPayload = (
