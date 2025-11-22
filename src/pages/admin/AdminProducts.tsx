@@ -194,9 +194,7 @@ const AdminProducts = () => {
   };
 
   const handleToggleStatus = async (product: Product) => {
-    // treat both 'inactive' and 'out_of_stock' as out-of-stock states coming from the API
-    const isCurrentlyOut = product.status === 'out_of_stock' || product.status === 'inactive';
-    const newStatus = isCurrentlyOut ? 'active' : 'out_of_stock';
+    const newStatus = product.status === 'out_of_stock' ? 'active' : 'out_of_stock';
     const actionText = newStatus === 'out_of_stock' ? 'mark as out of stock' : 'mark as in stock';
 
     alertService.show({
@@ -216,8 +214,12 @@ const AdminProducts = () => {
               title: "Status Updated",
               message: `${product.name} is now ${newStatus === 'out_of_stock' ? 'out of stock' : 'in stock'}`,
             });
-            // Refetch the products list - keep the current filter unchanged
+            // Ensure the product remains visible in the admin list even if the current
+            // status filter would hide it (e.g., user had 'In Stock' selected and just
+            // marked the item 'Out of Stock'). Reset filter to 'all' so the updated
+            // product remains visible immediately after the change.
             await refetch();
+            setStatusFilter("all");
           }
         } catch (error: unknown) {
           alertService.show({

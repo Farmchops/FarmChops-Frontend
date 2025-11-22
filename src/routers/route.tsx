@@ -51,6 +51,7 @@ import AdminForgotPassword from "@/pages/admin/AdminForgotPassword";
 import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 import AdminManagement from "@/pages/admin/AdminManagement";
 import OrderSuccess from "@/components/Checkout/OrderSuccess";
+import GroupOrderSuccess from "@/components/Checkout/GroupOrderSuccess";
 import RiderDashboard from "@/pages/admin/RiderDashboard";
 import Deals from "@/pages/admin/Deals";
 import VendorsList from "../pages/admin/VendorsList";
@@ -104,6 +105,7 @@ const router = createBrowserRouter([
             },
             { path: "/thank-you", element: <Thanks /> },
             { path: "/order/success", element: <OrderSuccess /> },
+            { path: "/order/success/group-buy/:groupId", element: <GroupOrderSuccess /> },
             // { path: "/orders/:orderId", element: <OrderDetails /> },
 
             // Profile routes (Protected)

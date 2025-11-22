@@ -95,6 +95,9 @@ const GroupDetail = () => {
   const hasReserved = myParticipation?.status === 'reserved';
   const hasPaid = myParticipation?.status === 'paid';
   const canCheckout = hasReserved && isCheckoutWindow;
+  
+  // Ensure participants is always an array to satisfy strict null checks
+  const participants = group.participants ?? [];
 
   const formatCurrency = (amount: number) => {
     if (amount === undefined || amount === null || isNaN(amount)) {
@@ -500,13 +503,13 @@ const GroupDetail = () => {
             <div className="bg-white rounded-3xl shadow-sm p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Users className="h-6 w-6" />
-                Participants ({group.participants?.length || totalFilled})
+                Participants ({participants.length || totalFilled})
               </h2>
-              {!group.participants || group.participants.length === 0 ? (
+              {participants.length === 0 ? (
                 <p className="text-gray-600 text-center py-8">No participants yet. Be the first!</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {group.participants.map((participant, index) => (
+                  {participants.map((participant, index) => (
                     <div
                       key={participant.id}
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl"
