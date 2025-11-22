@@ -200,8 +200,8 @@ const Overview: React.FC = () => {
   const currentFilterLabel = DATE_FILTER_OPTIONS.find((opt) => opt.value === dateFilter)?.label ?? "All Time";
 
   return (
-    <div className="p-6 mt-4 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-2 md:p-6 mt-4 space-y-6 w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-semibold">Overview</h1>
 
         {/* Date Filter Dropdown */}
@@ -274,17 +274,19 @@ const Overview: React.FC = () => {
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
             ) : orderTrendChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={orderTrendChartData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip
-                    formatter={(value: number) => [value, "Orders"]}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
-                  />
-                  <Bar dataKey="value" fill="#f97316" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="w-full min-w-0 h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={orderTrendChartData}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <Tooltip
+                      formatter={(value: number) => [value, "Orders"]}
+                      contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                    />
+                    <Bar dataKey="value" fill="#f97316" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
               <div className="flex items-center justify-center h-[250px] text-gray-400">
                 No data available
@@ -305,39 +307,41 @@ const Overview: React.FC = () => {
               </div>
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    {hasOrderStatusData ? (
-                      <Pie
-                        data={orderStatusData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={50}
-                        outerRadius={70}
-                        paddingAngle={3}
-                      >
-                        {orderStatusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    ) : (
-                      <Pie
-                        data={[{ name: "No Data", value: 100 }]}
-                        dataKey="value"
-                        innerRadius={50}
-                        outerRadius={70}
-                      >
-                        <Cell fill="#e5e7eb" />
-                      </Pie>
-                    )}
-                    {hasOrderStatusData && (
-                      <Tooltip
-                        formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]}
-                        contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
-                      />
-                    )}
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="w-full min-w-0 h-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      {hasOrderStatusData ? (
+                        <Pie
+                          data={orderStatusData}
+                          dataKey="value"
+                          nameKey="name"
+                          innerRadius={50}
+                          outerRadius={70}
+                          paddingAngle={3}
+                        >
+                          {orderStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      ) : (
+                        <Pie
+                          data={[{ name: "No Data", value: 100 }]}
+                          dataKey="value"
+                          innerRadius={50}
+                          outerRadius={70}
+                        >
+                          <Cell fill="#e5e7eb" />
+                        </Pie>
+                      )}
+                      {hasOrderStatusData && (
+                        <Tooltip
+                          formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]}
+                          contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                        />
+                      )}
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
                 <div className="space-y-2 mt-2">
                   {orderStatusData.map((s, i) => (
                     <div key={i} className="flex justify-between text-sm">
@@ -371,17 +375,19 @@ const Overview: React.FC = () => {
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
             ) : usersTrendChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={usersTrendChartData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip
-                    formatter={(value: number) => [value, "Users"]}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
-                  />
-                  <Line type="monotone" dataKey="value" stroke="#f97316" strokeWidth={3} dot={true} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="w-full min-w-0 h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={usersTrendChartData}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <Tooltip
+                      formatter={(value: number) => [value, "Users"]}
+                      contentStyle={{ borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                    />
+                    <Line type="monotone" dataKey="value" stroke="#f97316" strokeWidth={3} dot={true} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
               <div className="flex items-center justify-center h-[200px] text-gray-400">
                 No data available

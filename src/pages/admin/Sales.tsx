@@ -280,31 +280,33 @@ const Sales = () => {
           {revenueTrendLoading ? (
             <div className="h-64 bg-gray-100 rounded animate-pulse" />
           ) : revenueTrendChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={revenueTrendChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 12 }} />
-                <YAxis
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
-                  tickFormatter={(value) =>
-                    value >= 1000000
-                      ? `${(value / 1000000).toFixed(1)}M`
-                      : value >= 1000
-                      ? `${(value / 1000).toFixed(0)}K`
-                      : value
-                  }
-                />
-                <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), "Revenue"]}
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="w-full min-w-0 h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={revenueTrendChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 12 }} />
+                  <YAxis
+                    tick={{ fill: "#6b7280", fontSize: 12 }}
+                    tickFormatter={(value) =>
+                      value >= 1000000
+                        ? `${(value / 1000000).toFixed(1)}M`
+                        : value >= 1000
+                        ? `${(value / 1000).toFixed(0)}K`
+                        : value
+                    }
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Bar dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <div className="h-64 flex items-center justify-center text-gray-400">
               No revenue data available
@@ -320,44 +322,46 @@ const Sales = () => {
           {paymentMethodsLoading ? (
             <div className="h-64 bg-gray-100 rounded animate-pulse" />
           ) : paymentMethodsChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={paymentMethodsChartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {paymentMethodsChartData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={PAYMENT_COLORS[index % PAYMENT_COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number, _name: string, props: { payload?: { name: string; count: number; amount: number } }) => [
-                    `${value.toFixed(1)}% (${props.payload?.count ?? 0} transactions)`,
-                    props.payload?.name ?? "",
-                  ]}
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  formatter={(value) => (
-                    <span className="text-gray-600 text-sm">{value}</span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="w-full min-w-0 h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={paymentMethodsChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {paymentMethodsChartData.map((_, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={PAYMENT_COLORS[index % PAYMENT_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, _name: string, props: { payload?: { name: string; count: number; amount: number } }) => [
+                      `${value.toFixed(1)}% (${props.payload?.count ?? 0} transactions)`,
+                      props.payload?.name ?? "",
+                    ]}
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value) => (
+                      <span className="text-gray-600 text-sm">{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <div className="h-64 flex items-center justify-center text-gray-400">
               No payment data available
@@ -374,37 +378,39 @@ const Sales = () => {
         {aovLoading ? (
           <div className="h-64 bg-gray-100 rounded animate-pulse" />
         ) : aovChartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={aovChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 12 }} />
-              <YAxis
-                tick={{ fill: "#6b7280", fontSize: 12 }}
-                tickFormatter={(value) =>
-                  value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value
-                }
-              />
-              <Tooltip
-                formatter={(value: number) => [
-                  formatCurrency(value),
-                  "Avg Order Value",
-                ]}
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="aov"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="w-full min-w-0 h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={aovChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" tick={{ fill: "#6b7280", fontSize: 12 }} />
+                <YAxis
+                  tick={{ fill: "#6b7280", fontSize: 12 }}
+                  tickFormatter={(value) =>
+                    value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value
+                  }
+                />
+                <Tooltip
+                  formatter={(value: number) => [
+                    formatCurrency(value),
+                    "Avg Order Value",
+                  ]}
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="aov"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         ) : (
           <div className="h-64 flex items-center justify-center text-gray-400">
             No average order value data available

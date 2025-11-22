@@ -264,11 +264,11 @@ const AdminProducts = () => {
 
   // Show List
   return (
-    <div className="py-6 mt-4 space-y-6">
+    <div className="py-6 mt-4 space-y-6 w-full min-w-0">
       {/* Header + Add Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold">Products</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold">Products</h1>
           <p className="text-sm text-gray-700 mt-1">
             Showing {filteredProducts.length} of {allProducts.length} products
           </p>
@@ -278,7 +278,7 @@ const AdminProducts = () => {
             setEditProduct(null);
             setMode("form");
           }}
-          className="bg-[#1D7B3C] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          className="bg-[#1D7B3C] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto"
         >
           + Add Product
         </button>
@@ -286,16 +286,16 @@ const AdminProducts = () => {
 
       {/* Search + Filters */}
       <div>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
           {/* Search */}
-          <div className="relative">
+          <div className="relative w-full sm:w-auto sm:min-w-[200px]">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pr-10 pl-4 py-1 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C] focus:border-transparent placeholder:text-sm"
+              className="w-full pr-10 pl-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C] focus:border-transparent placeholder:text-sm"
             />
           </div>
 
@@ -329,14 +329,14 @@ const AdminProducts = () => {
           </div>  */}
 
 
-          <div className="flex items-center gap-2 ">
+          <div className="flex flex-row gap-2 w-full sm:w-auto">
             {/* Status Filter */}
-            <div className="relative ">
+            <div className="flex-1 sm:flex-initial">
               <Select
                 value={statusFilter}
                 onValueChange={(v) => setStatusFilter(v as "all" | "in_stock" | "out_of_stock")}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[130px]">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -349,16 +349,18 @@ const AdminProducts = () => {
             </div>
 
             {/* Sort */}
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as "name" | "price" | "stock")}>
-              <SelectTrigger className="">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Sort by Name</SelectItem>
-                <SelectItem value="price">Sort by Price</SelectItem>
-                <SelectItem value="stock">Sort by Stock</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex-1 sm:flex-initial">
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as "name" | "price" | "stock")}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Sort by Name</SelectItem>
+                  <SelectItem value="price">Sort by Price</SelectItem>
+                  <SelectItem value="stock">Sort by Stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -396,94 +398,109 @@ const AdminProducts = () => {
         )} */}
       </div>
 
-      {/* Table / Cards */}
-      {filteredProducts.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-          <div className="text-gray-400 text-5xl mb-4 flex items-center justify-center"><Package size={48} /></div>
-          <h3 className="text-lg font-medium mb-2">No products found</h3>
-          <p className="text-gray-700 mb-4">
-            {searchTerm || statusFilter !== "all"
-              ? "Try adjusting your search or filters"
-              : "Get started by adding your first product"}
-          </p>
-          {!searchTerm && statusFilter === "all" && (
-            <button
-              onClick={() => setMode("form")}
-              className="bg-[#1D7B3C] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Add Product
-            </button>
-          )}
-        </div>
-      ) : (
-        <>
-          {/* Mobile Card View */}
-          <div className="md:hidden space-y-4">
-            {filteredProducts.map((p) => (
-              <div key={p._id} className={`bg-white rounded-lg shadow-sm border overflow-hidden ${
-                p.isLowStock ? 'border-orange-300 ring-2 ring-orange-100' : 'border-gray-200'
-              }`}>
-                {/* Low Stock Warning Banner */}
-                {p.isLowStock && (
-                  <div className="bg-orange-50 border-b border-orange-200 px-4 py-2 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-orange-600" />
-                    <span className="text-xs font-medium text-orange-800">
-                      Low Stock Alert: Only {p.inventory?.availableStock || 0} {p.inventory?.unit || 'units'} left
-                    </span>
+      {/* Table View */}
+      <div className="overflow-x-auto bg-white rounded-2xl shadow">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr className="text-[#687182] text-sm">
+              <th className="p-3 text-left font-medium">#</th>
+              <th className="p-3 text-left font-medium">Product Name</th>
+              <th className="p-3 text-left font-medium">Price (Retail)</th>
+              <th className="p-3 text-left font-medium">Stock</th>
+              <th className="p-3 text-left font-medium">Category</th>
+              <th className="p-3 text-left font-medium">Status</th>
+              <th className="p-3 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProducts.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-6 text-center">
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <Package size={48} className="text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No products found</h3>
+                    <p className="text-gray-500 mb-4">
+                      {searchTerm || statusFilter !== "all"
+                        ? "Try adjusting your search or filters"
+                        : "Get started by adding your first product"}
+                    </p>
+                    {!searchTerm && statusFilter === "all" && (
+                      <button
+                        type="button"
+                        onClick={() => setMode("form")}
+                        className="bg-[#1D7B3C] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Add Product
+                      </button>
+                    )}
                   </div>
-                )}
-
-                {/* Product Image and Name */}
-                <div className="p-4 flex items-start gap-3">
-                  <img
-                    src={p.images?.[0] || "/placeholder.png"}
-                    alt={p.name}
-                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/placeholder.png";
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 mb-1">{p.name}</h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">{p.description}</p>
-                  </div>
-                </div>
-
-                {/* Product Details */}
-                <div className="px-4 pb-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Price:</span>
-                    <span className="text-lg font-semibold text-[#1D7B3C]">
-                      ₦{p.pricing?.retail?.price?.toLocaleString() || "N/A"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Stock:</span>
-                    <span className={`text-sm font-medium ${
-                      (p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
-                        ? "text-red-600"
-                        : "text-gray-900"
-                    }`}>
-                      {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
-                      {p.isLowStock && <span className="ml-1 text-xs">(Low!)</span>}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Category:</span>
-                    <span className="text-sm text-gray-900">{p.category?.name || "N/A"}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Status:</span>
+                </td>
+              </tr>
+            ) : (
+              filteredProducts.map((p, idx) => (
+                <tr key={p._id} className={`border-b hover:bg-gray-50 ${p.isLowStock ? "bg-orange-50" : ""}`}>
+                  <td className="p-3">{idx + 1}</td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-10 h-10 rounded bg-gray-100 overflow-hidden flex-shrink-0">
+                        {p.images?.[0] ? (
+                          <img
+                            src={p.images[0]}
+                            alt={p.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/placeholder.png";
+                            }}
+                          />
+                        ) : (
+                          <span className="flex items-center justify-center w-full h-full text-sm text-gray-500">
+                            {p.name?.[0] ?? "?"}
+                          </span>
+                        )}
+                        {p.isLowStock && (
+                          <div className="absolute -top-1 -right-1 bg-orange-500 rounded-full p-0.5">
+                            <AlertTriangle className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium">{p.name}</p>
+                        <p className="text-xs text-gray-500 line-clamp-1">{p.description}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-3 whitespace-nowrap">
+                    ₦{p.pricing?.retail?.price?.toLocaleString() || "N/A"}
+                  </td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`whitespace-nowrap ${(p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
+                          ? "text-red-600 font-semibold"
+                          : ""
+                          }`}
+                      >
+                        {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
+                      </span>
+                      {p.isLowStock && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium whitespace-nowrap">
+                          <AlertTriangle className="w-3 h-3" />
+                          Low
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-3 whitespace-nowrap">{p.category?.name || "N/A"}</td>
+                  <td className="p-3">
                     <button
                       type="button"
                       onClick={() => handleToggleStatus(p)}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all cursor-pointer hover:ring-2 ${
-                        p.status === "active"
-                          ? "bg-green-100 text-green-800 hover:bg-green-200 hover:ring-green-300"
-                          : p.status === "out_of_stock" || p.status === "inactive"
-                            ? "bg-red-100 text-red-800 hover:bg-red-200 hover:ring-red-300"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:ring-gray-300"
-                      }`}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all cursor-pointer hover:ring-2 whitespace-nowrap ${p.status === "active"
+                        ? "bg-green-100 text-green-800 hover:bg-green-200 hover:ring-green-300"
+                        : p.status === "out_of_stock" || p.status === "inactive"
+                          ? "bg-red-100 text-red-800 hover:bg-red-200 hover:ring-red-300"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:ring-gray-300"
+                        }`}
                       title="Click to toggle status"
                     >
                       {p.status === "active"
@@ -492,176 +509,49 @@ const AdminProducts = () => {
                           ? "Out of Stock"
                           : "Unknown"}
                     </button>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenGroupModal(p)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                      p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
-                        ? "text-[#1D7B3C] bg-green-100 font-medium"
-                        : "text-gray-700 bg-white border border-gray-300 hover:text-[#1D7B3C] hover:bg-green-50"
-                    }`}
-                    title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
-                  >
-                    <Users className="w-4 h-4" />
-                    <span className="text-sm">Group</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditProduct(p);
-                      setMode("form");
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:text-[#1D7B3C] hover:bg-green-50 transition-colors"
-                    title="Edit product"
-                  >
-                    <Pencil className="w-4 h-4" />
-                    <span className="text-sm">Edit</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(p._id, p.name)}
-                    disabled={isDeleting}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                    title="Delete product"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="text-sm">Delete</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto bg-white rounded-lg shadow-sm">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr className="text-[#687182] text-sm">
-                  <th className="p-3 text-left font-medium">#</th>
-                  <th className="p-3 text-left font-medium">Product Name</th>
-                  <th className="p-3 text-left font-medium">Price (Retail)</th>
-                  <th className="p-3 text-left font-medium">Stock</th>
-                  <th className="p-3 text-left font-medium">Category</th>
-                  <th className="p-3 text-left font-medium">Status</th>
-                  <th className="p-3 text-left font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredProducts.map((p, idx) => (
-                  <tr key={p._id} className={p.isLowStock ? "bg-orange-50" : ""}>
-                    <td className="p-3">{idx + 1}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <img
-                            src={p.images?.[0] || "/placeholder.png"}
-                            alt={p.name}
-                            className="w-10 h-10 rounded object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/placeholder.png";
-                            }}
-                          />
-                          {p.isLowStock && (
-                            <div className="absolute -top-1 -right-1 bg-orange-500 rounded-full p-0.5">
-                              <AlertTriangle className="w-3 h-3 text-white" />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium">{p.name}</p>
-                          <p className="text-xs line-clamp-1">{p.description}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      ₦{p.pricing?.retail?.price?.toLocaleString() || "N/A"}
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`inline-flex items-center ${(p.inventory?.availableStock || 0) <= (p.inventory?.lowStockThreshold || 0)
-                            ? "text-red-600 font-semibold"
-                            : ""
-                            }`}
-                        >
-                          {p.inventory?.availableStock ?? "N/A"} {p.inventory?.unit || ""}
-                        </span>
-                        {p.isLowStock && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                            <AlertTriangle className="w-3 h-3" />
-                            Low
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-3">{p.category?.name || "N/A"}</td>
-                    <td className="p-3">
+                  </td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => handleToggleStatus(p)}
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all cursor-pointer hover:ring-2 ${p.status === "active"
-                          ? "bg-green-100 text-green-800 hover:bg-green-200 hover:ring-green-300"
-                          : p.status === "out_of_stock" || p.status === "inactive"
-                            ? "bg-red-100 text-red-800 hover:bg-red-200 hover:ring-red-300"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:ring-gray-300"
-                          }`}
-                        title="Click to toggle status"
+                        onClick={() => handleOpenGroupModal(p)}
+                        className={`p-2 rounded transition-colors ${
+                          p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
+                            ? "text-[#1D7B3C] bg-green-50"
+                            : "hover:text-[#1D7B3C] hover:bg-green-50"
+                        }`}
+                        title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
                       >
-                        {p.status === "active"
-                          ? "In Stock"
-                          : p.status === "out_of_stock" || p.status === "inactive"
-                            ? "Out of Stock"
-                            : "Unknown"}
+                        <Users className="w-4 h-4" />
                       </button>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenGroupModal(p)}
-                          className={`p-2 rounded transition-colors ${
-                            p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
-                              ? "text-[#1D7B3C] bg-green-50"
-                              : "hover:text-[#1D7B3C] hover:bg-green-50"
-                          }`}
-                          title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
-                        >
-                          <Users className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditProduct(p);
-                            setMode("form");
-                          }}
-                          className="p-2  hover:text-[#1D7B3C] hover:bg-green-50 rounded transition-colors"
-                          title="Edit product"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(p._id, p.name)}
-                          disabled={isDeleting}
-                          className="p-2  hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                          title="Delete product"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditProduct(p);
+                          setMode("form");
+                        }}
+                        className="p-2 hover:text-[#1D7B3C] hover:bg-green-50 rounded transition-colors"
+                        title="Edit product"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(p._id, p.name)}
+                        disabled={isDeleting}
+                        className="p-2 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        title="Delete product"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination Info */}
       {filteredProducts.length > 0 && (
