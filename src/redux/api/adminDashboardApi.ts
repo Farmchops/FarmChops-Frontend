@@ -37,6 +37,40 @@ export interface DashboardSummaryResponse {
   conversionRate: number;
 }
 
+// Sales Page Types
+export interface RevenueTrendItem {
+  month: string;
+  revenue: number;
+}
+
+export interface PaymentMethodItem {
+  method: string;
+  count: number;
+  percentage: number;
+  totalAmount: number;
+}
+
+export interface PaymentMethodsResponse {
+  breakdown: PaymentMethodItem[];
+  totalTransactions: number;
+}
+
+export interface AverageOrderValueItem {
+  month: string;
+  averageOrderValue: number;
+}
+
+export interface TopProductItem {
+  productId: string;
+  productName: string;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface TopProductsResponse {
+  products: TopProductItem[];
+}
+
 export interface OrderTrendItem {
   month: string;
   orderCount: number;
@@ -69,6 +103,10 @@ export interface RecentOrdersQueryArgs extends DashboardDateFilter {
   limit?: number;
 }
 
+export interface TopProductsQueryArgs extends DashboardDateFilter {
+  limit?: number;
+}
+
 const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
 
 const baseQuery = fetchBaseQuery({
@@ -86,7 +124,7 @@ const baseQuery = fetchBaseQuery({
 export const adminDashboardApi = createApi({
   reducerPath: 'adminDashboardApi',
   baseQuery,
-  tagTypes: ['DashboardStats', 'OrderTrend', 'UsersTrend', 'RecentOrders'],
+  tagTypes: ['DashboardStats', 'OrderTrend', 'UsersTrend', 'RecentOrders', 'RevenueTrend', 'PaymentMethods', 'AverageOrderValue', 'TopProducts'],
   endpoints: (builder) => ({
     // Total Orders Statistics
     getTotalOrders: builder.query<ApiResponse<TotalOrdersResponse>, DashboardDateFilter | void>({
@@ -172,6 +210,63 @@ export const adminDashboardApi = createApi({
       },
       providesTags: ['RecentOrders'],
     }),
+
+    // Revenue Trend (for Sales page)
+    getRevenueTrend: builder.query<ApiResponse<RevenueTrendItem[]>, DashboardDateFilter | void>({
+      query: (args) => {
+        const params: Record<string, string> = {};
+        if (args?.startDate) params.startDate = args.startDate;
+        if (args?.endDate) params.endDate = args.endDate;
+        return {
+          url: '/admin/dashboard/revenue-trend',
+          params: Object.keys(params).length ? params : undefined,
+        };
+      },
+      providesTags: ['RevenueTrend'],
+    }),
+
+    // Payment Methods Breakdown (for Sales page)
+    getPaymentMethods: builder.query<ApiResponse<PaymentMethodsResponse>, DashboardDateFilter | void>({
+      query: (args) => {
+        const params: Record<string, string> = {};
+        if (args?.startDate) params.startDate = args.startDate;
+        if (args?.endDate) params.endDate = args.endDate;
+        return {
+          url: '/admin/dashboard/payment-methods',
+          params: Object.keys(params).length ? params : undefined,
+        };
+      },
+      providesTags: ['PaymentMethods'],
+    }),
+
+    // Average Order Value (for Sales page)
+    getAverageOrderValue: builder.query<ApiResponse<AverageOrderValueItem[]>, DashboardDateFilter | void>({
+      query: (args) => {
+        const params: Record<string, string> = {};
+        if (args?.startDate) params.startDate = args.startDate;
+        if (args?.endDate) params.endDate = args.endDate;
+        return {
+          url: '/admin/dashboard/average-order-value',
+          params: Object.keys(params).length ? params : undefined,
+        };
+      },
+      providesTags: ['AverageOrderValue'],
+    }),
+
+    // Top Products by Revenue (for Sales page)
+    getTopProducts: builder.query<ApiResponse<TopProductsResponse>, TopProductsQueryArgs | void>({
+      query: (args) => {
+        const params: Record<string, string | number> = {};
+        if (args?.startDate) params.startDate = args.startDate;
+        if (args?.endDate) params.endDate = args.endDate;
+        if (args?.limit) params.limit = args.limit;
+        return {
+          url: '/admin/dashboard/top-products',
+          params: Object.keys(params).length ? params : undefined,
+        };
+      },
+      providesTags: ['TopProducts'],
+    }),
   }),
 });
 
@@ -182,4 +277,8 @@ export const {
   useGetOrderTrendQuery,
   useGetUsersTrendQuery,
   useGetRecentOrdersQuery,
+  useGetRevenueTrendQuery,
+  useGetPaymentMethodsQuery,
+  useGetAverageOrderValueQuery,
+  useGetTopProductsQuery,
 } = adminDashboardApi;
