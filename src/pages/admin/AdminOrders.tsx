@@ -724,17 +724,15 @@ const AdminOrders = () => {
 		const args: GetOrdersQueryArgs = { limit: PAGE_SIZE, page: DEFAULT_PAGE };
 		if (statusFilter !== "all") args.status = statusFilter;
 
-		// Non-super-admins should only see orders relevant to their team by default.
-		if (!isSuper) {
-			// Force ownerRole to the user's team role to reduce payload from the server.
-			if (mappedAdminRole) args.ownerRole = mappedAdminRole;
-		} else {
-			if (ownerFilter !== "all") args.ownerRole = ownerFilter;
+		// Only filter by ownerRole if super admin explicitly selects a filter
+		// Non-super-admins see all orders but the UI filters by visible statuses
+		if (isSuper && ownerFilter !== "all") {
+			args.ownerRole = ownerFilter;
 		}
 
 		if (searchQuery.trim()) args.search = searchQuery.trim();
 		return args;
-	}, [ownerFilter, searchQuery, statusFilter, isSuper, mappedAdminRole]);
+	}, [ownerFilter, searchQuery, statusFilter, isSuper]);
 
 	const { data: ordersResponse, isLoading, isFetching, refetch } = useGetOrdersQuery(queryArgs);
 	const [triggerOrderAction, { isLoading: isActionSubmitting }] = useTriggerOrderActionMutation();
