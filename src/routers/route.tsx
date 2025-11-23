@@ -33,6 +33,14 @@ import OrderHistory from "../pages/profile/OrderHistory";
 import Notifications from "../pages/profile/Notifications";
 import ProfileSettings from "../pages/profile/ProfileSettings";
 import PaymentMethods from "../pages/profile/PaymentMethods";
+import Wallet from "../pages/profile/Wallet";
+import WalletTransactions from "../pages/profile/WalletTransactions";
+import FundWallet from "../pages/profile/FundWallet";
+import PaymentLinks from "../pages/profile/PaymentLinks";
+import CreatePaymentLink from "../pages/profile/CreatePaymentLink";
+
+// Public Payment Page
+import PayForMe from "../pages/PayForMe";
 
 // Admin Pages
 import AdminRoute from "./AdminRoute";
@@ -80,6 +88,10 @@ const router = createBrowserRouter([
             // Shareable link route - resolves shareableCode and redirects to group detail
             { path: "/group-buy/:groupId", element: <GroupOrderSuccess /> },
 
+            // Public Pay-for-Me routes (no auth required)
+            { path: "/pay/:code", element: <PayForMe /> },
+            { path: "/order/success/pay/:code", element: <PayForMe /> },
+
             // Auth routes
             { path: "/register", element: <Register /> },
             { path: "/signup", element: <Navigate to="/register" replace /> },
@@ -123,6 +135,13 @@ const router = createBrowserRouter([
                     { path: "personal-info", element: <PersonalInfo /> },
                     { path: "orders", element: <OrderHistory /> },
                     { path: "groups", element: <MyGroups /> },
+                    // Wallet routes
+                    { path: "wallet", element: <Wallet /> },
+                    { path: "wallet/transactions", element: <WalletTransactions /> },
+                    { path: "wallet/fund", element: <FundWallet /> },
+                    // Payment Links routes
+                    { path: "payment-links", element: <PaymentLinks /> },
+                    { path: "payment-links/create", element: <CreatePaymentLink /> },
                     { path: "notifications", element: <Notifications /> },
                     { path: "settings", element: <ProfileSettings /> },
                     { path: "payment-methods", element: <PaymentMethods /> },

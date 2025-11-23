@@ -6,7 +6,10 @@ import {
     useCheckoutMutation,
     useCreateOrderMutation,
 } from "@/redux/api/orderApi";
+import { useGetWalletBalanceQuery, useDebitWalletMutation, useCreatePaymentLinkMutation } from "@/redux/api/walletApi";
 import type { CheckoutResponse } from "@/types/orders";
+import type { CreatePaymentLinkResponse } from "@/types/wallet";
+import { Wallet, AlertCircle, Link2, Copy, Check, Share2, X, Loader2 } from "lucide-react";
 
 
 // Google Maps types (for TypeScript)
@@ -113,7 +116,14 @@ const Checkout: React.FC = () => {
 
     const [checkout] = useCheckoutMutation();
     const [createOrder] = useCreateOrderMutation();
-    // const [verifyPayment] = useVerifyPaymentMutation();
+    const { data: walletData, isLoading: walletLoading } = useGetWalletBalanceQuery();
+    const [debitWallet] = useDebitWalletMutation();
+    const [createPaymentLink, { isLoading: creatingPaymentLink }] = useCreatePaymentLinkMutation();
+
+    // Pay-for-Me modal state
+    const [showPayForMeModal, setShowPayForMeModal] = useState(false);
+    const [payForMeLink, setPayForMeLink] = useState<CreatePaymentLinkResponse | null>(null);
+    const [payForMeCopied, setPayForMeCopied] = useState(false);
 
     // Pre-fill form with user data
     const [formData, setFormData] = useState({
@@ -128,7 +138,10 @@ const Checkout: React.FC = () => {
     const addressRef = useRef<HTMLInputElement | null>(null);
     const autocompleteRef = useRef<GoogleMapsAutocomplete | null>(null);
 
-    const [paymentMethod, setPaymentMethod] = useState<"paystack" | "pay_later">("paystack");
+    const [paymentMethod, setPaymentMethod] = useState<"paystack" | "wallet" | "pay_later">("paystack");
+
+    // Wallet data
+    const walletBalance = walletData?.data?.balance ?? 0;
     const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
@@ -381,6 +394,22 @@ const Checkout: React.FC = () => {
             if (paymentMethod === "paystack" && payment) {
                 // Redirect to Paystack
                 window.location.href = payment.authorizationUrl;
+            } else if (paymentMethod === "wallet") {
+                // Debit wallet and complete order
+                try {
+                    await debitWallet({
+                        amount: deliveryData.totals.grandTotal,
+                        orderId: order._id,
+                        description: `Payment for order #${order.orderNumber}`,
+                    }).unwrap();
+                    // Redirect to success page
+                    navigate(`/order/success?orderId=${order._id}`);
+                } catch (walletError: unknown) {
+                    const errorMsg = walletError && typeof walletError === 'object' && 'data' in walletError
+                        ? (walletError as { data?: { message?: string } }).data?.message
+                        : 'Wallet payment failed';
+                    throw new Error(errorMsg || 'Wallet payment failed');
+                }
             } else if (paymentMethod === "pay_later") {
                 // Redirect to order details page
                 navigate(`/orders/${order._id}`);
@@ -388,7 +417,70 @@ const Checkout: React.FC = () => {
         }
     };
 
+    // Handle Pay-for-Me - Create payment link with current order details
+    const handlePayForMe = async () => {
+        // Need delivery fee calculated first
+        if (!checkoutData) {
+            alert("Please enter your delivery address first to calculate the total amount.");
+            return;
+        }
 
+        try {
+            // Build description from cart items
+            const itemNames = cart?.items.map(item => item.name).slice(0, 3).join(", ") || "Order";
+            const description = cart?.items.length && cart.items.length > 3
+                ? `${itemNames} and ${cart.items.length - 3} more items`
+                : itemNames;
+
+            const response = await createPaymentLink({
+                amount: checkoutData.totals.grandTotal,
+                description: `Help me pay for: ${description}`,
+                expiresInDays: 7,
+            }).unwrap();
+
+            if (response.success && response.data) {
+                setPayForMeLink(response.data);
+                setShowPayForMeModal(true);
+            }
+        } catch (err: unknown) {
+            const errorMsg = err && typeof err === 'object' && 'data' in err
+                ? (err as { data?: { message?: string } }).data?.message
+                : 'Failed to create payment link';
+            alert(errorMsg || 'Failed to create payment link');
+        }
+    };
+
+    // Copy payment link
+    const handleCopyPayForMeLink = async () => {
+        if (!payForMeLink) return;
+        try {
+            await navigator.clipboard.writeText(payForMeLink.shareableUrl);
+            setPayForMeCopied(true);
+            setTimeout(() => setPayForMeCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
+
+    // Share payment link
+    const handleSharePayForMeLink = async () => {
+        if (!payForMeLink) return;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Help me pay for my order',
+                    text: payForMeLink.description,
+                    url: payForMeLink.shareableUrl,
+                });
+            } catch (err) {
+                if ((err as Error).name !== 'AbortError') {
+                    handleCopyPayForMeLink();
+                }
+            }
+        } else {
+            handleCopyPayForMeLink();
+        }
+    };
 
     // Loading state
     if (cartLoading || isProcessing) {
@@ -613,7 +705,35 @@ const Checkout: React.FC = () => {
                             <div className="mt-6">
                                 <h4 className="font-semibold mb-3">Payment Method</h4>
                                 <div className="space-y-2">
-                                    <label className="flex items-center p-3  rounded-lg cursor-pointer transition bg-green-50">
+                                    {/* Wallet Payment Option */}
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "wallet" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            value="wallet"
+                                            checked={paymentMethod === "wallet"}
+                                            onChange={(e) => setPaymentMethod(e.target.value as "wallet")}
+                                            className="mr-3 accent-[#1D7B3C]"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <Wallet className="w-4 h-4 text-[#1D7B3C]" />
+                                                <span className="font-medium">Pay with Wallet</span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Balance: {walletLoading ? "Loading..." : `₦${walletBalance.toLocaleString()}`}
+                                            </p>
+                                            {checkoutData && walletBalance < checkoutData.totals.grandTotal && (
+                                                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                                    <AlertCircle className="w-3 h-3" />
+                                                    Insufficient balance
+                                                </p>
+                                            )}
+                                        </div>
+                                    </label>
+
+                                    {/* Card/Transfer Payment */}
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "paystack" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
                                         <input
                                             type="radio"
                                             name="paymentMethod"
@@ -623,11 +743,35 @@ const Checkout: React.FC = () => {
                                             className="mr-3 accent-[#1D7B3C]"
                                         />
                                         <div className="flex-1">
-                                            <span className="font-medium-">Pay with Card/ Transfer</span>
+                                            <span className="font-medium">Pay with Card/Transfer</span>
                                             <p className="text-xs text-gray-500">Secure payment via Paystack</p>
                                         </div>
                                     </label>
-                                    <label className="hidden flex items-center p-3 rounded-lg cursor-pointertransition bg-green-50">
+
+                                    {/* Pay-for-Me Link */}
+                                    <button
+                                        type="button"
+                                        onClick={handlePayForMe}
+                                        disabled={creatingPaymentLink || !checkoutData}
+                                        className="w-full flex items-center p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {creatingPaymentLink ? (
+                                            <Loader2 className="w-4 h-4 text-purple-600 mr-3 animate-spin" />
+                                        ) : (
+                                            <Link2 className="w-4 h-4 text-purple-600 mr-3" />
+                                        )}
+                                        <div className="flex-1">
+                                            <span className="font-medium text-purple-900">Pay-for-Me</span>
+                                            <p className="text-xs text-purple-600">
+                                                {checkoutData
+                                                    ? `Create a ₦${checkoutData.totals.grandTotal.toLocaleString()} payment link`
+                                                    : "Enter address first to create link"
+                                                }
+                                            </p>
+                                        </div>
+                                    </button>
+
+                                    <label className="hidden flex items-center p-3 rounded-lg cursor-pointer transition bg-green-50">
                                         <input
                                             type="radio"
                                             name="paymentMethod"
@@ -637,7 +781,7 @@ const Checkout: React.FC = () => {
                                             className="mr-3 accent-[#1D7B3C]"
                                         />
                                         <div className="flex-1 ">
-                                            <span className="font-medium-">Pay Later</span>
+                                            <span className="font-medium">Pay Later</span>
                                             <p className="text-xs text-gray-500">Pay on delivery</p>
                                         </div>
                                     </label>
@@ -647,10 +791,14 @@ const Checkout: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={handlePlaceOrder}
-                                disabled={isProcessing || isCalculatingDelivery}
+                                disabled={
+                                    isProcessing ||
+                                    isCalculatingDelivery ||
+                                    (paymentMethod === "wallet" && checkoutData && walletBalance < checkoutData.totals.grandTotal)
+                                }
                                 className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : "Place Order"}
+                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : "Place Order"}
                             </button>
 
 
@@ -663,6 +811,85 @@ const Checkout: React.FC = () => {
             </section>
 
             <Footer />
+
+            {/* Pay-for-Me Modal */}
+            {showPayForMeModal && payForMeLink && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 relative">
+                        <button
+                            onClick={() => {
+                                setShowPayForMeModal(false);
+                                setPayForMeLink(null);
+                            }}
+                            className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full transition"
+                        >
+                            <X className="w-5 h-5 text-gray-500" />
+                        </button>
+
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Link2 className="w-8 h-8 text-purple-600" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900">Payment Link Created!</h3>
+                            <p className="text-gray-600 mt-1">Share this link with whoever will pay for you</p>
+                        </div>
+
+                        {/* Order Summary */}
+                        <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                            <div className="flex justify-between text-sm mb-2">
+                                <span className="text-gray-600">Amount:</span>
+                                <span className="font-bold text-[#1D7B3C]">₦{payForMeLink.amount.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-sm mb-2">
+                                <span className="text-gray-600">Items:</span>
+                                <span className="text-gray-900">{totalItems} items</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Expires:</span>
+                                <span className="text-gray-900">7 days</span>
+                            </div>
+                        </div>
+
+                        {/* Link Display */}
+                        <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 mb-4">
+                            <p className="text-sm text-purple-800 font-mono break-all text-center">
+                                {payForMeLink.shareableUrl}
+                            </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleCopyPayForMeLink}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition"
+                            >
+                                {payForMeCopied ? (
+                                    <>
+                                        <Check className="w-4 h-4 text-green-600" />
+                                        Copied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy className="w-4 h-4" />
+                                        Copy Link
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                onClick={handleSharePayForMeLink}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition"
+                            >
+                                <Share2 className="w-4 h-4" />
+                                Share
+                            </button>
+                        </div>
+
+                        <p className="text-xs text-gray-500 text-center mt-4">
+                            Once paid, the funds will be added to your wallet and you can complete the order.
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

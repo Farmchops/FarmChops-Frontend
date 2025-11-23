@@ -10,6 +10,8 @@ import {
     Menu,
     X,
     Users,
+    Wallet,
+    Link2,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../../redux/store";
@@ -43,6 +45,8 @@ const ProfileLayout = () => {
         { path: "personal-info", label: "Personal Information", icon: User },
         { path: "orders", label: "Order History", icon: Package },
         { path: "groups", label: "My Groups", icon: Users },
+        { path: "wallet", label: "My Wallet", icon: Wallet },
+        { path: "payment-links", label: "Pay-for-Me", icon: Link2 },
         { path: "notifications", label: "Notifications", icon: Bell },
         { path: "payment-methods", label: "Payment Methods", icon: CreditCard },
         { path: "settings", label: "Settings", icon: Settings },

@@ -22,6 +22,7 @@ import { dealsApi } from './api/dealsApi';
 import { vendorsApi } from './api/vendorsApi';
 import { groupOrdersApi } from './api/groupOrdersApi';
 import { adminDashboardApi } from './api/adminDashboardApi';
+import { walletApi } from './api/walletApi';
 
 
 export const store = configureStore({
@@ -48,6 +49,7 @@ export const store = configureStore({
         [vendorsApi.reducerPath]: vendorsApi.reducer,
         [groupOrdersApi.reducerPath]: groupOrdersApi.reducer,
         [adminDashboardApi.reducerPath]: adminDashboardApi.reducer,
+        [walletApi.reducerPath]: walletApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
@@ -65,6 +67,7 @@ export const store = configureStore({
             vendorsApi.middleware,
             groupOrdersApi.middleware,
             adminDashboardApi.middleware,
+            walletApi.middleware,
         ),
 });
 
