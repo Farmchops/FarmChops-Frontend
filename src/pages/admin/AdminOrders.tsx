@@ -184,10 +184,7 @@ const OrderActionModal = ({
 	if (!open || !actionConfig) return null;
 
 	const handleSubmit = () => {
-		if (requires.note && !values.note?.trim()) {
-			setLocalError("Please provide a note for this action.");
-			return;
-		}
+		// Note is optional - removed validation requirement
 
 		if (requires.riderId && !values.riderId?.trim()) {
 			setLocalError("Please provide the rider ID.");
@@ -199,10 +196,7 @@ const OrderActionModal = ({
 			return;
 		}
 
-		if (requires.reason && !values.reason?.trim()) {
-			setLocalError(actionConfig.reasonLabel ? `${actionConfig.reasonLabel} is required.` : "Please provide a reason for this action.");
-			return;
-		}
+		// Reason is optional - removed validation requirement
 
 		setLocalError(null);
 		onSubmit(values);
@@ -224,7 +218,7 @@ const OrderActionModal = ({
 				<div className="space-y-4 px-6 py-5 text-sm">
 					{requires.note && (
 						<div className="space-y-2">
-							<label className="block text-xs font-medium text-gray-600">Internal note</label>
+							<label className="block text-xs font-medium text-gray-600">Internal note <span className="text-gray-400 font-normal">(optional)</span></label>
 							<textarea
 								className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
 								rows={4}
@@ -334,6 +328,20 @@ const OrderActionModal = ({
 						</div>
 					)}
 
+					{requires.reason && (
+						<div className="space-y-2">
+							<label className="block text-xs font-medium text-gray-600">
+								{actionConfig.reasonLabel ?? "Reason"} <span className="text-gray-400 font-normal">(optional)</span>
+							</label>
+							<textarea
+								className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/40"
+								rows={3}
+								placeholder={`Enter ${(actionConfig.reasonLabel ?? "reason").toLowerCase()}...`}
+								value={values.reason ?? ""}
+								onChange={(event) => setValues((prev) => ({ ...prev, reason: event.target.value }))}
+							/>
+						</div>
+					)}
 
 		{localError ? <p className="text-xs text-red-600">{localError}</p> : null}
 					{error ? <p className="text-xs text-red-600">{error}</p> : null}
