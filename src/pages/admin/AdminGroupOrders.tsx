@@ -154,7 +154,7 @@ const AdminGroupOrders = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
             <div>
@@ -192,18 +192,6 @@ const AdminGroupOrders = () => {
               <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalCancelledGroups}</p>
             </div>
             <XCircle className="h-10 w-10 text-red-500 opacity-20" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-[#1D7B3C]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-xl font-bold text-gray-900 mt-1">
-                {formatCurrency(stats.totalRevenue)}
-              </p>
-            </div>
-            <Package className="h-10 w-10 text-[#1D7B3C] opacity-20" />
           </div>
         </div>
       </div>

@@ -398,7 +398,7 @@ const GroupDetail = () => {
                     </p>
                   )}
                   <p className="text-sm text-gray-600 mt-2">
-                    Min: {group.quantityPerPerson?.min ?? 0}{group.product.unit} • Max: {group.quantityPerPerson?.max ?? 0}{group.product.unit} per person
+                    Min: {group.quantityPerPerson?.min ?? 0}{group.product.unit || ''} • Max: {group.quantityPerPerson?.max ?? 0}{group.product.unit || ''} per person
                   </p>
                 </div>
 
@@ -490,7 +490,7 @@ const GroupDetail = () => {
                         1
                       </div>
                       <p>
-                        <strong>Reserve your spot:</strong> Select quantity ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit}) and reserve. No payment yet!
+                        <strong>Reserve your spot:</strong> Select quantity ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''}) and reserve. No payment yet!
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
@@ -545,7 +545,7 @@ const GroupDetail = () => {
                           {participant.user.firstName} {participant.user.lastName?.[0]}.
                         </p>
                         <p className="text-sm text-gray-600">
-                          {participant.quantity}{group.product.unit} •{' '}
+                          {participant.quantity}{group.product.unit || ''} •{' '}
                           <span className={participant.status === 'paid' ? 'text-green-600 font-medium' : 'text-yellow-600'}>
                             {participant.status}
                           </span>
@@ -574,7 +574,7 @@ const GroupDetail = () => {
                           {index + 1}
                         </span>
                         <span>{person.user.firstName} {person.user.lastName?.[0]}.</span>
-                        <span className="text-gray-400">• {person.quantity}{group.product.unit}</span>
+                        <span className="text-gray-400">• {person.quantity}{group.product.unit || ''}</span>
                       </div>
                     ))}
                   </div>
@@ -676,15 +676,15 @@ const GroupDetail = () => {
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-gray-600">Bulk Price:</span>
-                      <span className="font-semibold">{formatCurrency(group.bulkPricePerUnit)}/{group.product.unit}</span>
+                      <span className="font-semibold">{formatCurrency(group.bulkPricePerUnit)}{group.product.unit ? `/${group.product.unit}` : ''}</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-gray-600">Min per person:</span>
-                      <span className="font-semibold">{group.quantityPerPerson?.min ?? 0}{group.product.unit}</span>
+                      <span className="font-semibold">{group.quantityPerPerson?.min ?? 0}{group.product.unit || ''}</span>
                     </div>
                     <div className="flex items-center justify-between py-2">
                       <span className="text-gray-600">Max per person:</span>
-                      <span className="font-semibold">{group.quantityPerPerson?.max ?? 0}{group.product.unit}</span>
+                      <span className="font-semibold">{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''}</span>
                     </div>
                   </div>
 
@@ -742,7 +742,7 @@ const GroupDetail = () => {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                How much do you want? ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit})
+                How much do you want? ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''})
               </label>
               <input
                 type="number"
@@ -772,7 +772,7 @@ const GroupDetail = () => {
                 disabled={isProcessing}
                 className="w-full bg-[#1D7B3C] hover:bg-[#166430] text-white font-semibold py-4 rounded-full disabled:opacity-50"
               >
-                {isProcessing ? 'Reserving...' : `Reserve ${quantity}${group.product.unit} (Free)`}
+                {isProcessing ? 'Reserving...' : `Reserve ${quantity}${group.product.unit || ''} (Free)`}
               </button>
               <button
                 onClick={() => setShowReserveModal(false)}
@@ -812,7 +812,7 @@ const GroupDetail = () => {
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900">{group.product.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {myParticipation.quantity}{group.product.unit} @ {formatCurrency(group.bulkPricePerUnit)}/{group.product.unit}
+                    {myParticipation.quantity}{group.product.unit || ''} @ {formatCurrency(group.bulkPricePerUnit)}{group.product.unit ? `/${group.product.unit}` : ''}
                   </p>
                 </div>
               </div>
