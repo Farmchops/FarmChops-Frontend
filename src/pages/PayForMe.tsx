@@ -254,11 +254,10 @@ const PayForMe = () => {
           <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-lg">
             {/* Header */}
             <div className="bg-gradient-to-br from-[#1D7B3C] to-[#145a2b] p-6 text-white text-center">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Link2 className="w-7 h-7" />
               </div>
-              <p className="text-white/80 text-sm mb-2">Payment Request from</p>
-              <p className="text-xl font-semibold mb-4">{linkDetails.createdBy}</p>
+              <p className="text-white/80 text-sm mb-1">Amount Due</p>
               <h2 className="text-4xl font-bold">
                 {formatCurrency(linkDetails.amount)}
               </h2>
@@ -266,16 +265,24 @@ const PayForMe = () => {
 
             {/* Details */}
             <div className="p-6">
+              {/* Personal Message */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                <p className="text-gray-900 text-center">
+                  <span className="font-semibold">{linkDetails.createdBy}</span>
+                  {" is requesting your help to pay for their order"}
+                </p>
+              </div>
+
               {/* Description */}
               <div className="mb-4 pb-4 border-b border-gray-100">
-                <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">For</p>
-                <p className="text-gray-900 font-medium">{linkDetails.description}</p>
+                <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Items</p>
+                <p className="text-gray-900 font-medium">{linkDetails.description.replace('Help me pay for: ', '')}</p>
               </div>
 
               {/* Recipient Name */}
               {linkDetails.recipientName && (
                 <div className="mb-4 pb-4 border-b border-gray-100">
-                  <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Requested For</p>
+                  <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Beneficiary</p>
                   <p className="text-gray-900 font-medium">{linkDetails.recipientName}</p>
                 </div>
               )}
@@ -298,7 +305,7 @@ const PayForMe = () => {
               {/* Expiry */}
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-6">
                 <Clock className="w-4 h-4" />
-                <span>Expires {formatDate(linkDetails.expiresAt)}</span>
+                <span>Valid until {formatDate(linkDetails.expiresAt)}</span>
               </div>
 
               {/* Error */}
