@@ -794,7 +794,7 @@ const Checkout: React.FC = () => {
                                 disabled={
                                     isProcessing ||
                                     isCalculatingDelivery ||
-                                    (paymentMethod === "wallet" && checkoutData && walletBalance < checkoutData.totals.grandTotal)
+                                    (paymentMethod === "wallet" && checkoutData !== null && walletBalance < checkoutData.totals.grandTotal)
                                 }
                                 className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >

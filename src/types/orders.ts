@@ -18,7 +18,7 @@ export type OrderStatus =
     | 'failed_delivery';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-export type PaymentMethod = 'paystack' | 'pay_later';
+export type PaymentMethod = 'paystack' | 'pay_later' | 'wallet';
 
 // Order Item
 export interface OrderItem {

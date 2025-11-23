@@ -24,7 +24,6 @@ const FundWallet = () => {
 
   // Check if returning from payment
   const paymentReference = searchParams.get('reference');
-  const paymentStatus = searchParams.get('status');
 
   const [amount, setAmount] = useState<number | ''>('');
   const [error, setError] = useState<string | null>(null);

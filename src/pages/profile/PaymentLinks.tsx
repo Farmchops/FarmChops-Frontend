@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Link2,
-  Filter,
   ChevronDown,
   X,
   RefreshCw,
