@@ -180,8 +180,8 @@ export interface CreatePaymentLinkResponse {
 }
 
 export interface PayViaLinkRequest {
-  payerName: string;
-  payerEmail: string;
+  payerName?: string;
+  payerEmail?: string;
   payerPhone?: string;
 }
 
