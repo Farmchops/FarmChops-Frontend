@@ -1,27 +1,21 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetGroupByShareableCodeQuery, useGetGroupByIdQuery } from '@/redux/api/groupOrdersApi';
+import { useGetGroupByShareableCodeQuery } from '@/redux/api/groupOrdersApi';
 
 const GroupOrderSuccess: React.FC = () => {
     const navigate = useNavigate();
     const { groupId: shareableCode } = useParams<{ groupId: string }>();
 
-    // First try to look up by shareable code
+    // Look up by shareable code - this is the primary lookup for shared links
     const { data: shareData, error: shareError, isLoading: shareLoading } = useGetGroupByShareableCodeQuery(shareableCode || '', { skip: !shareableCode });
 
-    // If shareable code lookup fails, try treating the code as a direct groupId
-    const shouldTryDirectId = !shareLoading && (shareError || !shareData?.group?.groupId && !shareData?.group?._id);
-    const { data: directData, error: directError, isLoading: directLoading } = useGetGroupByIdQuery(shareableCode || '', { skip: !shareableCode || !shouldTryDirectId });
-
-    // Combine results - prefer shareable code lookup, fallback to direct ID
-    const data = shareData?.group?.groupId || shareData?.group?._id ? shareData : directData;
-    const isLoading = shareLoading || (shouldTryDirectId && directLoading);
-    const error = shouldTryDirectId ? directError : shareError;
-    const isError = !!(shareError && directError);
-
-    // Get the group ID from the response - check both groupId and _id
-    const group = data?.group;
+    // Get the group from shareable code response
+    const group = shareData?.group;
     const resolvedGroupId = group?.groupId || group?._id;
+
+    // Only consider it an error if shareable code lookup finished and failed
+    const isLoading = shareLoading;
+    const isError = !shareLoading && (!!shareError || !group || (!group.groupId && !group._id));
 
     useEffect(() => {
         if (resolvedGroupId) {
@@ -47,13 +41,11 @@ const GroupOrderSuccess: React.FC = () => {
         console.log('[GroupOrderSuccess] shareableCode:', shareableCode);
         console.log('[GroupOrderSuccess] shareData:', shareData);
         console.log('[GroupOrderSuccess] shareError:', shareError);
-        console.log('[GroupOrderSuccess] directData:', directData);
-        console.log('[GroupOrderSuccess] directError:', directError);
         console.log('[GroupOrderSuccess] resolvedGroupId:', resolvedGroupId);
     }
 
     // Show error state if API call failed or group not found
-    const groupNotFound = isError || (error && !isLoading) || (!group && !isLoading) || (!isLoading && group && !group.groupId && !group._id);
+    const groupNotFound = isError;
     if (groupNotFound) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

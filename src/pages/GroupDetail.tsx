@@ -125,7 +125,16 @@ const GroupDetail = () => {
   };
 
   const handleShare = async () => {
-    const shareUrl = group.shareableLink || window.location.href;
+    // Debug: log what shareableLink we have
+    console.log('[GroupDetail] group.shareableLink:', group.shareableLink);
+    console.log('[GroupDetail] group.shareableCode:', group.shareableCode);
+
+    // Use shareableLink from API, or construct from shareableCode, or fallback to current URL
+    const shareUrl = group.shareableLink
+      || (group.shareableCode ? `${window.location.origin}/group-buy/${group.shareableCode}` : null)
+      || window.location.href;
+
+    console.log('[GroupDetail] Using shareUrl:', shareUrl);
 
     if (navigator.share) {
       try {

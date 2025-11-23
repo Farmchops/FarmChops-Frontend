@@ -58,11 +58,17 @@ export const groupOrdersApi = createApi({
     // Get group by shareable code
     getGroupByShareableCode: builder.query<{ group: GroupOrder }, string>({
       query: (shareableCode) => `/group-orders/share/${shareableCode}`,
-      transformResponse: (response: { success?: boolean; data?: { group: GroupOrder }; group?: GroupOrder }) => {
+      transformResponse: (response: { success?: boolean; data?: GroupOrder | { group: GroupOrder }; group?: GroupOrder }) => {
         // Check for valid group data in various response formats
-        if (response.data && response.data.group && (response.data.group.groupId || response.data.group._id)) {
-          return response.data;
+        // Format 1: { success: true, data: { group: {...} } }
+        if (response.data && 'group' in response.data && response.data.group) {
+          return { group: response.data.group };
         }
+        // Format 2: { success: true, data: { groupId: "...", ... } } - data IS the group
+        if (response.data && ('groupId' in response.data || '_id' in response.data)) {
+          return { group: response.data as GroupOrder };
+        }
+        // Format 3: { success: true, group: {...} }
         if (response.group && (response.group.groupId || response.group._id)) {
           return { group: response.group };
         }
