@@ -21,6 +21,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
     const [open, setOpen] = useState(false);
     const [backdropVisible, setBackdropVisible] = useState(false);
     const [removingKey, setRemovingKey] = useState<string | null>(null);
+    const [showClearModal, setShowClearModal] = useState(false);
 
     const cart = cartData?.cart;
     type SidebarCartItem = CartItem & { _id?: string; total?: number }; // server enriches items with _id/total
@@ -57,12 +58,11 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
     };
 
     const handleClearCart = async () => {
-        if (window.confirm("Are you sure you want to clear your cart?")) {
-            try {
-                await clearCart().unwrap();
-            } catch (error) {
-                console.error("Failed to clear cart:", error);
-            }
+        try {
+            await clearCart().unwrap();
+            setShowClearModal(false);
+        } catch (error) {
+            console.error("Failed to clear cart:", error);
         }
     };
 
@@ -245,7 +245,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                                 <div className="mb-4">
                                     <button
                                         type="button"
-                                        onClick={handleClearCart}
+                                        onClick={() => setShowClearModal(true)}
                                         disabled={isClearing}
                                         className="w-full text-sm text-red-600 hover:text-red-700 py-2 px-4 border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
@@ -306,6 +306,41 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                     </div>
                 )}
             </div>
+
+            {/* Clear Cart Confirmation Modal */}
+            {showClearModal && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4"
+                    onClick={() => setShowClearModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Clear Cart?</h3>
+                        <p className="text-gray-600 text-sm mb-6">
+                            Are you sure you want to remove all items from your cart? This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowClearModal(false)}
+                                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleClearCart}
+                                disabled={isClearing}
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                                {isClearing ? "Clearing..." : "Clear Cart"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
