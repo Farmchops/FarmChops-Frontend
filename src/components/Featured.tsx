@@ -65,10 +65,10 @@ const Featured: React.FC = () => {
 
                     return (
                         <Link
-                            to={`/product/${product.slug}`}
+                            to={`/products/${product.slug}`}
                             key={product._id}
                             className="w-fit m-auto overflow-hidden rounded-[5px] hover:-translate-y-2 hover:shadow-lg transition-all duration-300"
-                        > the backend enginee
+                        >
                             <img
                                 src={productImage}
                                 alt={product.name}
