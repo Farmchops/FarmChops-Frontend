@@ -109,6 +109,17 @@ const GroupDetail = () => {
   const hasReserved = myParticipation?.status === 'reserved';
   const hasPaid = myParticipation?.status === 'paid';
   const canCheckout = hasReserved && isCheckoutWindow;
+
+  // Debug logging
+  console.log('[GroupDetail] Debug Info:', {
+    userId: user?._id,
+    myParticipation,
+    hasReserved,
+    hasPaid,
+    isCheckoutWindow,
+    canCheckout,
+    phase: group.phase,
+  });
   
   // Ensure participants is always an array to satisfy strict null checks
   const participants = group.participants ?? [];
@@ -121,7 +132,7 @@ const GroupDetail = () => {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 0,
-    }).format(amount / 100); // Backend sends in kobo
+    }).format(amount); // Amount in naira
   };
 
   const handleShare = async () => {
@@ -309,10 +320,21 @@ const GroupDetail = () => {
     }
   };
 
-  // Calculate total price for selected quantity
+  // Calculate total price for checkout (in naira)
   const calculateTotal = () => {
-    const productTotal = quantity * group.bulkPricePerUnit;
-    return productTotal + (deliveryFee * 100); // deliveryFee in naira, convert to kobo
+    if (!myParticipation) return 0;
+    // Backend stores prices in kobo, so divide by 100 to get naira
+    const priceInNaira = group.bulkPricePerUnit / 100;
+    const productTotal = myParticipation.quantity * priceInNaira;
+    return productTotal + deliveryFee; // Both in naira
+  };
+
+  // Calculate product subtotal for display (in naira)
+  const calculateProductTotal = () => {
+    if (!myParticipation) return 0;
+    // Backend stores prices in kobo, so divide by 100 to get naira
+    const priceInNaira = group.bulkPricePerUnit / 100;
+    return myParticipation.quantity * priceInNaira;
   };
 
   return (
@@ -388,13 +410,13 @@ const GroupDetail = () => {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-bold text-[#1D7B3C]">
-                      {formatCurrency(group.bulkPricePerUnit)}
+                      {formatCurrency(group.bulkPricePerUnit / 100)}
                     </span>
                     <span className="text-gray-600">per {group.product.unit || 'unit'}</span>
                   </div>
                   {group.product.regularPrice && (
                     <p className="text-lg text-gray-500 line-through mt-1">
-                      Regular: {formatCurrency(group.product.regularPrice)}
+                      Regular: {formatCurrency(group.product.regularPrice / 100)}
                     </p>
                   )}
                   <p className="text-sm text-gray-600 mt-2">
@@ -626,7 +648,7 @@ const GroupDetail = () => {
                     View My Groups
                   </Link>
                 </div>
-              ) : canCheckout ? (
+              ) : canCheckout || (isCheckoutWindow && hasReserved) ? (
                 <>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
                     <p className="text-sm text-yellow-800 font-medium">
@@ -646,7 +668,7 @@ const GroupDetail = () => {
                     Leave Group
                   </button>
                 </>
-              ) : hasReserved ? (
+              ) : hasReserved && !isCheckoutWindow ? (
                 <div className="text-center py-6">
                   <Clock className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
                   <p className="text-gray-600 mb-4">
@@ -659,7 +681,7 @@ const GroupDetail = () => {
                     Leave Group
                   </button>
                 </div>
-              ) : isFull ? (
+              ) : isFull && !hasReserved && !hasPaid ? (
                 <div className="text-center py-6">
                   <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
                   <p className="text-gray-600 mb-4">This group is full</p>
@@ -676,7 +698,7 @@ const GroupDetail = () => {
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-gray-600">Bulk Price:</span>
-                      <span className="font-semibold">{formatCurrency(group.bulkPricePerUnit)}{group.product.unit ? `/${group.product.unit}` : ''}</span>
+                      <span className="font-semibold">{formatCurrency(group.bulkPricePerUnit / 100)}{group.product.unit ? `/${group.product.unit}` : ''}</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-gray-600">Min per person:</span>
@@ -812,18 +834,18 @@ const GroupDetail = () => {
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900">{group.product.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {myParticipation.quantity}{group.product.unit || ''} @ {formatCurrency(group.bulkPricePerUnit)}{group.product.unit ? `/${group.product.unit}` : ''}
+                    {myParticipation.quantity} {group.product.unit || 'units'} × {formatCurrency(group.bulkPricePerUnit / 100)}/{group.product.unit || 'unit'}
                   </p>
                 </div>
               </div>
               <div className="space-y-2 pt-3 border-t border-gray-200">
                 <div className="flex justify-between text-sm">
                   <span>Product Total:</span>
-                  <span className="font-semibold">{formatCurrency(myParticipation.amount)}</span>
+                  <span className="font-semibold">{formatCurrency(calculateProductTotal())}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Delivery Fee:</span>
-                  <span className="font-semibold">{formatCurrency(deliveryFee * 100)}</span>
+                  <span className="font-semibold">{formatCurrency(deliveryFee)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total:</span>
