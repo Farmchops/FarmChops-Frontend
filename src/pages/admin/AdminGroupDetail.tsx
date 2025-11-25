@@ -15,7 +15,7 @@ import {
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { alertService } from "@/lib/alertService";
 import { resolveErrorMessage } from "@/lib/utils";
-import { useGetGroupByIdQuery } from "@/redux/api/groupOrdersApi";
+import { useGetGroupByIdQuery, useCancelGroupMutation } from "@/redux/api/groupOrdersApi";
 
 const AdminGroupDetail = () => {
   const { groupId } = useParams<{ groupId: string }>();
@@ -27,6 +27,7 @@ const AdminGroupDetail = () => {
   const { data, isLoading } = useGetGroupByIdQuery(groupId || '', {
     skip: !groupId,
   });
+  const [cancelGroup] = useCancelGroupMutation();
 
   const group = data?.group;
 

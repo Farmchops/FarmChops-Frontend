@@ -105,7 +105,12 @@ const GroupDetail = () => {
   const isCheckoutWindow = group.phase === 'checkout_window';
   const isFilling = group.phase === 'filling';
 
-  const myParticipation = group.participants?.find(p => p.userId === user?._id);
+  const myParticipation = group.participants?.find(p => {
+    // Handle both string comparison and potential MongoDB ObjectId
+    const participantUserId = String(p.userId);
+    const currentUserId = String(user?._id);
+    return participantUserId === currentUserId;
+  });
   const hasReserved = myParticipation?.status === 'reserved';
   const hasPaid = myParticipation?.status === 'paid';
   const canCheckout = hasReserved && isCheckoutWindow;
@@ -113,12 +118,18 @@ const GroupDetail = () => {
   // Debug logging
   console.log('[GroupDetail] Debug Info:', {
     userId: user?._id,
+    participantsArray: group.participants,
+    participantsUserIds: group.participants?.map(p => ({ id: p.userId, status: p.status, user: p.user })),
     myParticipation,
     hasReserved,
     hasPaid,
     isCheckoutWindow,
     canCheckout,
     phase: group.phase,
+    isFull,
+    totalFilled,
+    reservedSlots: group.reservedSlots,
+    paidSlots: group.paidSlots,
   });
   
   // Ensure participants is always an array to satisfy strict null checks
