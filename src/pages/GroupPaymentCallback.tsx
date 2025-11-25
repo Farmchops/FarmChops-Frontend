@@ -15,7 +15,7 @@ const GroupPaymentCallback = () => {
   });
 
   useEffect(() => {
-    if (data?.success && data.data.group.groupId) {
+    if (data?.success && data.data?.group?.groupId) {
       // Payment verified successfully, redirect to group page after a short delay
       const timer = setTimeout(() => {
         navigate(`/group/${data.data.group.groupId}`, { replace: true });
@@ -34,6 +34,7 @@ const GroupPaymentCallback = () => {
             No payment reference found. Please try again.
           </p>
           <button
+            type="button"
             onClick={() => navigate('/group-sharing')}
             className="w-full bg-[#1D7B3C] text-white px-6 py-3 rounded-full hover:bg-[#166430] transition-colors"
           >
@@ -66,12 +67,14 @@ const GroupPaymentCallback = () => {
           </p>
           <div className="space-y-3">
             <button
+              type="button"
               onClick={() => navigate('/group-sharing')}
               className="w-full bg-[#1D7B3C] text-white px-6 py-3 rounded-full hover:bg-[#166430] transition-colors"
             >
               Browse Groups
             </button>
             <button
+              type="button"
               onClick={() => navigate('/profile/orders')}
               className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-full hover:bg-gray-200 transition-colors"
             >
