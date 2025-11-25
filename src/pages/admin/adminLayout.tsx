@@ -181,7 +181,8 @@ import {
     Shapes,
     UserCog,
     Truck,
-    Tag
+    Tag,
+    CreditCard
 } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -320,6 +321,18 @@ const AdminLayout = () => {
                 label: "Admin Management",
                 icon: UserCog,
                 permission: "manage_admins",
+            },
+            {
+                path: "paylater/applications",
+                label: "PayLater Applications",
+                icon: CreditCard,
+                permission: "manage_paylater",
+            },
+            {
+                path: "paylater/users",
+                label: "PayLater Users",
+                icon: CreditCard,
+                permission: "manage_paylater",
             },
             {
                 path: "settings",

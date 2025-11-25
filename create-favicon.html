@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Favicon</title>
+</head>
+<body>
+    <h2>Creating Favicon...</h2>
+    <canvas id="canvas" width="192" height="192" style="border:1px solid #000"></canvas>
+    <br>
+    <a id="download" download="favicon.png">Download Favicon</a>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = function() {
+            // Fill with white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 192, 192);
+
+            // Draw circular clip path
+            ctx.beginPath();
+            ctx.arc(96, 96, 96, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+
+            // Fill circle with brand green color
+            ctx.fillStyle = '#1D7B3C';
+            ctx.fill();
+
+            // Calculate dimensions to fit logo in circle with padding
+            const padding = 30;
+            const size = 192 - (padding * 2);
+            const aspectRatio = img.width / img.height;
+            let drawWidth = size;
+            let drawHeight = size;
+
+            if (aspectRatio > 1) {
+                drawHeight = size / aspectRatio;
+            } else {
+                drawWidth = size * aspectRatio;
+            }
+
+            const x = (192 - drawWidth) / 2;
+            const y = (192 - drawHeight) / 2;
+
+            // Draw logo centered
+            ctx.drawImage(img, x, y, drawWidth, drawHeight);
+
+            // Create download link
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.getElementById('download');
+                link.href = url;
+                link.style.display = 'inline-block';
+                link.style.marginTop = '10px';
+                link.style.padding = '10px 20px';
+                link.style.background = '#1D7B3C';
+                link.style.color = 'white';
+                link.style.textDecoration = 'none';
+                link.style.borderRadius = '5px';
+                link.click(); // Auto download
+            });
+        };
+
+        // Load the logo
+        img.src = './src/assets/logo.png';
+    </script>
+</body>
+</html>

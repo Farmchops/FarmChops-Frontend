@@ -68,6 +68,13 @@ import AdminGroupOrders from "../pages/admin/AdminGroupOrders";
 import AdminGroupDetail from "../pages/admin/AdminGroupDetail";
 import CreateGroupOrder from "../pages/admin/CreateGroupOrder";
 
+// PayLater Pages
+import PayLaterPage from "../pages/PayLater";
+import PayLaterCart from "../pages/PayLater/PayLaterCart";
+import PayLaterCheckout from "../pages/PayLater/PayLaterCheckout";
+import PayLaterApplications from "../pages/admin/PayLaterApplications";
+import PayLaterUsers from "../pages/admin/PayLaterUsers";
+
 const router = createBrowserRouter([
     {
         path: "/",
@@ -149,6 +156,40 @@ const router = createBrowserRouter([
             },
             { path: "/bulk-buying", element: <BulkBuyingPage /> },
             { path: "/become-vendor", element: <BecomeVendor /> },
+
+            // PayLater routes (Protected)
+            {
+                path: "/paylater",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/paylater/shop",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/paylater/cart",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterCart />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/paylater/checkout",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterCheckout />
+                    </ProtectedRoute>
+                ),
+            },
         ],
     },
 
@@ -289,6 +330,24 @@ const router = createBrowserRouter([
                 element: (
                     <AdminRoute requiredPermission="manage_vendors">
                         <VendorDetail />
+                    </AdminRoute>
+                ),
+            },
+
+            // PayLater Management
+            {
+                path: "paylater/applications",
+                element: (
+                    <AdminRoute requiredPermission="manage_paylater">
+                        <PayLaterApplications />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "paylater/users",
+                element: (
+                    <AdminRoute requiredPermission="manage_paylater">
+                        <PayLaterUsers />
                     </AdminRoute>
                 ),
             },
