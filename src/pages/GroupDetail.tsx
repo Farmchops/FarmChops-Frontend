@@ -107,7 +107,8 @@ const GroupDetail = () => {
 
   const myParticipation = group.participants?.find(p => {
     // Handle both string comparison and potential MongoDB ObjectId
-    const participantUserId = String(p.userId);
+    // API may return userId, user._id, or we can match by user ID in the id field
+    const participantUserId = String(p.userId || p.user._id || p.id);
     const currentUserId = String(user?._id);
     return participantUserId === currentUserId;
   });
@@ -117,9 +118,19 @@ const GroupDetail = () => {
 
   // Debug logging
   console.log('[GroupDetail] Debug Info:', {
-    userId: user?._id,
+    currentUser: {
+      _id: user?._id,
+      email: user?.email,
+      firstName: user?.firstName,
+    },
     participantsArray: group.participants,
-    participantsUserIds: group.participants?.map(p => ({ id: p.userId, status: p.status, user: p.user })),
+    participantsUserIds: group.participants?.map(p => ({
+      participantId: p.id,
+      userId: p.userId,
+      userObjId: p.user._id,
+      status: p.status,
+      user: p.user
+    })),
     myParticipation,
     hasReserved,
     hasPaid,
