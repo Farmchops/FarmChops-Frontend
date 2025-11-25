@@ -133,32 +133,22 @@ const GroupDetail = () => {
   const hasPaid = myParticipation?.status === 'paid';
   const canCheckout = hasReserved && isCheckoutWindow;
 
-  // Debug logging
-  console.log('[GroupDetail] Debug Info:', {
-    currentUser: {
-      _id: user?._id,
-      email: user?.email,
-      firstName: user?.firstName,
-    },
-    participantsArray: group.participants,
-    participantsUserIds: group.participants?.map(p => ({
-      participantId: p.id,
-      userId: p.userId,
-      userObjId: p.user._id,
-      status: p.status,
-      user: p.user
-    })),
-    myParticipation,
-    hasReserved,
-    hasPaid,
-    isCheckoutWindow,
-    canCheckout,
-    phase: group.phase,
-    isFull,
-    totalFilled,
-    reservedSlots: group.reservedSlots,
-    paidSlots: group.paidSlots,
-  });
+  // Debug logging (can be removed in production)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[GroupDetail] Debug Info:', {
+      currentUser: {
+        _id: user?._id,
+        email: user?.email,
+        firstName: user?.firstName,
+      },
+      myParticipation,
+      hasReserved,
+      hasPaid,
+      isCheckoutWindow,
+      canCheckout,
+      phase: group.phase,
+    });
+  }
   
   // Ensure participants is always an array to satisfy strict null checks
   const participants = group.participants ?? [];

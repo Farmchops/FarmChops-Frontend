@@ -24,6 +24,7 @@ import BulkBuyingPage from "../pages/BulkBuying";
 import BecomeVendor from "../pages/BecomeVendor";
 import GroupSharing from "../pages/GroupSharing";
 import GroupDetail from "../pages/GroupDetail";
+import GroupPaymentCallback from "../pages/GroupPaymentCallback";
 import MyGroups from "../pages/profile/MyGroups";
 
 // Profile Pages
@@ -94,6 +95,8 @@ const router = createBrowserRouter([
             { path: "/group/:groupId", element: <GroupDetail /> },
             // Shareable link route - resolves shareableCode and redirects to group detail
             { path: "/group-buy/:groupId", element: <GroupOrderSuccess /> },
+            // Group payment callback - handles Paystack redirect after payment
+            { path: "/group-payment/callback", element: <GroupPaymentCallback /> },
 
             // Public Pay-for-Me routes (no auth required)
             { path: "/pay/:code", element: <PayForMe /> },
