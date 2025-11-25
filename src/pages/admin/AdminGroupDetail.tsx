@@ -66,8 +66,10 @@ const AdminGroupDetail = () => {
       onConfirm: async () => {
         setIsCancelling(true);
         try {
-          // TODO: Call cancel API
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await cancelGroup({
+            groupId: groupId || '',
+            data: { reason: cancelReason },
+          }).unwrap();
 
           alertService.show({
             type: "success",
@@ -75,6 +77,7 @@ const AdminGroupDetail = () => {
             message: "Group has been cancelled and refunds are being processed",
           });
           setShowCancelModal(false);
+          setCancelReason("");
           navigate("/admin/group-orders");
         } catch (error: unknown) {
           alertService.show({
