@@ -106,11 +106,28 @@ const GroupDetail = () => {
   const isFilling = group.phase === 'filling';
 
   const myParticipation = group.participants?.find(p => {
-    // Handle both string comparison and potential MongoDB ObjectId
-    // API may return userId, user._id, or we can match by user ID in the id field
-    const participantUserId = String(p.userId || p.user._id || p.id);
-    const currentUserId = String(user?._id);
-    return participantUserId === currentUserId;
+    // Try to match by userId or user._id first (when available)
+    if (p.userId && user?._id && String(p.userId) === String(user._id)) {
+      return true;
+    }
+    if (p.user._id && user?._id && String(p.user._id) === String(user._id)) {
+      return true;
+    }
+
+    // Fallback: Match by firstName and email (case-insensitive)
+    // The API may only return firstName/lastName for privacy, so we match by name
+    if (user?.firstName && user?.email && p.user.firstName && p.user.email) {
+      return p.user.firstName.toLowerCase() === user.firstName.toLowerCase() &&
+             p.user.email.toLowerCase() === user.email.toLowerCase();
+    }
+
+    // Last resort: Match by firstName only if email not available in participant data
+    // This is less reliable but necessary when API doesn't return full user data
+    if (user?.firstName && p.user.firstName && !p.user.email) {
+      return p.user.firstName.toLowerCase() === user.firstName.toLowerCase();
+    }
+
+    return false;
   });
   const hasReserved = myParticipation?.status === 'reserved';
   const hasPaid = myParticipation?.status === 'paid';
