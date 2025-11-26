@@ -395,7 +395,7 @@ const AdminGroupDetail = () => {
                   </td>
                   <td className="p-4">
                     <span className="text-sm font-bold text-[#1D7B3C]">
-                      {formatCurrency(participant.amount)}
+                      {formatCurrency((participant.quantity * groupData.bulkPricePerUnit) / 100)}
                     </span>
                   </td>
                   <td className="p-4">
