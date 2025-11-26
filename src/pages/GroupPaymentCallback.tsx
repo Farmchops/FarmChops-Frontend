@@ -15,15 +15,20 @@ const GroupPaymentCallback = () => {
   });
 
   useEffect(() => {
-    if (data?.success && data.data?.group?.groupId) {
-      const groupId = data.data.group.groupId;
+    if (data?.success) {
+      // Backend returns groupId directly in data, not nested in data.group
+      const groupId = (data.data as any)?.groupId || data.data?.group?.groupId;
 
-      console.log('[GroupPaymentCallback] Redirecting to group:', groupId);
-      // Payment verified successfully, redirect to group page after a short delay
-      const timer = setTimeout(() => {
-        navigate(`/group/${groupId}`, { replace: true });
-      }, 2000);
-      return () => clearTimeout(timer);
+      if (groupId) {
+        console.log('[GroupPaymentCallback] Redirecting to group:', groupId);
+        // Payment verified successfully, redirect to group page after a short delay
+        const timer = setTimeout(() => {
+          navigate(`/group/${groupId}`, { replace: true });
+        }, 2000);
+        return () => clearTimeout(timer);
+      } else {
+        console.error('[GroupPaymentCallback] No groupId found in response:', data);
+      }
     } else if (data && !data.success) {
       console.error('[GroupPaymentCallback] Payment verification failed:', data);
     }
