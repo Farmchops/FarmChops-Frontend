@@ -196,7 +196,7 @@ const AdminGroupDetail = () => {
       </div>
 
       {/* Product & Progress Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Product Card */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Product Information</h3>
@@ -258,41 +258,6 @@ const AdminGroupDetail = () => {
                 </p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Revenue Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-4">Revenue Information</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600">Current Revenue</p>
-              <p className="text-3xl font-bold text-[#1D7B3C] mt-1">
-                {formatCurrency(totalRevenue)}
-              </p>
-            </div>
-            <div className="pt-4 border-t border-gray-200 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Paid Participants</span>
-                <span className="font-medium">{groupData.paidSlots}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Reserved Participants</span>
-                <span className="font-medium">{groupData.reservedSlots}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Price per {groupData.product.unit}</span>
-                <span className="font-medium">{formatCurrency(groupData.bulkPricePerUnit)}</span>
-              </div>
-              {(groupData.phase === 'filling' || groupData.phase === 'checkout_window') && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Potential Revenue</span>
-                  <span className="font-medium text-green-600">
-                    {formatCurrency(groupData.maxParticipants * groupData.bulkPricePerUnit)}
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
