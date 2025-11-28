@@ -125,7 +125,6 @@ const AdminGroupDetail = () => {
 
   const totalFilled = groupData.reservedSlots + groupData.paidSlots;
   const progress = (totalFilled / groupData.maxParticipants) * 100;
-  const totalRevenue = groupData.paidSlots * groupData.bulkPricePerUnit;
   const spotsLeft = groupData.maxParticipants - totalFilled;
 
   const getStatusBadge = () => {
