@@ -93,8 +93,8 @@ const router = createBrowserRouter([
             // Group Sharing
             { path: "/group-sharing", element: <GroupSharing /> },
             { path: "/group/:groupId", element: <GroupDetail /> },
-            // Shareable link route - resolves shareableCode and redirects to group detail
-            { path: "/group-buy/:groupId", element: <GroupOrderSuccess /> },
+            // Shareable link route - supports both group ID and shareable code
+            { path: "/group-buy/:groupId", element: <GroupDetail /> },
             // Group payment callback - handles Paystack redirect after payment
             { path: "/group-payment/callback", element: <GroupPaymentCallback /> },
 

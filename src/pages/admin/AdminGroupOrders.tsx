@@ -251,7 +251,6 @@ const AdminGroupOrders = () => {
                   <th className="p-4 font-medium">Product</th>
                   <th className="p-4 font-medium">Progress</th>
                   <th className="p-4 font-medium">Price/Slot</th>
-                  <th className="p-4 font-medium">Revenue</th>
                   <th className="p-4 font-medium">Status</th>
                   <th className="p-4 font-medium">Created</th>
                   <th className="p-4 font-medium">Actions</th>
@@ -260,7 +259,6 @@ const AdminGroupOrders = () => {
               <tbody className="divide-y divide-gray-200">
                 {filteredGroups.map((group) => {
                   const totalFilled = group.reservedSlots + group.paidSlots;
-                  const revenue = group.paidSlots * group.bulkPricePerUnit;
 
                   return (
                     <tr key={group._id} className="hover:bg-gray-50">
@@ -311,11 +309,6 @@ const AdminGroupOrders = () => {
                       <td className="p-4">
                         <span className="text-sm font-medium">
                           {formatCurrency(group.bulkPricePerUnit)}/{group.product.unit || 'unit'}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="text-sm font-bold text-[#1D7B3C]">
-                          {formatCurrency(revenue)}
                         </span>
                       </td>
                       <td className="p-4">

@@ -654,6 +654,10 @@ const AdminProducts = () => {
                         min="2"
                         max="100"
                         value={groupConfig.minParticipants}
+                        onInput={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/^0+/, '') || '0';
+                        }}
                         onChange={(e) => setGroupConfig({ ...groupConfig, minParticipants: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                         placeholder="5"
@@ -670,6 +674,10 @@ const AdminProducts = () => {
                         min="2"
                         max="100"
                         value={groupConfig.maxParticipants}
+                        onInput={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/^0+/, '') || '0';
+                        }}
                         onChange={(e) => setGroupConfig({ ...groupConfig, maxParticipants: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                         placeholder="10"
@@ -686,6 +694,10 @@ const AdminProducts = () => {
                       type="number"
                       min="1"
                       value={groupConfig.quantityPerPerson.min}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        target.value = target.value.replace(/^0+/, '') || '0';
+                      }}
                       onChange={(e) => {
                         const value = parseInt(e.target.value) || 0;
                         setGroupConfig({
@@ -709,6 +721,10 @@ const AdminProducts = () => {
                       type="number"
                       min="1"
                       value={groupConfig.targetQuantity}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        target.value = target.value.replace(/^0+/, '') || '0';
+                      }}
                       onChange={(e) => setGroupConfig({ ...groupConfig, targetQuantity: parseInt(e.target.value) || 0 })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                       placeholder="100"
@@ -727,6 +743,17 @@ const AdminProducts = () => {
                       min="0"
                       step="0.01"
                       value={groupConfig.bulkPricePerUnit / 100}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        // For decimal numbers, only strip leading zeros before the decimal point
+                        if (target.value.includes('.')) {
+                          const parts = target.value.split('.');
+                          parts[0] = parts[0].replace(/^0+/, '') || '0';
+                          target.value = parts.join('.');
+                        } else {
+                          target.value = target.value.replace(/^0+/, '') || '0';
+                        }
+                      }}
                       onChange={(e) => setGroupConfig({ ...groupConfig, bulkPricePerUnit: Math.round((parseFloat(e.target.value) || 0) * 100) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                       placeholder="450"
@@ -745,6 +772,10 @@ const AdminProducts = () => {
                         type="number"
                         min="1"
                         value={groupConfig.deadlineHours}
+                        onInput={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/^0+/, '') || '0';
+                        }}
                         onChange={(e) => setGroupConfig({ ...groupConfig, deadlineHours: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                         placeholder="48"
@@ -760,6 +791,10 @@ const AdminProducts = () => {
                         type="number"
                         min="1"
                         value={groupConfig.checkoutWindowHours}
+                        onInput={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/^0+/, '') || '0';
+                        }}
                         onChange={(e) => setGroupConfig({ ...groupConfig, checkoutWindowHours: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                         placeholder="48"
@@ -777,6 +812,10 @@ const AdminProducts = () => {
                       min="1"
                       max="50"
                       value={groupConfig.maxActiveGroups}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        target.value = target.value.replace(/^0+/, '') || '0';
+                      }}
                       onChange={(e) => setGroupConfig({ ...groupConfig, maxActiveGroups: parseInt(e.target.value) || 0 })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                       placeholder="5"

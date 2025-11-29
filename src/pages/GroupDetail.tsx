@@ -137,11 +137,23 @@ const GroupDetail = () => {
   // Debug logging (can be removed in production)
   if (process.env.NODE_ENV === 'development') {
     console.log('[GroupDetail] Debug Info:', {
+      route: {
+        groupId,
+        triedShareableCode: shouldTryShareableCode,
+        dataSource: idData?.group ? 'ID lookup' : codeData?.group ? 'Shareable code lookup' : 'none',
+      },
       currentUser: {
         _id: user?._id,
         email: user?.email,
         firstName: user?.firstName,
+        isAuthenticated,
       },
+      participants: group.participants?.map(p => ({
+        userId: p.userId,
+        userEmail: p.user.email,
+        userName: `${p.user.firstName} ${p.user.lastName}`,
+        status: p.status,
+      })),
       myParticipation,
       hasReserved,
       hasPaid,
@@ -450,7 +462,7 @@ const GroupDetail = () => {
                     </p>
                   )}
                   <p className="text-sm text-gray-600 mt-2">
-                    Min: {group.quantityPerPerson?.min ?? 0}{group.product.unit || ''} • Max: {group.quantityPerPerson?.max ?? 0}{group.product.unit || ''} per person
+                    {group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'} per person (fixed)
                   </p>
                 </div>
 
@@ -730,14 +742,16 @@ const GroupDetail = () => {
                       <span className="text-gray-600">Bulk Price:</span>
                       <span className="font-semibold">{formatCurrency(group.bulkPricePerUnit / 100)}{group.product.unit ? `/${group.product.unit}` : ''}</span>
                     </div>
-                    <div className="flex items-center justify-between py-2 border-b">
-                      <span className="text-gray-600">Min per person:</span>
-                      <span className="font-semibold">{group.quantityPerPerson?.min ?? 0}{group.product.unit || ''}</span>
-                    </div>
                     <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-600">Max per person:</span>
-                      <span className="font-semibold">{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''}</span>
+                      <span className="text-gray-600">Quantity per person:</span>
+                      <span className="font-semibold">{group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'}</span>
                     </div>
+                  </div>
+
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-6">
+                    <p className="text-sm text-green-800 text-center">
+                      Everyone gets <strong>{group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'}</strong> at the bulk price
+                    </p>
                   </div>
 
                   {isAuthenticated ? (
