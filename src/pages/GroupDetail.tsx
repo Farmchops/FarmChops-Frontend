@@ -62,9 +62,10 @@ const GroupDetail = () => {
 
   const group = data?.group;
 
-  // Initialize quantity to min when modal opens
+  // Initialize quantity to the fixed amount when modal opens
   useEffect(() => {
     if (showReserveModal && group && group.quantityPerPerson) {
+      // For group sharing, quantity is fixed (min === max)
       setQuantity(group.quantityPerPerson.min);
     }
   }, [showReserveModal, group]);
@@ -541,7 +542,7 @@ const GroupDetail = () => {
                         1
                       </div>
                       <p>
-                        <strong>Reserve your spot:</strong> Select quantity ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''}) and reserve. No payment yet!
+                        <strong>Reserve your spot:</strong> Each person gets {group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'}. No payment yet!
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
@@ -793,17 +794,16 @@ const GroupDetail = () => {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                How much do you want? ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''})
+                Quantity per person (Fixed)
               </label>
-              <input
-                type="number"
-                min={group.quantityPerPerson?.min ?? 0}
-                max={group.quantityPerPerson?.max ?? 0}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg font-semibold"
-                disabled={isProcessing}
-              />
+              <div className="w-full px-4 py-3 border-2 border-green-200 bg-green-50 rounded-lg text-center">
+                <p className="text-3xl font-bold text-[#1D7B3C]">
+                  {quantity} {group.product.unit || 'units'}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Everyone gets the same amount for fair bulk pricing
+                </p>
+              </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">

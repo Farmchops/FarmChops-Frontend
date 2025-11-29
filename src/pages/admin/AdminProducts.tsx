@@ -678,42 +678,27 @@ const AdminProducts = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Min Quantity per Person *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={groupConfig.quantityPerPerson.min}
-                        onChange={(e) => setGroupConfig({
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantity per Person (Fixed) *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={groupConfig.quantityPerPerson.min}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        setGroupConfig({
                           ...groupConfig,
-                          quantityPerPerson: { ...groupConfig.quantityPerPerson, min: parseInt(e.target.value) || 0 }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                        placeholder="5"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Min {selectedProduct?.inventory?.unit || 'kg'} per person</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Max Quantity per Person *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={groupConfig.quantityPerPerson.max}
-                        onChange={(e) => setGroupConfig({
-                          ...groupConfig,
-                          quantityPerPerson: { ...groupConfig.quantityPerPerson, max: parseInt(e.target.value) || 0 }
-                        })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                        placeholder="15"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Max {selectedProduct?.inventory?.unit || 'kg'} per person</p>
-                    </div>
+                          quantityPerPerson: { min: value, max: value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                      placeholder="5"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      All participants will receive exactly this amount ({selectedProduct?.inventory?.unit || 'units'})
+                    </p>
                   </div>
 
                   <div>

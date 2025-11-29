@@ -209,12 +209,6 @@ const AdminGroupDetail = () => {
             )}
             <div>
               <p className="text-2xl font-bold text-gray-900">{groupData.product.name}</p>
-              <p className="text-sm text-gray-600 mt-2">
-                Quantity per person: {groupData.quantityPerPerson?.min ?? 0}-{groupData.quantityPerPerson?.max ?? 0}{groupData.product.unit}
-              </p>
-              <p className="text-sm text-gray-600">
-                Bulk price: {formatCurrency(groupData.bulkPricePerUnit)}/{groupData.product.unit}
-              </p>
             </div>
           </div>
         </div>
@@ -337,7 +331,7 @@ const AdminGroupDetail = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="h-4 w-4" />
-                      {participant.deliveryInfo?.phoneNumber || 'N/A'}
+                      {participant.deliveryInfo?.phoneNumber || participant.user.phone || '-'}
                     </div>
                   </td>
                   <td className="p-4">
