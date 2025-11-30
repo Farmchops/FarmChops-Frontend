@@ -15,7 +15,7 @@ import {
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { alertService } from "@/lib/alertService";
 import { resolveErrorMessage } from "@/lib/utils";
-import { useGetGroupByIdQuery } from "@/redux/api/groupOrdersApi";
+import { useGetGroupByIdQuery, useCancelGroupMutation } from "@/redux/api/groupOrdersApi";
 
 const AdminGroupDetail = () => {
   const { groupId } = useParams<{ groupId: string }>();
@@ -27,6 +27,7 @@ const AdminGroupDetail = () => {
   const { data, isLoading } = useGetGroupByIdQuery(groupId || '', {
     skip: !groupId,
   });
+  const [cancelGroup] = useCancelGroupMutation();
 
   const group = data?.group;
 
@@ -65,8 +66,10 @@ const AdminGroupDetail = () => {
       onConfirm: async () => {
         setIsCancelling(true);
         try {
-          // TODO: Call cancel API
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await cancelGroup({
+            groupId: groupId || '',
+            data: { reason: cancelReason },
+          }).unwrap();
 
           alertService.show({
             type: "success",
@@ -74,6 +77,7 @@ const AdminGroupDetail = () => {
             message: "Group has been cancelled and refunds are being processed",
           });
           setShowCancelModal(false);
+          setCancelReason("");
           navigate("/admin/group-orders");
         } catch (error: unknown) {
           alertService.show({
@@ -121,7 +125,6 @@ const AdminGroupDetail = () => {
 
   const totalFilled = groupData.reservedSlots + groupData.paidSlots;
   const progress = (totalFilled / groupData.maxParticipants) * 100;
-  const totalRevenue = groupData.paidSlots * groupData.bulkPricePerUnit;
   const spotsLeft = groupData.maxParticipants - totalFilled;
 
   const getStatusBadge = () => {
@@ -192,7 +195,7 @@ const AdminGroupDetail = () => {
       </div>
 
       {/* Product & Progress Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Product Card */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Product Information</h3>
@@ -206,12 +209,6 @@ const AdminGroupDetail = () => {
             )}
             <div>
               <p className="text-2xl font-bold text-gray-900">{groupData.product.name}</p>
-              <p className="text-sm text-gray-600 mt-2">
-                Quantity per person: {groupData.quantityPerPerson?.min ?? 0}-{groupData.quantityPerPerson?.max ?? 0}{groupData.product.unit}
-              </p>
-              <p className="text-sm text-gray-600">
-                Bulk price: {formatCurrency(groupData.bulkPricePerUnit)}/{groupData.product.unit}
-              </p>
             </div>
           </div>
         </div>
@@ -254,41 +251,6 @@ const AdminGroupDetail = () => {
                 </p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Revenue Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-4">Revenue Information</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600">Current Revenue</p>
-              <p className="text-3xl font-bold text-[#1D7B3C] mt-1">
-                {formatCurrency(totalRevenue)}
-              </p>
-            </div>
-            <div className="pt-4 border-t border-gray-200 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Paid Participants</span>
-                <span className="font-medium">{groupData.paidSlots}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Reserved Participants</span>
-                <span className="font-medium">{groupData.reservedSlots}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Price per {groupData.product.unit}</span>
-                <span className="font-medium">{formatCurrency(groupData.bulkPricePerUnit)}</span>
-              </div>
-              {(groupData.phase === 'filling' || groupData.phase === 'checkout_window') && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Potential Revenue</span>
-                  <span className="font-medium text-green-600">
-                    {formatCurrency(groupData.maxParticipants * groupData.bulkPricePerUnit)}
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -369,7 +331,7 @@ const AdminGroupDetail = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="h-4 w-4" />
-                      {participant.deliveryInfo?.phoneNumber || 'N/A'}
+                      {participant.deliveryInfo?.phoneNumber || participant.user.phone || '-'}
                     </div>
                   </td>
                   <td className="p-4">
@@ -391,7 +353,7 @@ const AdminGroupDetail = () => {
                   </td>
                   <td className="p-4">
                     <span className="text-sm font-bold text-[#1D7B3C]">
-                      {formatCurrency(participant.amount)}
+                      {formatCurrency((participant.quantity * groupData.bulkPricePerUnit) / 100)}
                     </span>
                   </td>
                   <td className="p-4">

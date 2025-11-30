@@ -181,11 +181,12 @@ const CreateGroupOrder = () => {
                 <div className="p-3 bg-white rounded-lg border border-gray-200">
                   <div className="flex items-center gap-2 mb-1">
                     <Package className="h-4 w-4 text-gray-500" />
-                    <span className="text-xs font-medium text-gray-600">Quantity Range</span>
+                    <span className="text-xs font-medium text-gray-600">Quantity per Person</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
-                    {selectedProduct.groupConfig.quantityPerPerson?.min || 0}-{selectedProduct.groupConfig.quantityPerPerson?.max || 0}{selectedProduct.inventory?.unit || 'kg'}
+                    {selectedProduct.groupConfig.quantityPerPerson?.min || 0} {selectedProduct.inventory?.unit || 'units'}
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">Fixed for all participants</p>
                 </div>
 
                 <div className="p-3 bg-white rounded-lg border border-gray-200">

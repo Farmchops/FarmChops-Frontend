@@ -24,6 +24,7 @@ import BulkBuyingPage from "../pages/BulkBuying";
 import BecomeVendor from "../pages/BecomeVendor";
 import GroupSharing from "../pages/GroupSharing";
 import GroupDetail from "../pages/GroupDetail";
+import GroupPaymentCallback from "../pages/GroupPaymentCallback";
 import MyGroups from "../pages/profile/MyGroups";
 
 // Profile Pages
@@ -68,6 +69,13 @@ import AdminGroupOrders from "../pages/admin/AdminGroupOrders";
 import AdminGroupDetail from "../pages/admin/AdminGroupDetail";
 import CreateGroupOrder from "../pages/admin/CreateGroupOrder";
 
+// PayLater Pages
+import PayLaterPage from "../pages/PayLater";
+import PayLaterCart from "../pages/PayLater/PayLaterCart";
+import PayLaterCheckout from "../pages/PayLater/PayLaterCheckout";
+import PayLaterApplications from "../pages/admin/PayLaterApplications";
+import PayLaterUsers from "../pages/admin/PayLaterUsers";
+
 const router = createBrowserRouter([
     {
         path: "/",
@@ -85,8 +93,10 @@ const router = createBrowserRouter([
             // Group Sharing
             { path: "/group-sharing", element: <GroupSharing /> },
             { path: "/group/:groupId", element: <GroupDetail /> },
-            // Shareable link route - resolves shareableCode and redirects to group detail
-            { path: "/group-buy/:groupId", element: <GroupOrderSuccess /> },
+            // Shareable link route - supports both group ID and shareable code
+            { path: "/group-buy/:groupId", element: <GroupDetail /> },
+            // Group payment callback - handles Paystack redirect after payment
+            { path: "/group-payment/callback", element: <GroupPaymentCallback /> },
 
             // Public Pay-for-Me routes (no auth required)
             { path: "/pay/:code", element: <PayForMe /> },
@@ -120,6 +130,7 @@ const router = createBrowserRouter([
             { path: "/thank-you", element: <Thanks /> },
             { path: "/order/success", element: <OrderSuccess /> },
             { path: "/order/success/group-buy/:groupId", element: <GroupOrderSuccess /> },
+            { path: "/wallet/callback", element: <FundWallet /> },
             // { path: "/orders/:orderId", element: <OrderDetails /> },
 
             // Profile routes (Protected)
@@ -149,6 +160,40 @@ const router = createBrowserRouter([
             },
             { path: "/bulk-buying", element: <BulkBuyingPage /> },
             { path: "/become-vendor", element: <BecomeVendor /> },
+
+            // PayLater routes (Protected)
+            {
+                path: "/paylater",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/paylater/shop",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/paylater/cart",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterCart />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "/paylater/checkout",
+                element: (
+                    <ProtectedRoute>
+                        <PayLaterCheckout />
+                    </ProtectedRoute>
+                ),
+            },
         ],
     },
 
@@ -289,6 +334,24 @@ const router = createBrowserRouter([
                 element: (
                     <AdminRoute requiredPermission="manage_vendors">
                         <VendorDetail />
+                    </AdminRoute>
+                ),
+            },
+
+            // PayLater Management
+            {
+                path: "paylater/applications",
+                element: (
+                    <AdminRoute requiredPermission="manage_paylater">
+                        <PayLaterApplications />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "paylater/users",
+                element: (
+                    <AdminRoute requiredPermission="manage_paylater">
+                        <PayLaterUsers />
                     </AdminRoute>
                 ),
             },

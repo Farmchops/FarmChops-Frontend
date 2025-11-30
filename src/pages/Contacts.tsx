@@ -89,7 +89,7 @@ const Contacts: React.FC = () => {
               <Phone className="text-[#FF9E67] " />
               <div className='flex flex-col items-start'>
                 <p className="font-bold">Call</p>
-                <p className="text-sm">084524145547</p>
+                <p className="text-sm">07077744060</p>
               </div>
             </div>
 
@@ -98,7 +98,7 @@ const Contacts: React.FC = () => {
               <Mail className="text-[#FF9E67] " />
               <div className='flex flex-col items-start'>
                 <p className="text-sm">Email</p>
-                <p className="text-sm font-medium">loremipsum@gmail.com</p>
+                <p className="text-sm font-medium">support@farmchops.com</p>
               </div>
             </div>
 
@@ -107,7 +107,7 @@ const Contacts: React.FC = () => {
               <MapPin className="text-[#FF9E67] " />
               <div className='flex flex-col items-start'>
                 <p className="text-sm">Location</p>
-                <p className="text-sm font-medium">Bandung, Indonesia</p>
+                <p className="text-sm font-medium">Abuja, Nigeria</p>
               </div>
             </div>
 

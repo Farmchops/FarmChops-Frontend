@@ -1,5 +1,5 @@
 // src/pages/profile/FundWallet.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -36,11 +36,21 @@ const FundWallet = () => {
   const currentBalance = balanceData?.data?.balance ?? 0;
 
   // Verify payment if returning from Paystack
-  useState(() => {
+  useEffect(() => {
     if (paymentReference) {
+      console.log('[FundWallet] Verifying payment reference:', paymentReference);
       verifyFunding(paymentReference);
     }
-  });
+  }, [paymentReference, verifyFunding]);
+
+  // Log verification data for debugging
+  useEffect(() => {
+    if (verifyData) {
+      console.log('[FundWallet] Verification response:', verifyData);
+      console.log('[FundWallet] Verification status:', verifyData?.data?.status);
+      console.log('[FundWallet] New balance:', verifyData?.data?.newBalance);
+    }
+  }, [verifyData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-NG', {

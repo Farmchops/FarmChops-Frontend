@@ -12,8 +12,8 @@ export interface WaitlistParticipant {
   user: {
     firstName: string;
     lastName: string;
-    email: string;
-    phone: string;
+    email?: string; // May be omitted for privacy when viewing other participants
+    phone?: string; // May be omitted for privacy when viewing other participants
   };
   quantity: number;
   joinedAt: string;
@@ -24,12 +24,13 @@ export interface WaitlistParticipant {
 // Group participant
 export interface GroupParticipant {
   id: string;
-  userId: string;
+  userId?: string; // Optional - some API responses don't include this
   user: {
+    _id?: string; // Sometimes included with user ID
     firstName: string;
     lastName: string;
-    email: string;
-    phone: string;
+    email?: string; // May be omitted for privacy when viewing other participants
+    phone?: string; // May be omitted for privacy when viewing other participants
   };
   quantity: number;
   amount: number;

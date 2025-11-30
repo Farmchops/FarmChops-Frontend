@@ -5,7 +5,8 @@ import { Trash2 } from 'lucide-react';
 import type { ApiResponse } from '@/types/api';
 import AlertModal from '@/components/AlertModal';
 
-type Vendor = { _id: string; id?: string; firstName?: string; lastName?: string; address?: string; phone?: string; email?: string; status?: string; contact?: { phone?: string; email?: string } };
+type VendorItem = { name?: string; description?: string; unit?: string };
+type Vendor = { _id: string; id?: string; firstName?: string; lastName?: string; address?: string; phone?: string; email?: string; status?: string; contact?: { phone?: string; email?: string }; items?: VendorItem[] };
 
 const VendorsList: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -70,6 +71,7 @@ const VendorsList: React.FC = () => {
                 <th className="p-3">Address</th>
                 <th className="p-3">Phone</th>
                 <th className="p-3">Email</th>
+                <th className="p-3">Products</th>
                 <th className="p-3">Status</th>
               </tr>
             </thead>
@@ -110,6 +112,23 @@ const VendorsList: React.FC = () => {
                     <td className="p-3 align-top">{v.address ?? '—'}</td>
                     <td className="p-3 align-top">{vendorPhone}</td>
                     <td className="p-3 align-top">{vendorEmail}</td>
+                    <td className="p-3 align-top">
+                      {Array.isArray(v.items) && v.items.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {v.items.map((item, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-block bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded"
+                              title={item.description || item.name}
+                            >
+                              {item.name || 'Unnamed'}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No products</span>
+                      )}
+                    </td>
                     <td className="p-3 align-top">
                       <div className="flex items-center gap-2">
                         <select

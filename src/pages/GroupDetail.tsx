@@ -62,9 +62,10 @@ const GroupDetail = () => {
 
   const group = data?.group;
 
-  // Initialize quantity to min when modal opens
+  // Initialize quantity to the fixed amount when modal opens
   useEffect(() => {
     if (showReserveModal && group && group.quantityPerPerson) {
+      // For group sharing, quantity is fixed (min === max)
       setQuantity(group.quantityPerPerson.min);
     }
   }, [showReserveModal, group]);
@@ -105,10 +106,62 @@ const GroupDetail = () => {
   const isCheckoutWindow = group.phase === 'checkout_window';
   const isFilling = group.phase === 'filling';
 
-  const myParticipation = group.participants?.find(p => p.userId === user?._id);
+  const myParticipation = group.participants?.find(p => {
+    // Try to match by userId or user._id first (when available)
+    if (p.userId && user?._id && String(p.userId) === String(user._id)) {
+      return true;
+    }
+    if (p.user._id && user?._id && String(p.user._id) === String(user._id)) {
+      return true;
+    }
+
+    // Fallback: Match by firstName and email (case-insensitive)
+    // The API may only return firstName/lastName for privacy, so we match by name
+    if (user?.firstName && user?.email && p.user.firstName && p.user.email) {
+      return p.user.firstName.toLowerCase() === user.firstName.toLowerCase() &&
+             p.user.email.toLowerCase() === user.email.toLowerCase();
+    }
+
+    // Last resort: Match by firstName only if email not available in participant data
+    // This is less reliable but necessary when API doesn't return full user data
+    if (user?.firstName && p.user.firstName && !p.user.email) {
+      return p.user.firstName.toLowerCase() === user.firstName.toLowerCase();
+    }
+
+    return false;
+  });
   const hasReserved = myParticipation?.status === 'reserved';
   const hasPaid = myParticipation?.status === 'paid';
   const canCheckout = hasReserved && isCheckoutWindow;
+
+  // Debug logging (can be removed in production)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[GroupDetail] Debug Info:', {
+      route: {
+        groupId,
+        triedShareableCode: shouldTryShareableCode,
+        dataSource: idData?.group ? 'ID lookup' : codeData?.group ? 'Shareable code lookup' : 'none',
+      },
+      currentUser: {
+        _id: user?._id,
+        email: user?.email,
+        firstName: user?.firstName,
+        isAuthenticated,
+      },
+      participants: group.participants?.map(p => ({
+        userId: p.userId,
+        userEmail: p.user.email,
+        userName: `${p.user.firstName} ${p.user.lastName}`,
+        status: p.status,
+      })),
+      myParticipation,
+      hasReserved,
+      hasPaid,
+      isCheckoutWindow,
+      canCheckout,
+      phase: group.phase,
+    });
+  }
   
   // Ensure participants is always an array to satisfy strict null checks
   const participants = group.participants ?? [];
@@ -121,7 +174,7 @@ const GroupDetail = () => {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 0,
-    }).format(amount / 100); // Backend sends in kobo
+    }).format(amount); // Amount in naira
   };
 
   const handleShare = async () => {
@@ -309,10 +362,21 @@ const GroupDetail = () => {
     }
   };
 
-  // Calculate total price for selected quantity
+  // Calculate total price for checkout (in naira)
   const calculateTotal = () => {
-    const productTotal = quantity * group.bulkPricePerUnit;
-    return productTotal + (deliveryFee * 100); // deliveryFee in naira, convert to kobo
+    if (!myParticipation) return 0;
+    // Backend stores prices in kobo, so divide by 100 to get naira
+    const priceInNaira = group.bulkPricePerUnit / 100;
+    const productTotal = myParticipation.quantity * priceInNaira;
+    return productTotal + deliveryFee; // Both in naira
+  };
+
+  // Calculate product subtotal for display (in naira)
+  const calculateProductTotal = () => {
+    if (!myParticipation) return 0;
+    // Backend stores prices in kobo, so divide by 100 to get naira
+    const priceInNaira = group.bulkPricePerUnit / 100;
+    return myParticipation.quantity * priceInNaira;
   };
 
   return (
@@ -388,17 +452,17 @@ const GroupDetail = () => {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-bold text-[#1D7B3C]">
-                      {formatCurrency(group.bulkPricePerUnit)}
+                      {formatCurrency(group.bulkPricePerUnit / 100)}
                     </span>
                     <span className="text-gray-600">per {group.product.unit || 'unit'}</span>
                   </div>
                   {group.product.regularPrice && (
                     <p className="text-lg text-gray-500 line-through mt-1">
-                      Regular: {formatCurrency(group.product.regularPrice)}
+                      Regular: {formatCurrency(group.product.regularPrice / 100)}
                     </p>
                   )}
                   <p className="text-sm text-gray-600 mt-2">
-                    Min: {group.quantityPerPerson?.min ?? 0}{group.product.unit || ''} • Max: {group.quantityPerPerson?.max ?? 0}{group.product.unit || ''} per person
+                    {group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'} per person (fixed)
                   </p>
                 </div>
 
@@ -490,7 +554,7 @@ const GroupDetail = () => {
                         1
                       </div>
                       <p>
-                        <strong>Reserve your spot:</strong> Select quantity ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''}) and reserve. No payment yet!
+                        <strong>Reserve your spot:</strong> Each person gets {group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'}. No payment yet!
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
@@ -626,7 +690,7 @@ const GroupDetail = () => {
                     View My Groups
                   </Link>
                 </div>
-              ) : canCheckout ? (
+              ) : canCheckout || (isCheckoutWindow && hasReserved) ? (
                 <>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
                     <p className="text-sm text-yellow-800 font-medium">
@@ -646,7 +710,7 @@ const GroupDetail = () => {
                     Leave Group
                   </button>
                 </>
-              ) : hasReserved ? (
+              ) : hasReserved && !isCheckoutWindow ? (
                 <div className="text-center py-6">
                   <Clock className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
                   <p className="text-gray-600 mb-4">
@@ -659,7 +723,7 @@ const GroupDetail = () => {
                     Leave Group
                   </button>
                 </div>
-              ) : isFull ? (
+              ) : isFull && !hasReserved && !hasPaid ? (
                 <div className="text-center py-6">
                   <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
                   <p className="text-gray-600 mb-4">This group is full</p>
@@ -676,16 +740,18 @@ const GroupDetail = () => {
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-gray-600">Bulk Price:</span>
-                      <span className="font-semibold">{formatCurrency(group.bulkPricePerUnit)}{group.product.unit ? `/${group.product.unit}` : ''}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b">
-                      <span className="text-gray-600">Min per person:</span>
-                      <span className="font-semibold">{group.quantityPerPerson?.min ?? 0}{group.product.unit || ''}</span>
+                      <span className="font-semibold">{formatCurrency(group.bulkPricePerUnit / 100)}{group.product.unit ? `/${group.product.unit}` : ''}</span>
                     </div>
                     <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-600">Max per person:</span>
-                      <span className="font-semibold">{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''}</span>
+                      <span className="text-gray-600">Quantity per person:</span>
+                      <span className="font-semibold">{group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'}</span>
                     </div>
+                  </div>
+
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-6">
+                    <p className="text-sm text-green-800 text-center">
+                      Everyone gets <strong>{group.quantityPerPerson?.min ?? 0} {group.product.unit || 'units'}</strong> at the bulk price
+                    </p>
                   </div>
 
                   {isAuthenticated ? (
@@ -742,17 +808,16 @@ const GroupDetail = () => {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                How much do you want? ({group.quantityPerPerson?.min ?? 0}-{group.quantityPerPerson?.max ?? 0}{group.product.unit || ''})
+                Quantity per person (Fixed)
               </label>
-              <input
-                type="number"
-                min={group.quantityPerPerson?.min ?? 0}
-                max={group.quantityPerPerson?.max ?? 0}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg font-semibold"
-                disabled={isProcessing}
-              />
+              <div className="w-full px-4 py-3 border-2 border-green-200 bg-green-50 rounded-lg text-center">
+                <p className="text-3xl font-bold text-[#1D7B3C]">
+                  {quantity} {group.product.unit || 'units'}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Everyone gets the same amount for fair bulk pricing
+                </p>
+              </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
@@ -812,18 +877,18 @@ const GroupDetail = () => {
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900">{group.product.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {myParticipation.quantity}{group.product.unit || ''} @ {formatCurrency(group.bulkPricePerUnit)}{group.product.unit ? `/${group.product.unit}` : ''}
+                    {myParticipation.quantity} {group.product.unit || 'units'} × {formatCurrency(group.bulkPricePerUnit / 100)}/{group.product.unit || 'unit'}
                   </p>
                 </div>
               </div>
               <div className="space-y-2 pt-3 border-t border-gray-200">
                 <div className="flex justify-between text-sm">
                   <span>Product Total:</span>
-                  <span className="font-semibold">{formatCurrency(myParticipation.amount)}</span>
+                  <span className="font-semibold">{formatCurrency(calculateProductTotal())}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Delivery Fee:</span>
-                  <span className="font-semibold">{formatCurrency(deliveryFee * 100)}</span>
+                  <span className="font-semibold">{formatCurrency(deliveryFee)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total:</span>

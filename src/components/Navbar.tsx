@@ -261,10 +261,14 @@ const Navbar: React.FC = () => {
                             </Link>
                         </li>
                         <li>
-                            <span className="flex items-center px-4 py-3 text-gray-400">
-                                <CreditCard size={18} className="mr-3" />
-                                <span>Pay Later (Coming Soon)</span>
-                            </span>
+                            <Link
+                                to="/paylater"
+                                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <CreditCard size={18} className="mr-3 text-gray-500" />
+                                <span>Pay Later</span>
+                            </Link>
                         </li>
                         <li>
                             <Link

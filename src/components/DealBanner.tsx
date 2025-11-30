@@ -40,6 +40,7 @@ export const DealBanner = () => {
                 {quickOptions.map((option) => {
                     const linkMap: Record<string, string> = {
                         "Bulk Buying": "/bulk-buying",
+                        "Pay Later": "/paylater",
                         "Group Sharing": "/group-sharing",
                         "Become a vendor": "/become-vendor"
                     };
@@ -88,6 +89,7 @@ export const DealBanner = () => {
                 {quickOptions.map((option) => {
                     const linkMap: Record<string, string> = {
                         "Bulk Buying": "/bulk-buying",
+                        "Pay Later": "/paylater",
                         "Group Sharing": "/group-sharing",
                         "Become a vendor": "/become-vendor"
                     };

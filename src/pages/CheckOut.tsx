@@ -320,9 +320,13 @@ const Checkout: React.FC = () => {
                 // Use existing delivery calculation
                 await createOrderWithDeliveryFee(checkoutData);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Order placement failed:", error);
-            const errorMessage = error?.data?.message || error?.message || "Order placement failed. Please try again.";
+            const errorMessage = error && typeof error === 'object' && 'data' in error
+                ? (error as { data?: { message?: string } }).data?.message
+                : error && typeof error === 'object' && 'message' in error
+                ? (error as { message?: string }).message
+                : "Order placement failed. Please try again.";
             alert(errorMessage);
         } finally {
             setIsProcessing(false);
