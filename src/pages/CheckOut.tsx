@@ -6,7 +6,7 @@ import {
     useCheckoutMutation,
     useCreateOrderMutation,
 } from "@/redux/api/orderApi";
-import { useGetWalletBalanceQuery, useDebitWalletMutation, useCreatePaymentLinkMutation } from "@/redux/api/walletApi";
+import { useGetWalletBalanceQuery, useCreatePaymentLinkMutation } from "@/redux/api/walletApi";
 import type { CheckoutResponse } from "@/types/orders";
 import type { CreatePaymentLinkResponse } from "@/types/wallet";
 import { Wallet, AlertCircle, Link2, Copy, Check, Share2, X, Loader2 } from "lucide-react";
@@ -117,7 +117,6 @@ const Checkout: React.FC = () => {
     const [checkout] = useCheckoutMutation();
     const [createOrder] = useCreateOrderMutation();
     const { data: walletData, isLoading: walletLoading } = useGetWalletBalanceQuery();
-    const [debitWallet] = useDebitWalletMutation();
     const [createPaymentLink, { isLoading: creatingPaymentLink }] = useCreatePaymentLinkMutation();
 
     // Pay-for-Me modal state
@@ -399,27 +398,10 @@ const Checkout: React.FC = () => {
                 // Redirect to Paystack
                 window.location.href = payment.authorizationUrl;
             } else if (paymentMethod === "wallet") {
-                // Debit wallet and complete order
-                try {
-                    const walletResponse = await debitWallet({
-                        amount: deliveryData.totals.grandTotal,
-                        orderId: order._id,
-                        description: `Payment for order #${order.orderNumber}`,
-                    }).unwrap();
-
-                    // Check if wallet response has the reference
-                    if (!walletResponse?.data?.reference) {
-                        throw new Error('Payment reference not received from wallet');
-                    }
-
-                    // Redirect to success page with payment reference
-                    navigate(`/order/success?reference=${walletResponse.data.reference}`);
-                } catch (walletError: unknown) {
-                    const errorMsg = walletError && typeof walletError === 'object' && 'data' in walletError
-                        ? (walletError as { data?: { message?: string } }).data?.message
-                        : 'Wallet payment failed';
-                    throw new Error(errorMsg || 'Wallet payment failed');
-                }
+                // Wallet payment - backend debits wallet and marks order as paid immediately
+                // No separate debit call needed - backend handles everything in createOrder
+                // Order is already paid and ready for processing
+                navigate(`/profile/orders/${order._id}`);
             } else if (paymentMethod === "pay_later") {
                 // Redirect to order details page
                 navigate(`/orders/${order._id}`);

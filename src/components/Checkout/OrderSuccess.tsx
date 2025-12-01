@@ -1,5 +1,5 @@
 // src/pages/OrderSuccess.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, Package, AlertCircle } from "lucide-react";
 import { useVerifyPaymentMutation } from "@/redux/api/orderApi";
@@ -17,19 +17,7 @@ const OrderSuccess: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState<string>("");
 
 
-    useEffect(() => {
-        const reference = searchParams.get("reference") || searchParams.get("trxref");
-
-        if (!reference) {
-            setVerificationState("error");
-            setErrorMessage("No payment reference found");
-            return;
-        }
-
-        handleVerifyPayment(reference);
-    }, [searchParams]);
-
-    const handleVerifyPayment = async (reference: string) => {
+    const handleVerifyPayment = useCallback(async (reference: string) => {
         try {
             const response = await verifyPayment(reference).unwrap();
 
@@ -48,7 +36,21 @@ const OrderSuccess: React.FC = () => {
             const err = error as { data?: { message?: string } };
             setErrorMessage(err?.data?.message || "Failed to verify payment");
         }
-    };
+    }, [verifyPayment, dispatch]);
+
+    useEffect(() => {
+        const reference = searchParams.get("reference") || searchParams.get("trxref");
+
+        if (!reference) {
+            setVerificationState("error");
+            setErrorMessage("No payment reference found");
+            return;
+        }
+
+        // Only Paystack payments need verification
+        // Wallet payments are handled directly by the backend and redirect to order details
+        handleVerifyPayment(reference);
+    }, [searchParams, handleVerifyPayment]);
 
     // Verifying state
     if (verificationState === "verifying" || isLoading) {
