@@ -406,6 +406,12 @@ const Checkout: React.FC = () => {
                         orderId: order._id,
                         description: `Payment for order #${order.orderNumber}`,
                     }).unwrap();
+
+                    // Check if wallet response has the reference
+                    if (!walletResponse?.data?.reference) {
+                        throw new Error('Payment reference not received from wallet');
+                    }
+
                     // Redirect to success page with payment reference
                     navigate(`/order/success?reference=${walletResponse.data.reference}`);
                 } catch (walletError: unknown) {
