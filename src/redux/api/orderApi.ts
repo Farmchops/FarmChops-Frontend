@@ -11,6 +11,7 @@ import type {
     OrderListResponse,
     Order,
 } from '@/types/orders';
+import { walletApi } from './walletApi';
 
 const baseQuery = fetchBaseQuery({
     baseUrl: '/api',
@@ -46,12 +47,17 @@ export const orderApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { paymentMethod }) => {
-                // If wallet payment, also invalidate wallet balance to refresh it
-                if (paymentMethod === 'wallet') {
-                    return ['Orders', 'WalletBalance'];
+            invalidatesTags: ['Orders'],
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    // If wallet payment, invalidate wallet balance to refresh it
+                    if (arg.paymentMethod === 'wallet') {
+                        dispatch(walletApi.util.invalidateTags(['WalletBalance']));
+                    }
+                } catch {
+                    // Ignore errors
                 }
-                return ['Orders'];
             },
         }),
 
