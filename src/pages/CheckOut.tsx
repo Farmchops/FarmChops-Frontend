@@ -401,13 +401,13 @@ const Checkout: React.FC = () => {
             } else if (paymentMethod === "wallet") {
                 // Debit wallet and complete order
                 try {
-                    await debitWallet({
+                    const walletResponse = await debitWallet({
                         amount: deliveryData.totals.grandTotal,
                         orderId: order._id,
                         description: `Payment for order #${order.orderNumber}`,
                     }).unwrap();
-                    // Redirect to success page
-                    navigate(`/order/success?orderId=${order._id}`);
+                    // Redirect to success page with payment reference
+                    navigate(`/order/success?reference=${walletResponse.data.reference}`);
                 } catch (walletError: unknown) {
                     const errorMsg = walletError && typeof walletError === 'object' && 'data' in walletError
                         ? (walletError as { data?: { message?: string } }).data?.message

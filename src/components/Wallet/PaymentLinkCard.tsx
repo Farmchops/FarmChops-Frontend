@@ -11,17 +11,19 @@ import {
   AlertCircle,
   MoreVertical,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 import type { MyPaymentLink, PaymentLinkStatus } from '@/types/wallet';
 
 interface PaymentLinkCardProps {
   link: MyPaymentLink;
   onCancel?: (code: string) => void;
+  onRegenerate?: (code: string) => void;
   isCompact?: boolean;
 }
 
-const PaymentLinkCard = ({ link, onCancel, isCompact = false }: PaymentLinkCardProps) => {
+const PaymentLinkCard = ({ link, onCancel, onRegenerate, isCompact = false }: PaymentLinkCardProps) => {
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -292,6 +294,17 @@ const PaymentLinkCard = ({ link, onCancel, isCompact = false }: PaymentLinkCardP
             Share
           </button>
         </div>
+      )}
+
+      {/* Regenerate for Expired Links */}
+      {link.status === 'expired' && onRegenerate && (
+        <button
+          onClick={() => onRegenerate(link.code)}
+          className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#1D7B3C] text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Regenerate Link
+        </button>
       )}
     </div>
   );

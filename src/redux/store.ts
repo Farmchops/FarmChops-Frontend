@@ -25,6 +25,9 @@ import { adminDashboardApi } from './api/adminDashboardApi';
 import { walletApi } from './api/walletApi';
 import { paylaterApi } from './api/paylaterApi';
 
+// Middleware
+import { authErrorMiddleware } from './middleware/authErrorMiddleware';
+
 
 export const store = configureStore({
     reducer: {
@@ -55,6 +58,7 @@ export const store = configureStore({
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
+            authErrorMiddleware,
             authApi.middleware,
             adminAuthApi.middleware,
             adminManagementApi.middleware,

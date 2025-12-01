@@ -11,6 +11,7 @@ import {
 import {
   useGetMyPaymentLinksQuery,
   useCancelPaymentLinkMutation,
+  useRegeneratePaymentLinkMutation,
 } from '@/redux/api/walletApi';
 import { PaymentLinkCard } from '@/components/Wallet';
 import type { PaymentLinkStatus } from '@/types/wallet';
@@ -28,6 +29,7 @@ const PaymentLinks = () => {
   });
 
   const [cancelLink, { isLoading: cancelling }] = useCancelPaymentLinkMutation();
+  const [regenerateLink, { isLoading: regenerating }] = useRegeneratePaymentLinkMutation();
 
   const links = data?.data?.links ?? [];
   const pagination = data?.data?.pagination;
@@ -38,6 +40,25 @@ const PaymentLinks = () => {
       setShowConfirmCancel(null);
     } catch (err) {
       console.error('Failed to cancel link:', err);
+    }
+  };
+
+  const handleRegenerateLink = async (code: string) => {
+    if (regenerating) return;
+
+    try {
+      const result = await regenerateLink({ code, expiresInHours: 1 }).unwrap();
+
+      if (result.success && result.data?.shareableUrl) {
+        // Copy new link to clipboard
+        await navigator.clipboard.writeText(result.data.shareableUrl);
+        alert(`Link regenerated! New link copied to clipboard.\nExpires in 1 hour.`);
+        refetch();
+      }
+    } catch (err) {
+      const error = err as { data?: { message?: string } };
+      alert(error.data?.message || 'Failed to regenerate link. Please try again.');
+      console.error('Failed to regenerate link:', err);
     }
   };
 
@@ -170,6 +191,7 @@ const PaymentLinks = () => {
               key={link.id}
               link={link}
               onCancel={(code) => setShowConfirmCancel(code)}
+              onRegenerate={handleRegenerateLink}
             />
           ))}
         </div>

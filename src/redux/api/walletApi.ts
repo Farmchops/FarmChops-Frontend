@@ -148,6 +148,19 @@ export const walletApi = createApi({
         { type: 'PaymentLink', id: code },
       ],
     }),
+
+    // Regenerate Payment Link (Authenticated)
+    regeneratePaymentLink: builder.mutation<ApiResponse<CreatePaymentLinkResponse>, { code: string; expiresInHours?: number }>({
+      query: ({ code, expiresInHours = 1 }) => ({
+        url: `/payment-links/${code}/regenerate`,
+        method: 'POST',
+        body: { expiresInHours },
+      }),
+      invalidatesTags: (_result, _error, { code }) => [
+        'PaymentLinks',
+        { type: 'PaymentLink', id: code },
+      ],
+    }),
   }),
 });
 
@@ -167,4 +180,5 @@ export const {
   useLazyVerifyPaymentLinkPaymentQuery,
   useGetMyPaymentLinksQuery,
   useCancelPaymentLinkMutation,
+  useRegeneratePaymentLinkMutation,
 } = walletApi;

@@ -19,6 +19,100 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 
+// Fill Window Countdown Component
+const FillWindowCountdown = ({ expiresAt }: { expiresAt: string }) => {
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
+  const [isUrgent, setIsUrgent] = useState(false);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const expiry = new Date(expiresAt).getTime();
+      const diff = expiry - now;
+
+      if (diff <= 0) {
+        setTimeLeft(null);
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft({ hours, minutes, seconds });
+      setIsUrgent(diff < 3600000); // Less than 1 hour left
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  if (!timeLeft) return null;
+
+  const totalHours = timeLeft.hours;
+  const isVeryUrgent = totalHours === 0 && timeLeft.minutes < 30;
+
+  return (
+    <div className={`rounded-xl p-4 mb-6 border-2 ${
+      isVeryUrgent
+        ? 'bg-red-50 border-red-300'
+        : isUrgent
+        ? 'bg-orange-50 border-orange-300'
+        : 'bg-blue-50 border-blue-300'
+    }`}>
+      <div className="flex items-start gap-3">
+        <Timer className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+          isVeryUrgent ? 'text-red-600' : isUrgent ? 'text-orange-600' : 'text-blue-600'
+        }`} />
+        <div className="flex-1">
+          <h3 className={`font-semibold mb-1 ${
+            isVeryUrgent ? 'text-red-900' : isUrgent ? 'text-orange-900' : 'text-blue-900'
+          }`}>
+            {isVeryUrgent ? 'Closing Soon!' : isUrgent ? 'Hurry!' : 'Time to Fill Group'}
+          </h3>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-baseline gap-1">
+              <span className={`text-3xl font-bold tabular-nums ${
+                isVeryUrgent ? 'text-red-700' : isUrgent ? 'text-orange-700' : 'text-blue-700'
+              }`}>
+                {totalHours.toString().padStart(2, '0')}
+              </span>
+              <span className="text-sm font-medium text-gray-600">h</span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className={`text-3xl font-bold tabular-nums ${
+                isVeryUrgent ? 'text-red-700' : isUrgent ? 'text-orange-700' : 'text-blue-700'
+              }`}>
+                {timeLeft.minutes.toString().padStart(2, '0')}
+              </span>
+              <span className="text-sm font-medium text-gray-600">m</span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className={`text-3xl font-bold tabular-nums ${
+                isVeryUrgent ? 'text-red-700' : isUrgent ? 'text-orange-700' : 'text-blue-700'
+              }`}>
+                {timeLeft.seconds.toString().padStart(2, '0')}
+              </span>
+              <span className="text-sm font-medium text-gray-600">s</span>
+            </div>
+          </div>
+          <p className={`text-sm ${
+            isVeryUrgent ? 'text-red-800' : isUrgent ? 'text-orange-800' : 'text-blue-800'
+          }`}>
+            {isVeryUrgent
+              ? 'This group will be dissolved if not filled soon. Join now!'
+              : isUrgent
+              ? 'Group will be dissolved if not filled within 1 hour.'
+              : 'If the group doesn\'t fill in time, it will be automatically dissolved.'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GroupDetail = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
@@ -494,6 +588,11 @@ const GroupDetail = () => {
                     {group.paidSlots} paid • {group.reservedSlots} reserved
                   </span>
                 </div>
+
+                {/* Fill Window Countdown */}
+                {isFilling && !isFull && group.fillWindowExpiresAt && (
+                  <FillWindowCountdown expiresAt={group.fillWindowExpiresAt} />
+                )}
 
                 {/* Progress Bar */}
                 <div className="mb-6">

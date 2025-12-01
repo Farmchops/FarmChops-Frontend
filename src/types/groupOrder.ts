@@ -127,6 +127,7 @@ export interface GroupOrder {
   expiredAt?: string;
   cancelledAt?: string;
   cancelledReason?: string;
+  fillWindowExpiresAt?: string; // When the group will be dissolved if not filled
 
   createdAt: string;
   updatedAt: string;
