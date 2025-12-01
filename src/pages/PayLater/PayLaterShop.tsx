@@ -31,7 +31,6 @@ const PayLaterShop = () => {
     const availableCredit = statusData?.data?.account?.availableCredit ?? 0;
     const cartTotal = cartData?.data?.cart?.totalAmount ?? 0;
     const cartItemCount = cartData?.data?.cart?.totalItems ?? 0;
-    const markupPercentage = productsData?.data?.paylaterInfo?.markupPercentage ?? 10;
 
     const handleAddToCart = async (productId: string) => {
         setAddingToCart(productId);
