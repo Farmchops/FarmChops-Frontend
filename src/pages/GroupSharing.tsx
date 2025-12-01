@@ -4,6 +4,7 @@ import { Users, Clock, Package, Sparkles, Timer } from "lucide-react";
 import { useGetActiveGroupsQuery } from "@/redux/api/groupOrdersApi";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import type { GroupOrder } from "@/types/groupOrder";
+import { useState, useEffect } from "react";
 
 const GroupSharing = () => {
   const { data, isLoading, error } = useGetActiveGroupsQuery({});
@@ -110,6 +111,48 @@ const GroupSharing = () => {
   );
 };
 
+// Countdown Hook
+const useCountdown = (targetDate?: string) => {
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  useEffect(() => {
+    if (!targetDate) {
+      setTimeLeft('');
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const difference = target - now;
+
+      if (difference <= 0) {
+        setTimeLeft('Expired');
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) {
+        setTimeLeft(`${days}d ${hours}h`);
+      } else if (hours > 0) {
+        setTimeLeft(`${hours}h ${minutes}m`);
+      } else {
+        setTimeLeft(`${minutes}m`);
+      }
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return timeLeft;
+};
+
 // Group Card Component
 const GroupCard = ({ group }: { group: GroupOrder }) => {
   const totalFilled = group.reservedSlots + group.paidSlots;
@@ -117,6 +160,10 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
   const spotsLeft = group.spotsLeft ?? (group.maxParticipants - totalFilled);
   const isCheckoutWindow = group.phase === 'checkout_window';
   const isFilling = group.phase === 'filling';
+
+  // Countdown timers
+  const fillWindowCountdown = useCountdown(isFilling ? group.fillWindowExpiresAt : undefined);
+  const checkoutCountdown = useCountdown(isCheckoutWindow ? group.checkoutWindowClosesAt : undefined);
 
   const formatCurrency = (amount: number) => {
     if (amount === undefined || amount === null || isNaN(amount)) {
@@ -233,23 +280,39 @@ const GroupCard = ({ group }: { group: GroupOrder }) => {
           {isFilling ? 'Reserve Spot (Free)' : isCheckoutWindow ? 'Checkout Now' : 'View Group'} →
         </button>
 
-        {/* Status Badge */}
-        <div className="mt-3 flex items-center justify-center gap-1 text-xs text-gray-500">
+        {/* Status Badge with Countdown */}
+        <div className="mt-3 flex flex-col items-center gap-1 text-xs">
           {isFilling ? (
             <>
-              <Clock className="h-3.5 w-3.5" />
-              <span>Filling - {spotsLeft} spots left</span>
+              <div className="flex items-center gap-1 text-gray-500">
+                <Clock className="h-3.5 w-3.5" />
+                <span>Filling - {spotsLeft} spots left</span>
+              </div>
+              {fillWindowCountdown && (
+                <div className="flex items-center gap-1 text-red-600 font-medium">
+                  <Timer className="h-3.5 w-3.5" />
+                  <span>{fillWindowCountdown} left to fill</span>
+                </div>
+              )}
             </>
           ) : isCheckoutWindow ? (
             <>
-              <Timer className="h-3.5 w-3.5 text-yellow-600" />
-              <span className="text-yellow-600">Checkout window open</span>
+              <div className="flex items-center gap-1 text-yellow-600">
+                <Timer className="h-3.5 w-3.5" />
+                <span>Checkout window open</span>
+              </div>
+              {checkoutCountdown && (
+                <div className="flex items-center gap-1 text-red-600 font-medium">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>{checkoutCountdown} to checkout</span>
+                </div>
+              )}
             </>
           ) : (
-            <>
-              <Clock className="h-3.5 w-3.5 text-green-600" />
-              <span className="text-green-600">Group confirmed</span>
-            </>
+            <div className="flex items-center gap-1 text-green-600">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Group confirmed</span>
+            </div>
           )}
         </div>
       </div>
