@@ -85,15 +85,6 @@ const PayLaterShop = () => {
                 </div>
             </div>
 
-            {/* Notice Banner */}
-            <div className="bg-amber-50 border-b border-amber-200">
-                <div className="max-w-7xl mx-auto px-4 py-3">
-                    <p className="text-sm text-amber-800 text-center">
-                        PayLater prices include a {markupPercentage}% markup. You have 30 days to repay via automatic IPPIS deduction.
-                    </p>
-                </div>
-            </div>
-
             {/* Search */}
             <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="relative max-w-md">
@@ -163,9 +154,6 @@ const PayLaterShop = () => {
                                         <div className="mb-3">
                                             <p className="text-lg font-bold text-[#1D7B3C]">
                                                 {formatCurrency(product.pricing.paylaterPrice)}
-                                            </p>
-                                            <p className="text-xs text-gray-500 line-through">
-                                                {formatCurrency(product.pricing.regularPrice)}
                                             </p>
                                         </div>
 
