@@ -399,9 +399,8 @@ const Checkout: React.FC = () => {
                 window.location.href = payment.authorizationUrl;
             } else if (paymentMethod === "wallet") {
                 // Wallet payment - backend debits wallet and marks order as paid immediately
-                // No separate debit call needed - backend handles everything in createOrder
-                // Order is already paid and ready for processing
-                navigate(`/profile/orders/${order._id}`);
+                // Show success page with order details
+                navigate(`/order/success/wallet?orderId=${order._id}&orderNumber=${order.orderNumber}`);
             } else if (paymentMethod === "pay_later") {
                 // Redirect to order details page
                 navigate(`/orders/${order._id}`);

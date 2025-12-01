@@ -129,6 +129,7 @@ const router = createBrowserRouter([
             },
             { path: "/thank-you", element: <Thanks /> },
             { path: "/order/success", element: <OrderSuccess /> },
+            { path: "/order/success/wallet", element: <OrderSuccess /> },
             { path: "/order/success/group-buy/:groupId", element: <GroupOrderSuccess /> },
             { path: "/wallet/callback", element: <FundWallet /> },
             // { path: "/orders/:orderId", element: <OrderDetails /> },

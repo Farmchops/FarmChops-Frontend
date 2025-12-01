@@ -39,6 +39,18 @@ const OrderSuccess: React.FC = () => {
     }, [verifyPayment, dispatch]);
 
     useEffect(() => {
+        // Check if this is a wallet payment (has orderId instead of reference)
+        const orderId = searchParams.get("orderId");
+        const orderNumber = searchParams.get("orderNumber");
+
+        if (orderId && orderNumber) {
+            // Wallet payment - already completed, show success immediately
+            setVerificationState("success");
+            setOrderNumber(orderNumber);
+            return;
+        }
+
+        // Paystack payment - needs verification
         const reference = searchParams.get("reference") || searchParams.get("trxref");
 
         if (!reference) {
@@ -47,8 +59,6 @@ const OrderSuccess: React.FC = () => {
             return;
         }
 
-        // Only Paystack payments need verification
-        // Wallet payments are handled directly by the backend and redirect to order details
         handleVerifyPayment(reference);
     }, [searchParams, handleVerifyPayment]);
 
