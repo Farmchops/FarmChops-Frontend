@@ -46,7 +46,13 @@ export const orderApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: ['Orders'],
+            invalidatesTags: (result, error, { paymentMethod }) => {
+                // If wallet payment, also invalidate wallet balance to refresh it
+                if (paymentMethod === 'wallet') {
+                    return ['Orders', 'WalletBalance'];
+                }
+                return ['Orders'];
+            },
         }),
 
         // Step 3: Verify Payment - Verify Paystack payment
