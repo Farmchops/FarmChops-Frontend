@@ -469,7 +469,7 @@ export const paylaterApi = createApi({
         >({
             query: ({ orderId, ...data }) => ({
                 url: `/admin/paylater/orders/${orderId}/repaid`,
-                method: 'PUT',
+                method: 'PATCH',
                 body: data,
             }),
             invalidatesTags: ['AdminUsers', 'PayLaterOrders'],

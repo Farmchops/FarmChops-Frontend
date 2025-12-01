@@ -570,7 +570,7 @@ const GroupDetail = () => {
                         3
                       </div>
                       <p>
-                        <strong>Checkout:</strong> Enter delivery address and complete payment via Paystack.
+                        <strong>Checkout:</strong> Enter delivery address and complete payment.
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
@@ -578,7 +578,7 @@ const GroupDetail = () => {
                         ✓
                       </div>
                       <p>
-                        <strong>Delivery:</strong> Receive individual delivery to your address 3-5 days after group confirms.
+                        <strong>Delivery:</strong> Receive individual delivery to your address after group confirms.
                       </p>
                     </div>
                   </div>
@@ -975,7 +975,7 @@ const GroupDetail = () => {
                     Processing...
                   </span>
                 ) : (
-                  `Pay ${formatCurrency(calculateTotal())} with Paystack`
+                  `Pay ${formatCurrency(calculateTotal())}`
                 )}
               </button>
               <button
@@ -989,7 +989,7 @@ const GroupDetail = () => {
 
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <span>Secure payment powered by Paystack</span>
+              <span>Secure payment</span>
             </div>
           </div>
         </div>

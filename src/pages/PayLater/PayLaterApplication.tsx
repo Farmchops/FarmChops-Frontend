@@ -128,7 +128,7 @@ const PayLaterApplication = () => {
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
                         <p className="text-gray-600 mb-6">
-                            Your PayLater application has been received. Our team will review your details and notify you via email once your application is processed. This usually takes 1-3 business days.
+                            Your PayLater application has been received. A member of our team will contact you soonest to review your details and notify you via email once your application is processed.
                         </p>
                         <button
                             onClick={() => navigate('/paylater')}
@@ -176,7 +176,7 @@ const PayLaterApplication = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-gray-900">Get Approved</h3>
-                                    <p className="text-sm text-gray-600">Our team verifies your details and assigns you a credit limit (1-3 business days)</p>
+                                    <p className="text-sm text-gray-600">Our team verifies your details and assigns you a credit limit</p>
                                 </div>
                             </div>
 
@@ -227,7 +227,7 @@ const PayLaterApplication = () => {
                             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                             <div>
                                 <p className="text-sm text-amber-800 font-medium">Important Notice</p>
-                                <p className="text-sm text-amber-700">PayLater prices are slightly higher than regular prices to cover credit costs. You can only have one active PayLater purchase at a time.</p>
+                                <p className="text-sm text-amber-700">You can only have one active PayLater purchase at a time.</p>
                             </div>
                         </div>
                     </div>

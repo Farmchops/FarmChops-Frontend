@@ -45,16 +45,12 @@ const PayLaterStatus = ({ status }: PayLaterStatusProps) => {
                                     {status.application?.submittedAt ? formatDate(status.application.submittedAt) : 'Recently'}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between text-sm mt-2">
-                                <span className="text-gray-600">Estimated Review Time</span>
-                                <span className="font-medium text-gray-900">1-3 business days</span>
-                            </div>
                         </div>
 
                         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-left">
                             <p className="text-sm text-blue-800">
                                 <strong>What happens next?</strong><br />
-                                Our team will verify your BVN and NIN details. Once approved, you'll receive an email notification with your credit limit and can start shopping with PayLater.
+                                A member of our team will contact you soonest to verify your BVN and NIN details. Once approved, you'll receive an email notification with your credit limit and can start shopping with PayLater.
                             </p>
                         </div>
                     </div>
