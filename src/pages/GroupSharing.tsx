@@ -46,7 +46,7 @@ const GroupSharing = () => {
                 2
               </div>
               <h3 className="font-medium text-gray-900 mb-1">Group Fills Up</h3>
-              <p className="text-sm text-gray-600">Wait for others to join within the time limit</p>
+              <p className="text-sm text-gray-600">Wait for others to join within the time limit. If group doesn't fill, it dissolves (no charge)</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-[#1D7B3C]/10 text-[#1D7B3C] flex items-center justify-center mx-auto mb-3 text-xl font-bold">
