@@ -825,15 +825,13 @@ const AdminOrders = () => {
 		if (orderTypeFilter === "all") return orders;
 
 		// If fetching Pay Later orders from separate API, they're already filtered
-		if (orderTypeFilter === "pay_later" && shouldFetchPayLater) {
-			return orders;
+		if (orderTypeFilter === "pay_later") {
+			return shouldFetchPayLater ? orders : orders.filter(order => order.paymentMethod === "pay_later");
 		}
 
-		// Filter based on order type
+		// Filter based on order type for remaining cases
 		return orders.filter((order) => {
 			switch (orderTypeFilter) {
-				case "pay_later":
-					return order.paymentMethod === "pay_later";
 				case "group_sharing":
 					return order.groupOrder?.isGroupOrder === true;
 				case "deal_of_day":
