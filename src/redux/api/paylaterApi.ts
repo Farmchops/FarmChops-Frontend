@@ -502,6 +502,24 @@ export const paylaterApi = createApi({
                 body: data,
             }),
         }),
+
+        // Get All PayLater Orders (Admin)
+        getAdminPayLaterOrders: builder.query<
+            {
+                success: boolean;
+                data: {
+                    orders: PayLaterOrder[];
+                    pagination?: { page: number; limit: number; total: number; pages: number };
+                };
+            },
+            { page?: number; limit?: number; status?: string } | void
+        >({
+            query: (params) => ({
+                url: '/admin/paylater/orders',
+                params,
+            }),
+            providesTags: ['PayLaterOrders'],
+        }),
     }),
 });
 
@@ -527,4 +545,5 @@ export const {
     useMarkLoanRepaidMutation,
     useGetPayLaterSettingsQuery,
     useUpdatePayLaterSettingsMutation,
+    useGetAdminPayLaterOrdersQuery,
 } = paylaterApi;

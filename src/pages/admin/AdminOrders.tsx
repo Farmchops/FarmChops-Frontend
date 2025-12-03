@@ -15,7 +15,10 @@ import {
 	Truck,
 	Users,
 	X,
+	Printer,
+	FileSpreadsheet,
 } from "lucide-react";
+import * as XLSX from 'xlsx';
 import { cn } from "@/lib/utils";
 import {
 	useGetOrdersQuery,
@@ -25,6 +28,7 @@ import {
 	type GetOrdersQueryArgs,
 } from "@/redux/api/adminOrdersApi";
 import { useGetAdminRidersQuery, type RiderDirectoryEntry } from "@/redux/api/adminRidersApi";
+import { useGetAdminPayLaterOrdersQuery, type PayLaterOrder } from "@/redux/api/paylaterApi";
 import {
 	ORDER_ACTION_CONFIG,
 	ORDER_STATUS_CONFIG,
@@ -709,6 +713,7 @@ const AdminOrders = () => {
 	const [ownerFilter, setOwnerFilter] = useState<StageOwnerRole | "all">(
 		isSuper ? "all" : (mappedAdminRole ?? "all")
 	);
+	const [orderTypeFilter, setOrderTypeFilter] = useState<"all" | "group_sharing" | "pay_later" | "deal_of_day" | "regular">("all");
 	const [searchInput, setSearchInput] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
@@ -734,7 +739,21 @@ const AdminOrders = () => {
 		return args;
 	}, [ownerFilter, searchQuery, statusFilter, isSuper]);
 
-	const { data: ordersResponse, isLoading, isFetching, refetch } = useGetOrdersQuery(queryArgs);
+	// Conditionally fetch from Pay Later API or regular Orders API
+	const shouldFetchPayLater = orderTypeFilter === "pay_later";
+
+	const { data: ordersResponse, isLoading: isLoadingOrders, isFetching: isFetchingOrders, refetch: refetchOrders } = useGetOrdersQuery(
+		shouldFetchPayLater ? skipToken : queryArgs
+	);
+
+	const { data: payLaterResponse, isLoading: isLoadingPayLater, isFetching: isFetchingPayLater, refetch: refetchPayLater } = useGetAdminPayLaterOrdersQuery(
+		shouldFetchPayLater ? {} : skipToken
+	);
+
+	const isLoading = shouldFetchPayLater ? isLoadingPayLater : isLoadingOrders;
+	const isFetching = shouldFetchPayLater ? isFetchingPayLater : isFetchingOrders;
+	const refetch = shouldFetchPayLater ? refetchPayLater : refetchOrders;
+
 	const [triggerOrderAction, { isLoading: isActionSubmitting }] = useTriggerOrderActionMutation();
 
 	const selectedOrderId = selectedOrder?._id;
@@ -749,10 +768,188 @@ const AdminOrders = () => {
 	);
 
 	const orders = useMemo<AdminOrder[]>(() => {
+		if (shouldFetchPayLater) {
+			const payload = payLaterResponse?.data;
+			if (!payload) return [];
+			// PayLater orders need to be converted to AdminOrder format
+			const payLaterOrders = payload.orders ?? [];
+			return payLaterOrders.map((plOrder: PayLaterOrder) => ({
+				_id: plOrder._id,
+				orderNumber: plOrder._id.slice(-8).toUpperCase(),
+				orderStatus: plOrder.orderStatus,
+				paymentStatus: plOrder.repaymentStatus === 'paid' ? 'paid' : 'pending',
+				paymentMethod: 'pay_later',
+				totalAmount: plOrder.totalAmount,
+				createdAt: plOrder.createdAt,
+				items: [],
+				user: null,
+			} as AdminOrder));
+		}
+
 		const payload = ordersResponse?.data;
 		if (!payload) return [];
 		return Array.isArray(payload) ? (payload as AdminOrder[]) : payload.orders ?? [];
-	}, [ordersResponse]);
+	}, [ordersResponse, payLaterResponse, shouldFetchPayLater]);
+
+	// Filter orders by type
+	const filteredOrders = useMemo<AdminOrder[]>(() => {
+		// If fetching Pay Later orders, they're already filtered
+		if (orderTypeFilter === "pay_later" && shouldFetchPayLater) {
+			return orders;
+		}
+
+		if (orderTypeFilter === "all") return orders;
+
+		return orders.filter((order) => {
+			switch (orderTypeFilter) {
+				case "group_sharing":
+					return order.groupOrder?.isGroupOrder === true;
+				case "pay_later":
+					// This shouldn't be reached since we fetch from separate API
+					return order.paymentMethod === "pay_later";
+				case "deal_of_day":
+					return order.items?.some(item => item.deal);
+				case "regular":
+					return !order.groupOrder?.isGroupOrder &&
+						   order.paymentMethod !== "pay_later" &&
+						   !order.items?.some(item => item.deal);
+				default:
+					return true;
+			}
+		});
+	}, [orders, orderTypeFilter, shouldFetchPayLater]);
+
+	// Get order type label
+	const getOrderTypeLabel = (order: AdminOrder): string => {
+		if (order.groupOrder?.isGroupOrder) return "Group Sharing";
+		if (order.paymentMethod === "pay_later") return "Pay Later";
+		if (order.items?.some(item => item.deal)) return "Deal of Day";
+		return "Regular";
+	};
+
+	// Export to Excel
+	const handleExportToExcel = () => {
+		const exportData = filteredOrders.map((order) => ({
+			"Order Number": order.orderNumber,
+			"Order Type": getOrderTypeLabel(order),
+			"Customer": formatName(order),
+			"Status": order.orderStatus,
+			"Payment Status": order.paymentStatus,
+			"Payment Method": order.paymentMethod,
+			"Total Amount": formatCurrency(
+				typeof order.summary?.totalAmountInNaira === "number"
+					? order.summary.totalAmountInNaira
+					: typeof order.totalAmount === "number"
+					? order.totalAmount / 100
+					: 0
+			),
+			"Items": order.items?.length ?? 0,
+			"Created At": formatDateTime(order.createdAt),
+			"Delivery Address": order.deliveryInfo?.address ?? "-",
+			"Phone": order.deliveryInfo?.phoneNumber ?? "-",
+		}));
+
+		const worksheet = XLSX.utils.json_to_sheet(exportData);
+		const workbook = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+
+		const filterLabel = orderTypeFilter === "all" ? "All Orders" :
+			orderTypeFilter === "group_sharing" ? "Group Sharing Orders" :
+			orderTypeFilter === "pay_later" ? "Pay Later Orders" :
+			orderTypeFilter === "deal_of_day" ? "Deal of Day Orders" : "Regular Orders";
+
+		XLSX.writeFile(workbook, `${filterLabel}_${new Date().toISOString().split('T')[0]}.xlsx`);
+	};
+
+	// Print orders
+	const handlePrint = () => {
+		const printWindow = window.open('', '_blank');
+		if (!printWindow) return;
+
+		const filterLabel = orderTypeFilter === "all" ? "All Orders" :
+			orderTypeFilter === "group_sharing" ? "Group Sharing Orders" :
+			orderTypeFilter === "pay_later" ? "Pay Later Orders" :
+			orderTypeFilter === "deal_of_day" ? "Deal of Day Orders" : "Regular Orders";
+
+		const printContent = `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<title>${filterLabel} - ${new Date().toLocaleDateString()}</title>
+				<style>
+					body { font-family: Arial, sans-serif; padding: 20px; }
+					h1 { color: #1D7B3C; }
+					table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+					th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+					th { background-color: #1D7B3C; color: white; }
+					tr:nth-child(even) { background-color: #f2f2f2; }
+					.header { display: flex; justify-content: space-between; align-items: center; }
+					.badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+					.group-sharing { background-color: #DFF5EB; color: #1D7B3C; }
+					.pay-later { background-color: #FEF3C7; color: #92400E; }
+					.deal-of-day { background-color: #DBEAFE; color: #1E40AF; }
+					@media print {
+						button { display: none; }
+					}
+				</style>
+			</head>
+			<body>
+				<div class="header">
+					<h1>${filterLabel}</h1>
+					<p>Generated: ${new Date().toLocaleString()}</p>
+				</div>
+				<p>Total Orders: ${filteredOrders.length}</p>
+				<table>
+					<thead>
+						<tr>
+							<th>Order #</th>
+							<th>Type</th>
+							<th>Customer</th>
+							<th>Status</th>
+							<th>Amount</th>
+							<th>Items</th>
+							<th>Date</th>
+						</tr>
+					</thead>
+					<tbody>
+						${filteredOrders.map((order) => {
+							const orderType = getOrderTypeLabel(order);
+							const badgeClass =
+								orderType === "Group Sharing" ? "group-sharing" :
+								orderType === "Pay Later" ? "pay-later" :
+								orderType === "Deal of Day" ? "deal-of-day" : "";
+
+							return `
+								<tr>
+									<td>${order.orderNumber}</td>
+									<td><span class="badge ${badgeClass}">${orderType}</span></td>
+									<td>${formatName(order)}</td>
+									<td>${order.orderStatus}</td>
+									<td>${formatCurrency(
+										typeof order.summary?.totalAmountInNaira === "number"
+											? order.summary.totalAmountInNaira
+											: typeof order.totalAmount === "number"
+											? order.totalAmount / 100
+											: 0
+									)}</td>
+									<td>${order.items?.length ?? 0}</td>
+									<td>${formatDateTime(order.createdAt)}</td>
+								</tr>
+							`;
+						}).join('')}
+					</tbody>
+				</table>
+			</body>
+			</html>
+		`;
+
+		printWindow.document.write(printContent);
+		printWindow.document.close();
+		printWindow.focus();
+		setTimeout(() => {
+			printWindow.print();
+		}, 250);
+	};
 
 	useEffect(() => {
 		if (!selectedOrder) return;
@@ -911,7 +1108,7 @@ const AdminOrders = () => {
 		}
 	};
 
-	const totalOrders = orders.length;
+	const totalOrders = filteredOrders.length;
 
 	return (
 		<div className="space-y-6 p-6">
@@ -986,9 +1183,40 @@ const AdminOrders = () => {
 							</option>
 						))}
 					</select>
-					<div className="ml-auto flex items-center gap-2 text-xs text-gray-500">
-						<Package className="h-4 w-4 text-[#1D7B3C]" />
-						<span>{totalOrders} orders</span>
+					<select
+						value={orderTypeFilter}
+						onChange={(event) => setOrderTypeFilter(event.target.value as typeof orderTypeFilter)}
+						className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 focus:border-[#1D7B3C] focus:outline-none"
+					>
+						<option value="all">All Types</option>
+						<option value="group_sharing">Group Sharing</option>
+						<option value="pay_later">Pay Later</option>
+						<option value="deal_of_day">Deal of Day</option>
+						<option value="regular">Regular Orders</option>
+					</select>
+					<div className="ml-auto flex items-center gap-2">
+						<button
+							onClick={handleExportToExcel}
+							type="button"
+							className="inline-flex items-center gap-2 rounded-full border border-[#1D7B3C]/30 px-4 py-2 text-sm font-medium text-[#1D7B3C] transition hover:border-[#1D7B3C] hover:bg-[#1D7B3C]/5 focus:outline-none"
+							title="Export to Excel"
+						>
+							<FileSpreadsheet className="h-4 w-4" />
+							Export
+						</button>
+						<button
+							onClick={handlePrint}
+							type="button"
+							className="inline-flex items-center gap-2 rounded-full border border-[#1D7B3C]/30 px-4 py-2 text-sm font-medium text-[#1D7B3C] transition hover:border-[#1D7B3C] hover:bg-[#1D7B3C]/5 focus:outline-none"
+							title="Print orders"
+						>
+							<Printer className="h-4 w-4" />
+							Print
+						</button>
+						<div className="flex items-center gap-2 text-xs text-gray-500 pl-2">
+							<Package className="h-4 w-4 text-[#1D7B3C]" />
+							<span>{totalOrders} orders</span>
+						</div>
 					</div>
 				</form>
 
@@ -1012,7 +1240,7 @@ const AdminOrders = () => {
 				</div>
 			</div>
 
-			{isLoading && !orders.length ? (
+			{isLoading && !filteredOrders.length ? (
 				<div className="flex justify-center py-20">
 					<LoadingSpinner size="lg" />
 				</div>
@@ -1020,7 +1248,7 @@ const AdminOrders = () => {
 				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 					{activeStatuses.map((status) => {
 						const statusConfig = ORDER_STATUS_CONFIG[status];
-						const statusOrders = orders.filter((order) => order.orderStatus === status);
+						const statusOrders = filteredOrders.filter((order) => order.orderStatus === status);
 						return (
 							<div key={status} className="flex flex-col rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
 								<div className="flex items-center justify-between">
@@ -1035,30 +1263,51 @@ const AdminOrders = () => {
 								<p className="mt-2 text-xs text-gray-500">{statusConfig.description}</p>
 								<div className="mt-4 space-y-3">
 									{statusOrders.length ? (
-										statusOrders.map((order) => (
-											<button
-												key={order._id}
-												type="button"
-												onClick={() => handleOpenOrder(order)}
-												className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 text-left transition hover:border-[#1D7B3C] hover:bg-white"
-											>
-												<div className="flex items-center justify-between text-sm font-semibold text-gray-900">
-													<span>{order.orderNumber}</span>
-													<span>{formatCurrency((order.summary?.totalAmountInNaira ?? order.totalAmount / 100) || 0)}</span>
-												</div>
-												<p className="mt-1 text-xs text-gray-500">Placed {formatDateTime(order.createdAt)}</p>
-												<div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-													<span className="flex items-center gap-1">
-														<Users className="h-3.5 w-3.5 text-[#1D7B3C]" />
-														{formatName(order)}
-													</span>
-													<span className="flex items-center gap-1">
-														<Clock className="h-3.5 w-3.5 text-gray-400" />
-														{order.statusHistory?.length ? `${order.statusHistory.length} updates` : "No updates"}
-													</span>
-												</div>
-											</button>
-										))
+										statusOrders.map((order) => {
+											const orderType = getOrderTypeLabel(order);
+											const orderTypeBadge = orderType !== "Regular" ? (
+												<span
+													className={cn(
+														"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+														orderType === "Group Sharing" && "bg-[#DFF5EB] text-[#1D7B3C]",
+														orderType === "Pay Later" && "bg-yellow-100 text-yellow-800",
+														orderType === "Deal of Day" && "bg-blue-100 text-blue-800"
+													)}
+												>
+													{orderType}
+												</span>
+											) : null;
+
+											return (
+												<button
+													key={order._id}
+													type="button"
+													onClick={() => handleOpenOrder(order)}
+													className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 text-left transition hover:border-[#1D7B3C] hover:bg-white"
+												>
+													<div className="flex items-center justify-between text-sm font-semibold text-gray-900">
+														<span>{order.orderNumber}</span>
+														<span>{formatCurrency((order.summary?.totalAmountInNaira ?? order.totalAmount / 100) || 0)}</span>
+													</div>
+													{orderTypeBadge && (
+														<div className="mt-1">
+															{orderTypeBadge}
+														</div>
+													)}
+													<p className="mt-1 text-xs text-gray-500">Placed {formatDateTime(order.createdAt)}</p>
+													<div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+														<span className="flex items-center gap-1">
+															<Users className="h-3.5 w-3.5 text-[#1D7B3C]" />
+															{formatName(order)}
+														</span>
+														<span className="flex items-center gap-1">
+															<Clock className="h-3.5 w-3.5 text-gray-400" />
+															{order.statusHistory?.length ? `${order.statusHistory.length} updates` : "No updates"}
+														</span>
+													</div>
+												</button>
+											);
+										})
 									) : (
 										<p className="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">No orders in this stage.</p>
 									)}

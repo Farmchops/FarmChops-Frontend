@@ -53,14 +53,28 @@ const PayForMe = () => {
     }).format(value);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-NG', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleDateString('en-NG', {
+  //     day: 'numeric',
+  //     month: 'long',
+  //     year: 'numeric',
+  //   });
+  // };
+
+  // const getHoursUntilExpiry = (expiresAt: string) => {
+  //   const now = new Date();
+  //   const expiry = new Date(expiresAt);
+  //   const diffMs = expiry.getTime() - now.getTime();
+  //   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  //   if (diffHours < 1) {
+  //     const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  //     return diffMinutes > 0 ? `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}` : 'less than a minute';
+  //   }
+
+  //   return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+  // };
 
   // Handle Pay Now - No form needed, Paystack collects payer details
   const handlePayNow = async () => {
@@ -305,7 +319,7 @@ const PayForMe = () => {
               {/* Expiry */}
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-6">
                 <Clock className="w-4 h-4" />
-                <span>Valid until {formatDate(linkDetails.expiresAt)}</span>
+                <span>Expires in 1hr</span>
               </div>
 
               {/* Error */}
