@@ -147,6 +147,7 @@ export interface Order {
     items: OrderItem[];
     subtotal: number;
     deliveryFee: number;
+    tax?: number; // 7.5% tax (optional for backward compatibility with old orders)
     totalAmount: number;
     paymentMethod: PaymentMethod;
     paymentStatus: PaymentStatus;
@@ -217,6 +218,7 @@ export interface CheckoutResponse {
     totals: {
         subtotal: number;
         deliveryFee: number;
+        tax: number; // 7.5% tax on subtotal
         grandTotal: number;
     };
 }

@@ -1,9 +1,9 @@
 // src/pages/GroupDetail.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft, Users, Package, Clock, Share2,
-  AlertCircle, CheckCircle, Truck, Timer
+  AlertCircle, CheckCircle, Truck, Timer, Loader2
 } from "lucide-react";
 import { resolveErrorMessage } from "@/lib/utils";
 import { alertService } from "@/lib/alertService";
@@ -15,9 +15,45 @@ import {
   useJoinWaitlistMutation,
   useLeaveGroupMutation
 } from "@/redux/api/groupOrdersApi";
+import { useCheckoutMutation } from "@/redux/api/orderApi";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+import type { CheckoutResponse } from "@/types/orders";
+
+// Google Maps types (for TypeScript)
+interface GoogleMapsAutocomplete {
+  getPlace: () => GooglePlaceResult;
+  addListener: (event: string, callback: () => void) => void;
+}
+
+interface GooglePlaceResult {
+  formatted_address?: string;
+  address_components?: GoogleAddressComponent[];
+  geometry?: unknown;
+  place_id?: string;
+}
+
+interface GoogleAddressComponent {
+  long_name: string;
+  short_name: string;
+  types: string[];
+}
+
+declare global {
+  interface Window {
+    google?: {
+      maps: {
+        places: {
+          Autocomplete: new (
+            input: HTMLInputElement,
+            options?: { types?: string[]; componentRestrictions?: { country: string } }
+          ) => GoogleMapsAutocomplete;
+        };
+      };
+    };
+  }
+}
 
 // Fill Window Countdown Component
 const FillWindowCountdown = ({ expiresAt }: { expiresAt: string }) => {
@@ -128,8 +164,13 @@ const GroupDetail = () => {
     state: "",
     phoneNumber: user?.phone || "",
   });
-  const [deliveryFee] = useState(0); // Can be calculated based on location
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
+  const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+
+  const [checkout] = useCheckoutMutation();
 
   // First try to get group by ID
   const { data: idData, isLoading: idLoading, error: idError } = useGetGroupByIdQuery(groupId!, {
@@ -163,6 +204,67 @@ const GroupDetail = () => {
       setQuantity(group.quantityPerPerson.min);
     }
   }, [showReserveModal, group]);
+
+  // Initialize Google Places Autocomplete
+  useEffect(() => {
+    if (!showCheckoutModal || !addressInputRef.current || !window.google) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+      types: ['address'],
+      componentRestrictions: { country: 'ng' },
+    });
+
+    autocomplete.addListener('place_changed', async () => {
+      const place = autocomplete.getPlace();
+
+      if (!place.formatted_address || !place.address_components) return;
+
+      // Extract city and state from address components
+      let city = '';
+      let state = '';
+
+      place.address_components.forEach((component) => {
+        if (component.types.includes('locality')) {
+          city = component.long_name;
+        }
+        if (component.types.includes('administrative_area_level_1')) {
+          state = component.long_name;
+        }
+      });
+
+      const updatedDeliveryInfo = {
+        ...deliveryInfo,
+        address: place.formatted_address,
+        city: city || deliveryInfo.city,
+        state: state || deliveryInfo.state,
+      };
+
+      setDeliveryInfo(updatedDeliveryInfo);
+
+      // Auto-calculate delivery fee if phone number is filled
+      const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
+      if (updatedDeliveryInfo.phoneNumber && userName) {
+        setIsCalculatingDelivery(true);
+
+        try {
+          const checkoutResponse = await checkout({
+            name: userName,
+            phone: updatedDeliveryInfo.phoneNumber,
+            address: updatedDeliveryInfo.address,
+          }).unwrap();
+
+          if (checkoutResponse.success && checkoutResponse.data) {
+            setCheckoutData(checkoutResponse.data);
+            setDeliveryFee(checkoutResponse.data.delivery.fee);
+          }
+        } catch (error) {
+          console.error('Failed to calculate delivery fee:', error);
+        } finally {
+          setIsCalculatingDelivery(false);
+        }
+      }
+    });
+  }, [showCheckoutModal, checkout, deliveryInfo, user]);
 
   if (isLoading) {
     return (
@@ -462,7 +564,8 @@ const GroupDetail = () => {
     // Backend stores prices in kobo, so divide by 100 to get naira
     const priceInNaira = group.bulkPricePerUnit / 100;
     const productTotal = myParticipation.quantity * priceInNaira;
-    return productTotal + deliveryFee; // Both in naira
+    const tax = checkoutData ? checkoutData.totals.tax : 0;
+    return productTotal + deliveryFee + tax; // All in naira/kobo
   };
 
   // Calculate product subtotal for display (in naira)
@@ -987,8 +1090,23 @@ const GroupDetail = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Delivery Fee:</span>
-                  <span className="font-semibold">{formatCurrency(deliveryFee)}</span>
+                  {isCalculatingDelivery ? (
+                    <span className="text-gray-400 flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Calculating...
+                    </span>
+                  ) : checkoutData ? (
+                    <span className="font-semibold text-green-600">{formatCurrency(deliveryFee)}</span>
+                  ) : (
+                    <span className="text-gray-400">Enter address</span>
+                  )}
                 </div>
+                {checkoutData && (
+                  <div className="flex justify-between text-sm">
+                    <span>Tax (7.5%):</span>
+                    <span className="font-semibold">{formatCurrency(checkoutData.totals.tax)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total:</span>
                   <span className="text-[#1D7B3C]">{formatCurrency(calculateTotal())}</span>
@@ -1018,14 +1136,18 @@ const GroupDetail = () => {
                   Street Address *
                 </label>
                 <input
+                  ref={addressInputRef}
                   type="text"
                   value={deliveryInfo.address}
                   onChange={(e) => setDeliveryInfo({ ...deliveryInfo, address: e.target.value })}
-                  placeholder="123 Main Street"
+                  placeholder="Start typing your address..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                   required
                   disabled={isProcessing}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Use Google autocomplete for accurate delivery fee calculation
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

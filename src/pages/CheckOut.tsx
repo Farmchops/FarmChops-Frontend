@@ -684,6 +684,12 @@ const Checkout: React.FC = () => {
                                         <p>🕒 Duration: {checkoutData.delivery.durationText}</p>
                                     </div>
                                 )}
+                                {checkoutData && (
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Tax (7.5%):</span>
+                                        <span className="font-medium">₦{checkoutData.totals.tax.toLocaleString()}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between font-bold text-lg border-t border-[#9FA5A3]/30 pt-3 mt-3">
                                     <span>Total:</span>
                                     <span className="text-[#1D7B3C]">

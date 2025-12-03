@@ -297,6 +297,28 @@ const OrderHistory = () => {
                   </div>
                 </div>
 
+                {/* Price Breakdown */}
+                <div className="border-t pt-4 space-y-2 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Subtotal:</span>
+                    <span>₦{(order.subtotal / 100).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Delivery Fee:</span>
+                    <span>₦{(order.deliveryFee / 100).toLocaleString()}</span>
+                  </div>
+                  {order.tax && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>Tax (7.5%):</span>
+                      <span>₦{(order.tax / 100).toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold text-[#1D7B3C] pt-2 border-t">
+                    <span>Total:</span>
+                    <span>₦{(order.totalAmount / 100).toLocaleString()}</span>
+                  </div>
+                </div>
+
                 {/* Delivery Info */}
                                 <div className="flex items-start justify-between border-t pt-4">
                   <div className="flex items-start gap-2 text-sm text-gray-600">
