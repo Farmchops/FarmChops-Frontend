@@ -747,7 +747,7 @@ const AdminOrders = () => {
 	);
 
 	const { data: payLaterResponse, isLoading: isLoadingPayLater, isFetching: isFetchingPayLater, refetch: refetchPayLater } = useGetAdminPayLaterOrdersQuery(
-		shouldFetchPayLater ? {} : skipToken
+		shouldFetchPayLater ? undefined : skipToken
 	);
 
 	const isLoading = shouldFetchPayLater ? isLoadingPayLater : isLoadingOrders;
@@ -773,17 +773,31 @@ const AdminOrders = () => {
 			if (!payload) return [];
 			// PayLater orders need to be converted to AdminOrder format
 			const payLaterOrders = payload.orders ?? [];
-			return payLaterOrders.map((plOrder: PayLaterOrder) => ({
+			return payLaterOrders.map((plOrder: PayLaterOrder): AdminOrder => ({
 				_id: plOrder._id,
 				orderNumber: plOrder._id.slice(-8).toUpperCase(),
 				orderStatus: plOrder.orderStatus,
 				paymentStatus: plOrder.repaymentStatus === 'paid' ? 'paid' : 'pending',
-				paymentMethod: 'pay_later',
+				paymentMethod: 'pay_later' as const,
 				totalAmount: plOrder.totalAmount,
 				createdAt: plOrder.createdAt,
+				updatedAt: plOrder.createdAt,
 				items: [],
-				user: null,
-			} as AdminOrder));
+				user: '',
+				subtotal: plOrder.totalAmount,
+				deliveryFee: 0,
+				paymentReference: '',
+				paymentProvider: 'paylater',
+				providerResponse: null,
+				deliveryInfo: {
+					address: '',
+					city: '',
+					state: '',
+					phone: '',
+				},
+				statusHistory: [],
+				notes: {},
+			}));
 		}
 
 		const payload = ordersResponse?.data;

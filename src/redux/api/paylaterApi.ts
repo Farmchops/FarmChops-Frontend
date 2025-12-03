@@ -512,7 +512,7 @@ export const paylaterApi = createApi({
                     pagination?: { page: number; limit: number; total: number; pages: number };
                 };
             },
-            { page?: number; limit?: number; status?: string } | void
+            { page?: number; limit?: number; status?: string } | undefined
         >({
             query: (params) => ({
                 url: '/admin/paylater/orders',

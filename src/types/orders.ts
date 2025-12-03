@@ -34,6 +34,11 @@ export interface OrderItem {
     quantity: number;
     unitPrice: number;
     totalPrice: number;
+    deal?: {
+        _id: string;
+        title: string;
+        discountPercentage: number;
+    };
 }
 
 // Status History
