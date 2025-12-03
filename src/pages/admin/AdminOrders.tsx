@@ -773,31 +773,36 @@ const AdminOrders = () => {
 			if (!payload) return [];
 			// PayLater orders need to be converted to AdminOrder format
 			const payLaterOrders = payload.orders ?? [];
-			return payLaterOrders.map((plOrder: PayLaterOrder): AdminOrder => ({
-				_id: plOrder._id,
-				orderNumber: plOrder._id.slice(-8).toUpperCase(),
-				orderStatus: plOrder.orderStatus,
-				paymentStatus: plOrder.repaymentStatus === 'paid' ? 'paid' : 'pending',
-				paymentMethod: 'pay_later' as const,
-				totalAmount: plOrder.totalAmount,
-				createdAt: plOrder.createdAt,
-				updatedAt: plOrder.createdAt,
-				items: [],
-				user: '',
-				subtotal: plOrder.totalAmount,
-				deliveryFee: 0,
-				paymentReference: '',
-				paymentProvider: 'paylater',
-				providerResponse: null,
-				deliveryInfo: {
-					address: '',
-					city: '',
-					state: '',
-					phone: '',
-				},
-				statusHistory: [],
-				notes: {},
-			}));
+			return payLaterOrders.map((plOrder: PayLaterOrder): AdminOrder => {
+				// Map PayLater order status to OrderStatus
+				const orderStatus: OrderStatus = plOrder.orderStatus === 'shipped' ? 'en_route' : plOrder.orderStatus;
+
+				return {
+					_id: plOrder._id,
+					orderNumber: plOrder._id.slice(-8).toUpperCase(),
+					orderStatus,
+					paymentStatus: plOrder.repaymentStatus === 'paid' ? 'paid' : 'pending',
+					paymentMethod: 'pay_later' as const,
+					totalAmount: plOrder.totalAmount,
+					createdAt: plOrder.createdAt,
+					updatedAt: plOrder.createdAt,
+					items: [],
+					user: '',
+					subtotal: plOrder.totalAmount,
+					deliveryFee: 0,
+					paymentReference: '',
+					paymentProvider: 'paylater',
+					providerResponse: null,
+					deliveryInfo: {
+						address: '',
+						city: '',
+						state: '',
+						phoneNumber: '',
+					},
+					statusHistory: [],
+					notes: '',
+				};
+			});
 		}
 
 		const payload = ordersResponse?.data;
@@ -814,13 +819,15 @@ const AdminOrders = () => {
 
 		if (orderTypeFilter === "all") return orders;
 
+		// For pay_later from regular orders API (edge case)
+		if (orderTypeFilter === "pay_later") {
+			return orders.filter(order => order.paymentMethod === "pay_later");
+		}
+
 		return orders.filter((order) => {
 			switch (orderTypeFilter) {
 				case "group_sharing":
 					return order.groupOrder?.isGroupOrder === true;
-				case "pay_later":
-					// This shouldn't be reached since we fetch from separate API
-					return order.paymentMethod === "pay_later";
 				case "deal_of_day":
 					return order.items?.some(item => item.deal);
 				case "regular":
