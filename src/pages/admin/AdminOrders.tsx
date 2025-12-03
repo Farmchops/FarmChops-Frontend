@@ -779,11 +779,13 @@ const AdminOrders = () => {
 
 				return {
 					_id: plOrder._id,
+					id: plOrder._id,
 					orderNumber: plOrder._id.slice(-8).toUpperCase(),
 					orderStatus,
 					paymentStatus: plOrder.repaymentStatus === 'paid' ? 'paid' : 'pending',
 					paymentMethod: 'pay_later' as const,
 					totalAmount: plOrder.totalAmount,
+					totalItems: 0,
 					createdAt: plOrder.createdAt,
 					updatedAt: plOrder.createdAt,
 					items: [],
@@ -801,6 +803,13 @@ const AdminOrders = () => {
 					},
 					statusHistory: [],
 					notes: '',
+					summary: {
+						totalItems: 0,
+						ItemCount: 0,
+						totalAmountInNaira: plOrder.totalAmount,
+						status: orderStatus,
+						paymentStatus: plOrder.repaymentStatus === 'paid' ? 'paid' : 'pending',
+					},
 				};
 			});
 		}
@@ -819,24 +828,22 @@ const AdminOrders = () => {
 
 		if (orderTypeFilter === "all") return orders;
 
-		// For pay_later from regular orders API (edge case)
-		if (orderTypeFilter === "pay_later") {
-			return orders.filter(order => order.paymentMethod === "pay_later");
-		}
-
 		return orders.filter((order) => {
-			switch (orderTypeFilter) {
-				case "group_sharing":
-					return order.groupOrder?.isGroupOrder === true;
-				case "deal_of_day":
-					return order.items?.some(item => item.deal);
-				case "regular":
-					return !order.groupOrder?.isGroupOrder &&
-						   order.paymentMethod !== "pay_later" &&
-						   !order.items?.some(item => item.deal);
-				default:
-					return true;
+			if (orderTypeFilter === "pay_later") {
+				return order.paymentMethod === "pay_later";
 			}
+			if (orderTypeFilter === "group_sharing") {
+				return order.groupOrder?.isGroupOrder === true;
+			}
+			if (orderTypeFilter === "deal_of_day") {
+				return order.items?.some(item => item.deal);
+			}
+			if (orderTypeFilter === "regular") {
+				return !order.groupOrder?.isGroupOrder &&
+					   order.paymentMethod !== "pay_later" &&
+					   !order.items?.some(item => item.deal);
+			}
+			return true;
 		});
 	}, [orders, orderTypeFilter, shouldFetchPayLater]);
 
