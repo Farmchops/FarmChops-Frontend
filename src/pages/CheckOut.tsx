@@ -837,7 +837,7 @@ const Checkout: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Expires:</span>
-                                <span className="text-gray-900">7 days</span>
+                                <span className="text-gray-900">1hr</span>
                             </div>
                         </div>
 
