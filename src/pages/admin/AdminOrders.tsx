@@ -821,29 +821,30 @@ const AdminOrders = () => {
 
 	// Filter orders by type
 	const filteredOrders = useMemo<AdminOrder[]>(() => {
-		// If fetching Pay Later orders, they're already filtered
+		// Handle "all" filter
+		if (orderTypeFilter === "all") return orders;
+
+		// If fetching Pay Later orders from separate API, they're already filtered
 		if (orderTypeFilter === "pay_later" && shouldFetchPayLater) {
 			return orders;
 		}
 
-		if (orderTypeFilter === "all") return orders;
-
+		// Filter based on order type
 		return orders.filter((order) => {
-			if (orderTypeFilter === "pay_later") {
-				return order.paymentMethod === "pay_later";
+			switch (orderTypeFilter) {
+				case "pay_later":
+					return order.paymentMethod === "pay_later";
+				case "group_sharing":
+					return order.groupOrder?.isGroupOrder === true;
+				case "deal_of_day":
+					return order.items?.some(item => item.deal);
+				case "regular":
+					return !order.groupOrder?.isGroupOrder &&
+						   order.paymentMethod !== "pay_later" &&
+						   !order.items?.some(item => item.deal);
+				default:
+					return true;
 			}
-			if (orderTypeFilter === "group_sharing") {
-				return order.groupOrder?.isGroupOrder === true;
-			}
-			if (orderTypeFilter === "deal_of_day") {
-				return order.items?.some(item => item.deal);
-			}
-			if (orderTypeFilter === "regular") {
-				return !order.groupOrder?.isGroupOrder &&
-					   order.paymentMethod !== "pay_later" &&
-					   !order.items?.some(item => item.deal);
-			}
-			return true;
 		});
 	}, [orders, orderTypeFilter, shouldFetchPayLater]);
 
