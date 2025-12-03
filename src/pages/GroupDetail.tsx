@@ -1101,7 +1101,7 @@ const GroupDetail = () => {
                     <span className="text-gray-400">Enter address</span>
                   )}
                 </div>
-                {checkoutData && (
+                {checkoutData && checkoutData.totals.tax !== undefined && (
                   <div className="flex justify-between text-sm">
                     <span>Tax (7.5%):</span>
                     <span className="font-semibold">{formatCurrency(checkoutData.totals.tax)}</span>

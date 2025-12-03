@@ -684,7 +684,7 @@ const Checkout: React.FC = () => {
                                         <p>🕒 Duration: {checkoutData.delivery.durationText}</p>
                                     </div>
                                 )}
-                                {checkoutData && (
+                                {checkoutData && checkoutData.totals.tax !== undefined && (
                                     <div className="flex justify-between text-gray-600">
                                         <span>Tax (7.5%):</span>
                                         <span className="font-medium">₦{checkoutData.totals.tax.toLocaleString()}</span>
