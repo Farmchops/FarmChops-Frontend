@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, ChevronDown, LogOut, User, Home, ShoppingBag, Info, Phone, Users, CreditCard } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Home, ShoppingBag, Info, Phone, Users, CreditCard, Briefcase } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import cartnav from "../assets/cartnav.png";
@@ -117,6 +117,9 @@ const Navbar: React.FC = () => {
                         </Link>
                         <Link to="/about" className="hover:text-[#20571E]">
                             About Us
+                        </Link>
+                        <Link to="/services" className="hover:text-[#20571E]">
+                            Services
                         </Link>
                         <Link to="/products" className="hover:text-[#20571E]">
                             Products
@@ -268,6 +271,16 @@ const Navbar: React.FC = () => {
                             >
                                 <CreditCard size={18} className="mr-3 text-gray-500" />
                                 <span>Pay Later</span>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                to="/services"
+                                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <Briefcase size={18} className="mr-3 text-gray-500" />
+                                <span>Services</span>
                             </Link>
                         </li>
                         <li>

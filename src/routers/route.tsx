@@ -5,6 +5,11 @@ import App from "../App";
 // Public pages
 import Home from "../pages/Home";
 import About from "../pages/About";
+import Services from "../pages/Services";
+import FAQ from "../pages/FAQ";
+import CustomerSupport from "../pages/CustomerSupport";
+import TermsAndConditions from "../pages/TermsAndConditions";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
 import Products from "../pages/Products";
 import ProductDetail from "@/components/Product/ProductDetail";
 import Contacts from "../pages/Contacts";
@@ -83,6 +88,11 @@ const router = createBrowserRouter([
         children: [
             { path: "/", element: <Home /> },
             { path: "/about", element: <About /> },
+            { path: "/services", element: <Services /> },
+            { path: "/faq", element: <FAQ /> },
+            { path: "/support", element: <CustomerSupport /> },
+            { path: "/terms", element: <TermsAndConditions /> },
+            { path: "/privacy", element: <PrivacyPolicy /> },
             { path: "/products", element: <Products /> },
             { path: "/deals", element: <DealOfTheDay /> },
             { path: "/contact", element: <Contacts /> },

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { FaTwitter, FaFacebookF, FaInstagram, FaPinterestP } from "react-icons/fa";
 import foodArtLeft from "../assets/footerfoodart1.png"; // replace with your left food art image
 import foodArtRight from "../assets/footerfoodart2.png"; // replace with your right food art image
@@ -23,57 +24,49 @@ const Footer: React.FC = () => {
             />
 
             {/* Footer content */}
-            <div className="container mx-auto px-4 flex flex-col md:flex-row md:justify-between md:items-center gap-8 relative z-10">
-
-                {/* Logo + social */}
-                <div className="md:w-1/4">
-                    <img src={logo} alt="Farmchops logo" className=" mb-4" />
-                    <p className="text-sm text-green-100 mb-4">
-                        Fresh, organic produce delivered straight from local farms to your doorstep.
-                    </p>
-                    <div className="flex gap-3 text-white">
-                        <a href="#"><FaTwitter /></a>
-                        <a href="#"><FaFacebookF /></a>
-                        <a href="#"><FaInstagram /></a>
-                        <a href="#"><FaPinterestP /></a>
+            <div className="container mx-auto px-4 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                    {/* Logo + social */}
+                    <div>
+                        <img src={logo} alt="Farmchops logo" className="mb-4" />
+                        <p className="text-sm text-green-100 mb-4">
+                            Fresh, organic produce delivered straight from local farms to your doorstep.
+                        </p>
+                        <div className="flex gap-3 text-white">
+                            <a href="#"><FaTwitter /></a>
+                            <a href="#"><FaFacebookF /></a>
+                            <a href="#"><FaInstagram /></a>
+                            <a href="#"><FaPinterestP /></a>
+                        </div>
                     </div>
-                </div>
 
-                {/* Links */}
-                <div className=" gap-8 ">
+                    {/* Company Links */}
+                    <div>
                         <h4 className="font-semibold mb-3">Company</h4>
                         <ul className="space-y-2 text-green-100 text-sm">
-                            <li><a href="#">Service</a></li>
-                            <li><a href="#">Resources</a></li>
-                            <li><a href="#">About us</a></li>
+                            <li><Link to="/services" className="hover:text-white transition-colors">Service</Link></li>
+                            <li><Link to="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
+                            <li><Link to="/about" className="hover:text-white transition-colors">About us</Link></li>
                         </ul>
-                </div>
+                    </div>
 
-                <div className=" gap-8 ">
-                    <h4 className="font-semibold mb-3">Help</h4>
-                    <ul className="space-y-2 text-green-100 text-sm">
-                        <li><a href="#">Customer Support</a></li>
-                        <li><a href="#">Terms & Conditions</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                    </ul>
-                </div>
+                    {/* Help Links */}
+                    <div>
+                        <h4 className="font-semibold mb-3">Help</h4>
+                        <ul className="space-y-2 text-green-100 text-sm">
+                            <li><Link to="/support" className="hover:text-white transition-colors">Customer Support</Link></li>
+                            <li><Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+                            <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                        </ul>
+                    </div>
 
-                {/* Newsletter */}
-                <div className="md:w-1/4">
-                    <h4 className="font-semibold mb-3">Subscribe to Newsletter</h4>
-                    <form className="flex">
-                        <input
-                            type="email"
-                            placeholder="Enter email address"
-                            className="p-2 rounded-l-md w-full bg-white text-black focus:outline-none"
-                        />
-                        <button
-                            type="submit"
-                            className="bg-yellow-500 hover:bg-yellow-600 px-4 rounded-r-md text-black font-semibold"
-                        >
-                            Join
-                        </button>
-                    </form>
+                    {/* Location */}
+                    <div>
+                        <h4 className="font-semibold mb-3">Location</h4>
+                        <p className="text-sm text-green-100">
+                            Abuja, Nigeria
+                        </p>
+                    </div>
                 </div>
             </div>
         </footer>
