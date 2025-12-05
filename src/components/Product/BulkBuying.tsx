@@ -179,9 +179,9 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                 onClick={handleClose}
             />
 
-            {/* Drawer - Full width on mobile, fixed width on larger screens */}
+            {/* Drawer - Nearly full width on mobile, fixed width on larger screens */}
             <div
-                className={`ml-auto w-full sm:w-[90%] md:w-[420px] h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "translate-x-full"
+                className={`ml-auto w-[95%] sm:w-[90%] md:w-[420px] h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "translate-x-full"
                     } overflow-y-auto relative flex flex-col`}
             >
                 {/* Close Button */}
@@ -228,7 +228,7 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                                         <img
                                             src={product.images[0]}
                                             alt={product.name}
-                                            className="w-12 h-12 sm:w-10 sm:h-10 object-cover rounded-lg flex-shrink-0"
+                                            className="w-16 h-16 sm:w-12 sm:h-12 object-cover rounded-lg flex-shrink-0"
                                         />
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2">
@@ -249,7 +249,7 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                                                     handleQuantityChange(tier, "subtract");
                                                 }}
                                                 disabled={multiplier <= 1}
-                                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                                 aria-label="Decrease quantity"
                                             >
                                                 <Minus size={14} className="sm:w-4 sm:h-4" />
@@ -264,7 +264,7 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                                                     handleQuantityChange(tier, "add");
                                                 }}
                                                 disabled={multiplier >= maxMultiplier}
-                                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 aria-label="Increase quantity"
                                             >
                                                 <Plus size={14} className="sm:w-4 sm:h-4" />

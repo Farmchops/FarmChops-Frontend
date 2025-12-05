@@ -177,7 +177,7 @@ const Navbar: React.FC = () => {
                         >
                             <ShoppingBag size={22} />
                             {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-[#1D7B3C] text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center">
+                                <span className="absolute -top-1 -right-1 bg-[#1D7B3C] text-white text-[10px] font-medium rounded-full w-5 h-5 flex items-center justify-center">
                                     {cartCount}
                                 </span>
                             )}
@@ -204,7 +204,7 @@ const Navbar: React.FC = () => {
 
             {/* Mobile Menu */}
             <aside
-                className={`fixed top-0 right-0 h-full w-72 bg-white shadow-xl z-50 transform transition-transform duration-200 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                className={`fixed top-0 right-0 h-full w-[85vw] sm:w-72 max-w-sm bg-white shadow-xl z-50 transform transition-transform duration-200 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
             >
                 {/* Mobile Menu Header */}
                 <div className="flex justify-between items-center p-4 border-b h-16">
@@ -221,7 +221,7 @@ const Navbar: React.FC = () => {
                 </div>
 
                 {/* Mobile Menu Items */}
-                <nav className="py-2 overflow-y-auto h-[calc(100%-4rem)]">
+                <nav className="py-2 overflow-y-auto h-[calc(100%-4rem)] pb-4">
                     <ul className="space-y-1">
                         <li>
                             <Link
@@ -367,11 +367,11 @@ const Navbar: React.FC = () => {
                             </>
                         )}
                         
-                        {/* Cart Button - Fixed at bottom */}
-                        <li className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-3">
+                        {/* Cart Button - Within scrollable area */}
+                        <li className="mt-4 px-3 pb-2">
                             <Link
                                 to="/cart"
-                                className="flex items-center justify-center gap-2 w-full bg-[#1D7B3C] text-white py-2.5 px-4 rounded-md font-medium text-sm"
+                                className="flex items-center justify-center gap-2 w-full bg-[#1D7B3C] text-white py-3 px-4 rounded-md font-medium text-sm"
                                 onClick={() => setIsOpen(false)}
                             >
                                 <ShoppingBag size={18} />

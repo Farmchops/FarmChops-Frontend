@@ -97,9 +97,9 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                 onClick={onClose}
             />
 
-            {/* Sidebar - Full width on mobile, fixed width on larger screens */}
+            {/* Sidebar - Nearly full width on mobile, fixed width on larger screens */}
             <div
-                className={`ml-auto w-full sm:w-[90%] md:w-[420px] h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+                className={`ml-auto w-[95%] sm:w-[90%] md:w-[420px] h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
                     open ? "translate-x-0" : "translate-x-full"
                 } overflow-y-auto relative flex flex-col`}
             >
@@ -157,7 +157,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                                             <img
                                                 src={item.image}
                                                 alt={item.name}
-                                                className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                                                className="w-20 h-20 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
                                             />
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-medium text-sm text-gray-900 line-clamp-1">
@@ -191,7 +191,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                                                 <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                                                     <button
                                                         type="button"
-                                                        className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50 text-lg font-medium shadow-sm"
+                                                        className="w-10 h-10 flex items-center justify-center rounded-md bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50 text-lg font-medium shadow-sm"
                                                         disabled={isUpdating || item.quantity <= 1}
                                                         onClick={async () => {
                                                             if (item.quantity > 1) {
@@ -210,7 +210,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                                                     <span className="text-sm font-semibold text-gray-900 min-w-[32px] text-center">{item.quantity}</span>
                                                     <button
                                                         type="button"
-                                                        className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50 text-lg font-medium shadow-sm"
+                                                        className="w-10 h-10 flex items-center justify-center rounded-md bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50 text-lg font-medium shadow-sm"
                                                         disabled={isUpdating}
                                                         onClick={async () => {
                                                             await updateCartItem({

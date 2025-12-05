@@ -108,11 +108,11 @@ export const SortBar: React.FC<SortBarProps> = ({
                 </div>
 
                 {/* Right side - aligned with products grid (75% width on large screens) */}
-                <div className="flex-1 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex-1 flex flex-col sm:flex-row items-center gap-4">
                     {/* Search and Sort - left aligned */}
                     <div className="flex items-stretch border border-gray-300 rounded-lg overflow-hidden bg-white">
                         {/* Search */}
-                        <div className="relative w-48 sm:w-64">
+                        <div className="relative w-56 sm:w-64">
                             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                             <input
                                 type="text"
@@ -141,12 +141,6 @@ export const SortBar: React.FC<SortBarProps> = ({
                             </Select>
                         </div>
                     </div>
-
-                    {/* Results Count */}
-                    <p className="text-[#666666] text-sm whitespace-nowrap">
-                        <span className="text-[#1A1A1A] font-medium">{totalResults}</span>{" "}
-                        Results Found
-                    </p>
                 </div>
             </div>
         </div>

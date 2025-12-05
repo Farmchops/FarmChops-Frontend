@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     <img
                         src={product.images[0]}
                         alt={product.name}
-                        className={`w-full h-40 md:h-60 object-cover ${isOutOfStock ? "opacity-50 grayscale" : ""
+                        className={`w-full h-48 md:h-60 object-cover ${isOutOfStock ? "opacity-50 grayscale" : ""
                             }`}
                     />
                 </div>
@@ -131,10 +131,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <div className="px-3 pb-3 space-y-2 mt-auto relative" ref={dropdownRef}>
                     {/* Price Display with unit in parentheses - PricePally style */}
                     <div className="flex items-baseline gap-1">
-                        <p className="text-sm md:text-base font-semibold text-[#1A1A1A]">
+                        <p className="text-base md:text-lg font-semibold text-[#1A1A1A]">
                             ₦{product.pricing.retail.price.toLocaleString()}
                         </p>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-sm md:text-base text-gray-500">
                             ({product.pricing.retail.unit})
                         </span>
                     </div>
@@ -143,7 +143,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     <button
                         type="button"
                         onClick={handleOptionsClick}
-                        className="flex items-center justify-center gap-1 text-sm text-gray-700 hover:text-[#1D7B3C] transition w-full pb-1"
+                        className="flex items-center justify-center gap-1 text-sm text-gray-700 hover:text-[#1D7B3C] transition w-full py-3"
                     >
                         Options: {allTiers.length}
                         <ChevronDown size={16} className={`text-gray-600 transition-transform ${showOptionsDropdown ? 'rotate-180' : ''}`} />
@@ -185,7 +185,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         type="button"
                         onClick={() => setShowBulkModal(true)}
                         disabled={isOutOfStock}
-                        className={`w-full flex items-center justify-center gap-1 px-4 py-2 rounded-md text-white text-xs transition ${isOutOfStock
+                        className={`w-full flex items-center justify-center gap-1 px-4 py-3 rounded-md text-white text-xs transition ${isOutOfStock
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-[#1D7B3C] hover:bg-green-700"
                             }`}

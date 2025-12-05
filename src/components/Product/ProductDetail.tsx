@@ -1,7 +1,7 @@
 // src/pages/ProductDetail.tsx - UPDATED for bulkTiers
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Star, Flame } from "lucide-react";
+import { ArrowLeft, Flame } from "lucide-react";
 import cartImg from "../../assets/cart.svg";
 import { useGetProductBySlugQuery } from "../../redux/api/productApi";
 import { BulkBuying } from "../../components/Product/BulkBuying";
@@ -362,16 +362,6 @@ const ProductDetail: React.FC = () => {
                         {/* Title */}
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
-                                    <Star size={16} className="text-yellow-400 fill-yellow-400" />
-                                    <span>4.5 (125 reviews)</span>
-                                </div>
-                                <span>•</span>
-                                <span>{product.stats.orderCount} orders</span>
-                                <span>•</span>
-                                <span>{product.stats.viewCount} views</span>
-                            </div>
                         </div>
 
                         {/* Description */}
@@ -576,7 +566,7 @@ const ProductDetail: React.FC = () => {
                         {/* Action Buttons */}
                         <div className="space-y-3 pt-4">
                             {canBuyBulk ? (
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
                                     <button
                                         onClick={handleRetailAddToCart}
                                         disabled={primaryButtonDisabled}

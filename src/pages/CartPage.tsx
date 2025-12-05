@@ -454,7 +454,7 @@ const CartPage: React.FC = () => {
                                         handleQuantityChange(item, "subtract");
                                       }}
                                       disabled={isUpdating || isRemoving || item.quantity <= 1}
-                                      className="flex-1 px-3 py-2 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className="flex-1 px-3 py-3 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                       aria-label="Decrease quantity"
                                     >
                                       <Minus size={16} />
@@ -468,7 +468,7 @@ const CartPage: React.FC = () => {
                                         handleQuantityChange(item, "add");
                                       }}
                                       disabled={isUpdating || isRemoving}
-                                      className="flex-1 px-3 py-2 text-gray-600 hover:bg-gray-50"
+                                      className="flex-1 px-3 py-3 text-gray-600 hover:bg-gray-50"
                                       aria-label="Increase quantity"
                                     >
                                       <Plus size={16} />
@@ -480,7 +480,7 @@ const CartPage: React.FC = () => {
                                 <div className="pt-2">
                                   <button
                                     onClick={() => handleRemoveItem(item.productId, item.priceType, item.tierName, item.dealId ?? null)}
-                                    className="w-full py-2 px-4 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200 flex items-center justify-center space-x-2"
+                                    className="w-full py-3 px-4 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200 flex items-center justify-center space-x-2"
                                     disabled={isRemoving}
                                   >
                                     <Trash2 size={16} />

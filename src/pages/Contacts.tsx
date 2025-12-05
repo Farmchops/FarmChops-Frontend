@@ -1,17 +1,62 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import Footer from '../components/Footer';
 
 const Contacts: React.FC = () => {
-
-
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [fullName, setFullName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, message, fullName });
+
+    // Basic validation
+    if (!email || !message || !fullName) {
+      setStatus('error');
+      setErrorMessage("Please fill in all fields");
+      return;
+    }
+
+    setIsLoading(true);
+    setStatus('idle');
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          message,
+          fullName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      setStatus('success');
+      // Reset form
+      setEmail("");
+      setMessage("");
+      setFullName("");
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setStatus('idle');
+      }, 5000);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage("Failed to send message. Please try again or contact us directly at support@farmchops.com");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -29,6 +74,22 @@ const Contacts: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Form */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {/* Success Message */}
+              {status === 'success' && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="text-sm">Message sent successfully! We'll get back to you soon.</span>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {status === 'error' && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                  <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm">{errorMessage}</span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm text-[#121212] mb-1">
                   Email Address
@@ -38,7 +99,9 @@ const Contacts: React.FC = () => {
                   placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md mb-3 outline-none placeholder:text-sm"
+                  required
+                  disabled={isLoading}
+                  className="w-full py-3 px-3 border border-[#E6E6E6] focus:border-[#1D7B3C] rounded-md mb-3 outline-none placeholder:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -50,8 +113,10 @@ const Contacts: React.FC = () => {
                   placeholder="Type your message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  rows={2}
-                  className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md mb-3 outline-none placeholder:text-sm resize-none"
+                  required
+                  disabled={isLoading}
+                  rows={4}
+                  className="w-full py-3 px-3 border border-[#E6E6E6] focus:border-[#1D7B3C] rounded-md mb-3 outline-none placeholder:text-sm resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -64,15 +129,25 @@ const Contacts: React.FC = () => {
                   placeholder="Enter full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md mb-3 outline-none placeholder:text-sm"
+                  required
+                  disabled={isLoading}
+                  className="w-full py-3 px-3 border border-[#E6E6E6] focus:border-[#1D7B3C] rounded-md mb-3 outline-none placeholder:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#1D7B3C] text-white py-2 rounded-lg hover:bg-green-800"
+                disabled={isLoading}
+                className="w-full bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
               >
-                Send Now
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <span>Send Now</span>
+                )}
               </button>
             </form>
 

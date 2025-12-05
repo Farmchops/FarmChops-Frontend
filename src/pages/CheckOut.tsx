@@ -516,7 +516,7 @@ const Checkout: React.FC = () => {
                                         onChange={handleInputChange}
                                         placeholder="Enter your full name"
                                         autoComplete="name"
-                                        className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
+                                        className="w-full px-4 py-3 md:py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                         required
                                     />
                                 </div>
@@ -531,7 +531,7 @@ const Checkout: React.FC = () => {
                                         onChange={handleInputChange}
                                         placeholder="+234 812 345 6789"
                                         autoComplete="tel"
-                                        className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
+                                        className="w-full px-4 py-3 md:py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                         required
                                     />
                                 </div>

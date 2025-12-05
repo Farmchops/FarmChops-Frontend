@@ -1,7 +1,7 @@
 import React from 'react'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Clock, CreditCard, Tag, Users, ShoppingCart, Zap } from 'lucide-react'
+import { ArrowRight, Clock, CreditCard, Tag, Users, ShoppingCart, Zap, Wallet } from 'lucide-react'
 
 const Services: React.FC = () => {
   const services = [
@@ -60,6 +60,20 @@ const Services: React.FC = () => {
         "Perfect for businesses and large families",
         "Share orders and split costs easily"
       ]
+    },
+    {
+      id: 5,
+      title: "FarmChops Wallet",
+      tagline: "Quick & Easy Payments",
+      description: "Load funds into your FarmChops wallet for faster checkouts and seamless transactions. Enjoy the convenience of instant payments and track your spending easily.",
+      icon: <Wallet className="w-12 h-12" />,
+      link: "/profile/wallet",
+      features: [
+        "Instant payment processing",
+        "No need to enter card details every time",
+        "Track your wallet balance and transactions",
+        "Secure and convenient payment method"
+      ]
     }
   ];
 
@@ -73,11 +87,6 @@ const Services: React.FC = () => {
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-            <Zap className="w-5 h-5 text-yellow-300" />
-            <span className="text-sm font-medium">Innovative Solutions for Smart Shopping</span>
-          </div>
-
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Our Services
           </h1>
@@ -156,11 +165,6 @@ const Services: React.FC = () => {
       {/* CTA Section */}
       <section className="px-6 md:px-12 lg:px-20 py-16 md:py-20 bg-gradient-to-br from-green-50 to-emerald-50">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-6">
-            <Clock className="w-5 h-5 text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-800">Available 24/7</span>
-          </div>
-
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Ready to Get Started?
           </h2>

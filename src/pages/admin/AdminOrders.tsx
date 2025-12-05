@@ -741,18 +741,22 @@ const AdminOrders = () => {
 
 	// Conditionally fetch from Pay Later API or regular Orders API
 	const shouldFetchPayLater = orderTypeFilter === "pay_later";
+	const shouldFetchBoth = orderTypeFilter === "all";
 
 	const { data: ordersResponse, isLoading: isLoadingOrders, isFetching: isFetchingOrders, refetch: refetchOrders } = useGetOrdersQuery(
 		shouldFetchPayLater ? skipToken : queryArgs
 	);
 
 	const { data: payLaterResponse, isLoading: isLoadingPayLater, isFetching: isFetchingPayLater, refetch: refetchPayLater } = useGetAdminPayLaterOrdersQuery(
-		shouldFetchPayLater ? undefined : skipToken
+		(shouldFetchPayLater || shouldFetchBoth) ? undefined : skipToken
 	);
 
-	const isLoading = shouldFetchPayLater ? isLoadingPayLater : isLoadingOrders;
-	const isFetching = shouldFetchPayLater ? isFetchingPayLater : isFetchingOrders;
-	const refetch = shouldFetchPayLater ? refetchPayLater : refetchOrders;
+	const isLoading = shouldFetchBoth ? (isLoadingOrders || isLoadingPayLater) : (shouldFetchPayLater ? isLoadingPayLater : isLoadingOrders);
+	const isFetching = shouldFetchBoth ? (isFetchingOrders || isFetchingPayLater) : (shouldFetchPayLater ? isFetchingPayLater : isFetchingOrders);
+	const refetch = () => {
+		refetchOrders();
+		refetchPayLater();
+	};
 
 	const [triggerOrderAction, { isLoading: isActionSubmitting }] = useTriggerOrderActionMutation();
 
@@ -768,11 +772,8 @@ const AdminOrders = () => {
 	);
 
 	const orders = useMemo<AdminOrder[]>(() => {
-		if (shouldFetchPayLater) {
-			const payload = payLaterResponse?.data;
-			if (!payload) return [];
-			// PayLater orders need to be converted to AdminOrder format
-			const payLaterOrders = payload.orders ?? [];
+		// Helper function to convert PayLater orders to AdminOrder format
+		const convertPayLaterOrders = (payLaterOrders: PayLaterOrder[]): AdminOrder[] => {
 			return payLaterOrders.map((plOrder: PayLaterOrder): AdminOrder => {
 				// Map PayLater order status to OrderStatus
 				const orderStatus: OrderStatus = plOrder.orderStatus === 'shipped' ? 'en_route' : plOrder.orderStatus;
@@ -812,12 +813,35 @@ const AdminOrders = () => {
 					},
 				};
 			});
+		};
+
+		// Get regular orders
+		const regularOrdersPayload = ordersResponse?.data;
+		const regularOrders: AdminOrder[] = regularOrdersPayload
+			? (Array.isArray(regularOrdersPayload) ? (regularOrdersPayload as AdminOrder[]) : regularOrdersPayload.orders ?? [])
+			: [];
+
+		// Get Pay Later orders
+		const payLaterPayload = payLaterResponse?.data;
+		const payLaterOrders: AdminOrder[] = payLaterPayload
+			? convertPayLaterOrders(payLaterPayload.orders ?? [])
+			: [];
+
+		// If filtering by "all", merge both order types
+		if (shouldFetchBoth) {
+			return [...regularOrders, ...payLaterOrders].sort((a, b) =>
+				new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			);
 		}
 
-		const payload = ordersResponse?.data;
-		if (!payload) return [];
-		return Array.isArray(payload) ? (payload as AdminOrder[]) : payload.orders ?? [];
-	}, [ordersResponse, payLaterResponse, shouldFetchPayLater]);
+		// If filtering by "pay_later", return only Pay Later orders
+		if (shouldFetchPayLater) {
+			return payLaterOrders;
+		}
+
+		// Otherwise, return regular orders
+		return regularOrders;
+	}, [ordersResponse, payLaterResponse, shouldFetchPayLater, shouldFetchBoth]);
 
 	// Filter orders by type
 	const filteredOrders = useMemo<AdminOrder[]>(() => {
@@ -1142,7 +1166,6 @@ const AdminOrders = () => {
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div>
 					<h1 className="text-2xl font-semibold text-[#1D7B3C]">Orders workflow</h1>
-					<p className="text-sm text-gray-500">Track each stage and collaborate with the fulfilment teams in real-time.</p>
 				</div>
 				<div className="flex items-center gap-3">
 					<div
