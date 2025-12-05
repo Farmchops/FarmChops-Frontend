@@ -90,7 +90,6 @@ interface SortBarProps {
 }
 
 export const SortBar: React.FC<SortBarProps> = ({
-    totalResults,
     searchTerm,
     onSearchChange,
     sortBy,

@@ -1,7 +1,7 @@
 import React from 'react'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Clock, CreditCard, Tag, Users, ShoppingCart, Zap, Wallet } from 'lucide-react'
+import { ArrowRight, CreditCard, Tag, Users, ShoppingCart, Wallet } from 'lucide-react'
 
 const Services: React.FC = () => {
   const services = [
