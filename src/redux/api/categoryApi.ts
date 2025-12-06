@@ -88,7 +88,7 @@ export const categoryApi = createApi({
         // Create category (Admin only)
         createCategory: builder.mutation<ApiResponse<CategoryDetailResponse>, FormData>({
             query: (formData) => ({
-                url: '/categories/admin',
+                url: '/categories/admin/categories',
                 method: 'POST',
                 body: formData,
             }),
@@ -101,7 +101,7 @@ export const categoryApi = createApi({
             { id: string; body: { name?: string; description?: string; isActive?: boolean } }
         >({
             query: ({ id, body }) => ({
-                url: `/categories/admin/${id}`,
+                url: `/categories/admin/categories/${id}`,
                 method: 'PUT',
                 body,
                 headers: {
@@ -117,7 +117,7 @@ export const categoryApi = createApi({
         // Delete category (Admin only)
         deleteCategory: builder.mutation<ApiResponse<DeleteCategoryResponse>, string>({
             query: (id) => ({
-                url: `/categories/admin/${id}`,
+                url: `/categories/admin/categories/${id}`,
                 method: 'DELETE',
             }),
             invalidatesTags: [{ type: 'Categories', id: 'LIST' }],
