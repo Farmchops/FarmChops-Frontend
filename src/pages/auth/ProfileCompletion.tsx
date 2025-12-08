@@ -6,6 +6,8 @@ import Footer from "../../components/Footer";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { useUpdateProfileMutation } from "../../redux/api/authApi";
 import type { RootState } from "../../redux/store";
+import { HybridAddressInput } from "@/components/Checkout/HybridAddressInput";
+
 
 interface ProfileFormData {
     firstName: string;
@@ -15,6 +17,48 @@ interface ProfileFormData {
 }
 
 type ErrorMessages = Record<string, string>;
+
+// Error typing helpers for safer unknown error handling
+interface ApiErrorData { message?: string }
+interface ApiError { data?: ApiErrorData; message?: string }
+const getErrorMessage = (e: unknown, fallback: string): string => {
+    if (typeof e === 'object' && e !== null) {
+        const maybe = e as Partial<ApiError>;
+        if (maybe.data && typeof maybe.data === 'object' && typeof maybe.data.message === 'string') {
+            return maybe.data.message;
+        }
+        if (typeof maybe.message === 'string') return maybe.message;
+    }
+    return fallback;
+};
+
+const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
+
+
+const loadGoogleMapsScript = (apiKey?: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        if (!apiKey) {
+            reject(new Error("Google Maps API key not provided"));
+            return;
+        }
+
+        const existing = document.getElementById("google-maps-script");
+        if (existing) {
+            existing.addEventListener("load", () => resolve());
+            existing.addEventListener("error", () => reject(new Error("Google Maps script failed to load")));
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.id = "google-maps-script";
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&libraries=places&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Google Maps script failed to load"));
+        document.head.appendChild(script);
+    });
+};
 
 export default function ProfileCompletion() {
     const navigate = useNavigate();
@@ -37,13 +81,29 @@ export default function ProfileCompletion() {
     const [errors, setErrors] = useState<ErrorMessages>({});
     const [serverError, setServerError] = useState<string>("");
 
-    useEffect(() => {
+        useEffect(() => {
         if (!isAuthenticated) {
             navigate("/login");
         } else if (profileComplete) {
             navigate("/products");
         }
     }, [isAuthenticated, profileComplete, navigate]);
+
+    // Preload Google Places for address autocomplete
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                await loadGoogleMapsScript(GOOGLE_API_KEY);
+                if (!mounted) return;
+                // Optional: console.log("Google Maps loaded for ProfileCompletion");
+            } catch (err) {
+                console.error("Failed to load Google Maps script:", err);
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
+
 
     const validate = (): boolean => {
         const newErrors: ErrorMessages = {};
@@ -88,9 +148,10 @@ export default function ProfileCompletion() {
             } else {
                 setServerError(result.message);
             }
-        } catch (error: any) {
-            setServerError(error?.data?.message || "Failed to update profile. Please try again.");
+                } catch (error: unknown) {
+            setServerError(getErrorMessage(error, "Failed to update profile. Please try again."));
         }
+
     };
 
     if (!isAuthenticated) return null;
@@ -149,18 +210,25 @@ export default function ProfileCompletion() {
                         <p className="text-red-500 text-xs mb-3">{errors.phone}</p>
                     )}
 
-                    <textarea
-                        name="address"
-                        placeholder="Full Address"
+                                        <HybridAddressInput
                         value={formData.address}
-                        onChange={handleChange}
+                        onAddressChange={(value) => {
+                            setFormData(prev => ({ ...prev, address: value }));
+                            if (errors.address) setErrors(prev => ({ ...prev, address: "" }));
+                            setServerError("");
+                        }}
+                        onAddressSelect={(details) => {
+                            setFormData(prev => ({ ...prev, address: details.fullAddress }));
+                        }}
+                        googleApiKey={GOOGLE_API_KEY}
+                        customApiEndpoint="/api/addresses/search"
+                        placeholder="Search your address (e.g., Wuse 2, Jabi, Gwarinpa)..."
                         disabled={isLoading}
-                        rows={3}
-                        className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md mb-3 outline-none placeholder:text-sm disabled:bg-gray-50 resize-none"
                     />
                     {errors.address && (
                         <p className="text-red-500 text-xs mb-3">{errors.address}</p>
                     )}
+
 
                     {serverError && (
                         <p className="text-red-500 text-sm mb-3 text-center">{serverError}</p>

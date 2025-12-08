@@ -9,8 +9,7 @@ import {
 	MapPin,
 	Package,
 	RefreshCcw,
-	Search,
-	Signal,
+		Search,
 	ShieldCheck,
 	Truck,
 	Users,
@@ -720,7 +719,8 @@ const AdminOrders = () => {
 	const [requestedAction, setRequestedAction] = useState<OrderWorkflowAction | null>(null);
 	const [actionError, setActionError] = useState<string | null>(null);
 	const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-	const [connectionState, setConnectionState] = useState<"connecting" | "online" | "offline">("connecting");
+	const [, setConnectionState] = useState<"connecting" | "online" | "offline">("connecting");
+
 
 	const PAGE_SIZE = 60;
 	const DEFAULT_PAGE = 1;
@@ -1167,18 +1167,7 @@ const AdminOrders = () => {
 				<div>
 					<h1 className="text-2xl font-semibold text-[#1D7B3C]">Orders workflow</h1>
 				</div>
-				<div className="flex items-center gap-3">
-					<div
-						className={cn(
-							"flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium",
-							connectionState === "online"
-								? "bg-[#1D7B3C]/10 text-[#1D7B3C]"
-								: "bg-amber-100 text-amber-700"
-						)}
-					>
-						<Signal className="h-3.5 w-3.5" />
-						{connectionState === "online" ? "Live updates on" : connectionState === "connecting" ? "Connecting…" : "Live updates offline"}
-					</div>
+								<div className="flex items-center gap-3">
 					<button
 						onClick={() => refetch()}
 						type="button"
