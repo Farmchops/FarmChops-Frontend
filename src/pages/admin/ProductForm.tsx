@@ -20,6 +20,41 @@ interface BulkTierForm {
     minQuantity: string;
 }
 
+type FormState = {
+    name: string;
+    description: string;
+    category: string;
+    availableStock: string;
+    lowStockThreshold: string;
+    unit: string;
+    retailPrice: string;
+    retailUnit: string;
+    retailMinQty: string;
+    bulkPrice: string;
+    bulkUnit: string;
+    bulkMinQty: string;
+    status: string;
+    tags: string;
+};
+
+type UnitField = "unit" | "retailUnit";
+
+const UNIT_OPTIONS = [
+    { value: "kg", label: "Kilogram (kg)" },
+    { value: "g", label: "Gram (g)" },
+    { value: "ton", label: "Ton" },
+    { value: "bag", label: "Bag" },
+    { value: "box", label: "Box" },
+    { value: "crate", label: "Crate" },
+    { value: "bundle", label: "Bundle" },
+    { value: "bunch", label: "Bunch" },
+    { value: "pack", label: "Pack" },
+    { value: "piece", label: "Piece" },
+    { value: "dozen", label: "Dozen" },
+    { value: "litre", label: "Litre (L)" },
+    { value: "ml", label: "Millilitre (ml)" },
+];
+
 const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess }) => {
     const { data: catData } = useGetCategoriesQuery();
     const categories = catData?.data?.categories || [];
@@ -31,7 +66,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         { id: '', name: '', price: '', unit: '', minQuantity: '' }
     ]);
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<FormState>({
         name: "",
         description: "",
         category: "",
@@ -53,6 +88,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState("");
+
+    const getUnitSelectValue = (value: string) => {
+        if (!value) return "";
+        return UNIT_OPTIONS.some(option => option.value === value) ? value : "custom";
+    };
+
+    const shouldShowCustomUnitInput = (value: string) => getUnitSelectValue(value) === "custom";
+
+    const handleUnitSelectChange = (field: UnitField) => (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedValue = event.target.value;
+        if (selectedValue === "custom") {
+            setForm(prev => ({ ...prev, [field]: prev[field] || "" }));
+            return;
+        }
+        setForm(prev => ({ ...prev, [field]: selectedValue }));
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: "" }));
+        }
+    };
 
     useEffect(() => {
         if (product?.pricing?.bulkTiers && product.pricing.bulkTiers.length > 0) {
@@ -426,15 +480,34 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Stock Unit
                                     </label>
-                                    <input
-                                        type="text"
-                                        name="unit"
-                                        value={form.unit}
-                                        onChange={handleChange}
-                                        disabled={isLoading}
-                                        placeholder="kg, pieces, bags, etc."
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C] disabled:bg-gray-100"
-                                    />
+                                    <div className="space-y-3">
+                                        <select
+                                            value={getUnitSelectValue(form.unit)}
+                                            onChange={handleUnitSelectChange("unit")}
+                                            disabled={isLoading}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C] disabled:bg-gray-100"
+                                        >
+                                            <option value="">Select Stock Unit</option>
+                                            {UNIT_OPTIONS.map(option => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                            <option value="custom">Custom...</option>
+                                        </select>
+
+                                        {shouldShowCustomUnitInput(form.unit) && (
+                                            <input
+                                                type="text"
+                                                name="unit"
+                                                value={form.unit}
+                                                onChange={handleChange}
+                                                disabled={isLoading}
+                                                placeholder="Enter custom stock unit"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C] disabled:bg-gray-100"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -508,15 +581,33 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-600 mb-1">Unit</label>
-                                            <input
-                                                type="text"
-                                                name="retailUnit"
-                                                value={form.retailUnit}
-                                                onChange={handleChange}
-                                                disabled={isLoading}
-                                                placeholder="per kg"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                                            />
+                                            <div className="space-y-3">
+                                                <select
+                                                    value={getUnitSelectValue(form.retailUnit)}
+                                                    onChange={handleUnitSelectChange("retailUnit")}
+                                                    disabled={isLoading}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                                >
+                                                    <option value="">Select Unit</option>
+                                                    {UNIT_OPTIONS.map(option => (
+                                                        <option key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </option>
+                                                    ))}
+                                                    <option value="custom">Custom...</option>
+                                                </select>
+                                                {shouldShowCustomUnitInput(form.retailUnit) && (
+                                                    <input
+                                                        type="text"
+                                                        name="retailUnit"
+                                                        value={form.retailUnit}
+                                                        onChange={handleChange}
+                                                        disabled={isLoading}
+                                                        placeholder="Enter custom unit"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
