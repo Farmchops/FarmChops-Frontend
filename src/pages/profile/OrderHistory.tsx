@@ -15,7 +15,7 @@ import {
 	Filter,
 } from "lucide-react";
 import { useGetOrderHistoryQuery } from "@/redux/api/orderApi";
-import type { OrderStatus, PaymentStatus } from "@/types/orders";
+import type { OrderStatus, PaymentStatus, Order } from "@/types/orders";
 
 const OrderHistory = () => {
   const navigate = useNavigate();
@@ -90,6 +90,29 @@ const OrderHistory = () => {
       month: "short",
       day: "numeric",
       year: "numeric",
+    });
+  };
+
+  const shouldDivideBy100 = (order: Order) => {
+    const summaryTotal = order.summary?.totalAmountInNaira;
+    if (typeof summaryTotal === "number" && summaryTotal > 0) {
+      const ratio = order.totalAmount / summaryTotal;
+      return ratio > 5;
+    }
+    return order.totalAmount >= 100_000;
+  };
+
+  const formatCurrency = (
+    amount: number | undefined | null,
+    usesMinorUnits: boolean
+  ) => {
+    if (typeof amount !== "number" || Number.isNaN(amount)) {
+      return "0";
+    }
+    const normalized = usesMinorUnits ? amount / 100 : amount;
+    return normalized.toLocaleString(undefined, {
+      minimumFractionDigits: Number.isInteger(normalized) ? 0 : 2,
+      maximumFractionDigits: 2,
     });
   };
 
@@ -217,11 +240,16 @@ const OrderHistory = () => {
 
         {/* Orders List */}
         <div className="space-y-4">
-                    {filteredOrders.map((order) => (
-            <div
-              key={order._id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
-            >
+          {filteredOrders.map((order) => {
+            const usesMinorUnits = shouldDivideBy100(order);
+            const formatMoney = (value: number | undefined | null) =>
+              formatCurrency(value, usesMinorUnits);
+
+            return (
+              <div
+                key={order._id}
+                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
+              >
               <div className="p-6">
                 {/* Order Header */}
                 <div className="flex items-start justify-between mb-4">
@@ -278,11 +306,11 @@ const OrderHistory = () => {
                               {displayName}
                             </p>
                             <p className="text-xs text-gray-600">
-                              Qty: {item.quantity} × ₦{(item.unitPrice / 100).toLocaleString()}
+                              Qty: {item.quantity} × ₦{formatMoney(item.unitPrice)}
                             </p>
                           </div>
                           <p className="font-medium text-gray-900">
-                            ₦{(item.totalPrice / 100).toLocaleString()}
+                            ₦{formatMoney(item.totalPrice)}
                           </p>
                         </div>
                       );
@@ -301,21 +329,21 @@ const OrderHistory = () => {
                 <div className="border-t pt-4 space-y-2 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal:</span>
-                    <span>₦{(order.subtotal / 100).toLocaleString()}</span>
+                    <span>₦{formatMoney(order.subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Delivery Fee:</span>
-                    <span>₦{(order.deliveryFee / 100).toLocaleString()}</span>
+                    <span>₦{formatMoney(order.deliveryFee)}</span>
                   </div>
                   {order.tax && (
                     <div className="flex justify-between text-gray-600">
                       <span>Tax (7.5%):</span>
-                      <span>₦{(order.tax / 100).toLocaleString()}</span>
+                      <span>₦{formatMoney(order.tax)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-semibold text-[#1D7B3C] pt-2 border-t">
                     <span>Total:</span>
-                    <span>₦{(order.totalAmount / 100).toLocaleString()}</span>
+                    <span>₦{formatMoney(order.totalAmount)}</span>
                   </div>
                 </div>
 
@@ -332,8 +360,9 @@ const OrderHistory = () => {
                 </div>
 
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* No Results */}

@@ -1,5 +1,5 @@
 import { skipToken } from "@reduxjs/toolkit/query";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	AlertTriangle,
 	BadgeCheck,
@@ -109,6 +109,22 @@ const resolveErrorMessage = (error: unknown): string => {
 		return data && "code" in data && data.code ? `${data.code}: ${baseMessage}` : baseMessage;
 	}
 	return "Failed to complete the action. Please retry.";
+};
+
+const getOrderCurrencyMeta = (order: AdminOrder) => {
+	const summaryTotal = typeof order.summary?.totalAmountInNaira === "number"
+		? order.summary.totalAmountInNaira
+		: undefined;
+	const usesNormalized = summaryTotal !== undefined;
+	const normalizeAmount = (value?: number | null) => {
+		if (typeof value !== "number" || Number.isNaN(value)) return 0;
+		return usesNormalized ? value : value / 100;
+	};
+	return {
+		usesNormalized,
+		normalizeAmount,
+		displayTotal: summaryTotal ?? normalizeAmount(order.totalAmount),
+	};
 };
 
 interface ActionFormValues {
@@ -395,12 +411,7 @@ interface OrderDetailPanelProps {
 
 const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLoading, actionError, actionSuccess }: OrderDetailPanelProps) => {
 	const statusConfig = getStatusConfig(order.orderStatus);
-	const totalNaira =
-		typeof order.summary?.totalAmountInNaira === "number"
-			? order.summary.totalAmountInNaira
-			: typeof order.totalAmount === "number"
-			? order.totalAmount / 100
-			: 0;
+	const { displayTotal: totalNaira, normalizeAmount } = getOrderCurrencyMeta(order);
 
 	const legacyNotes = order as AdminOrder & LegacyOrderNotes;
 	const buyerNote = legacyNotes.notes ?? legacyNotes.note ?? legacyNotes.orderNote ?? legacyNotes.customerNote ?? "-";
@@ -473,7 +484,7 @@ const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLo
 										order.items.map((item: OrderItem) => {
 											const productId = item.product?._id ?? item.product?.id ?? item.productName;
 											const itemName = item.productName || item.product?.name || "Item";
-											const lineTotal = typeof item.totalPrice === "number" ? item.totalPrice / 100 : 0;
+											const lineTotal = normalizeAmount(item.totalPrice);
 											return (
 												<div key={productId} className="flex items-center justify-between gap-4 border-b border-gray-200 bg-white px-4 py-3 text-sm last:border-b-0">
 													<div>
@@ -753,10 +764,10 @@ const AdminOrders = () => {
 
 	const isLoading = shouldFetchBoth ? (isLoadingOrders || isLoadingPayLater) : (shouldFetchPayLater ? isLoadingPayLater : isLoadingOrders);
 	const isFetching = shouldFetchBoth ? (isFetchingOrders || isFetchingPayLater) : (shouldFetchPayLater ? isFetchingPayLater : isFetchingOrders);
-	const refetch = () => {
+	const refetch = useCallback(() => {
 		refetchOrders();
 		refetchPayLater();
-	};
+	}, [refetchOrders, refetchPayLater]);
 
 	const [triggerOrderAction, { isLoading: isActionSubmitting }] = useTriggerOrderActionMutation();
 
@@ -880,25 +891,22 @@ const AdminOrders = () => {
 
 	// Export to Excel
 	const handleExportToExcel = () => {
-		const exportData = filteredOrders.map((order) => ({
+		const exportData = filteredOrders.map((order) => {
+			const { displayTotal } = getOrderCurrencyMeta(order);
+			return ({
 			"Order Number": order.orderNumber,
 			"Order Type": getOrderTypeLabel(order),
 			"Customer": formatName(order),
 			"Status": order.orderStatus,
 			"Payment Status": order.paymentStatus,
 			"Payment Method": order.paymentMethod,
-			"Total Amount": formatCurrency(
-				typeof order.summary?.totalAmountInNaira === "number"
-					? order.summary.totalAmountInNaira
-					: typeof order.totalAmount === "number"
-					? order.totalAmount / 100
-					: 0
-			),
+			"Total Amount": formatCurrency(displayTotal),
 			"Items": order.items?.length ?? 0,
 			"Created At": formatDateTime(order.createdAt),
 			"Delivery Address": order.deliveryInfo?.address ?? "-",
 			"Phone": order.deliveryInfo?.phoneNumber ?? "-",
-		}));
+			});
+		});
 
 		const worksheet = XLSX.utils.json_to_sheet(exportData);
 		const workbook = XLSX.utils.book_new();
@@ -964,6 +972,7 @@ const AdminOrders = () => {
 					</thead>
 					<tbody>
 						${filteredOrders.map((order) => {
+							const orderTotal = getOrderCurrencyMeta(order).displayTotal;
 							const orderType = getOrderTypeLabel(order);
 							const badgeClass =
 								orderType === "Group Sharing" ? "group-sharing" :
@@ -976,13 +985,7 @@ const AdminOrders = () => {
 									<td><span class="badge ${badgeClass}">${orderType}</span></td>
 									<td>${formatName(order)}</td>
 									<td>${order.orderStatus}</td>
-									<td>${formatCurrency(
-										typeof order.summary?.totalAmountInNaira === "number"
-											? order.summary.totalAmountInNaira
-											: typeof order.totalAmount === "number"
-											? order.totalAmount / 100
-											: 0
-									)}</td>
+									<td>${formatCurrency(orderTotal)}</td>
 									<td>${order.items?.length ?? 0}</td>
 									<td>${formatDateTime(order.createdAt)}</td>
 								</tr>
@@ -1326,7 +1329,7 @@ const AdminOrders = () => {
 												>
 													<div className="flex items-center justify-between text-sm font-semibold text-gray-900">
 														<span>{order.orderNumber}</span>
-														<span>{formatCurrency((order.summary?.totalAmountInNaira ?? order.totalAmount / 100) || 0)}</span>
+														<span>{formatCurrency(getOrderCurrencyMeta(order).displayTotal)}</span>
 													</div>
 													{orderTypeBadge && (
 														<div className="mt-1">
