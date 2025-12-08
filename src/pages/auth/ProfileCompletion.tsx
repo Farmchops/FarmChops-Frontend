@@ -33,6 +33,8 @@ const getErrorMessage = (e: unknown, fallback: string): string => {
 };
 
 const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
+const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? 'https://api.farmchops.com/api';
+const ADDRESS_SEARCH_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/addresses/search`;
 
 
 const loadGoogleMapsScript = (apiKey?: string): Promise<void> => {
@@ -221,7 +223,7 @@ export default function ProfileCompletion() {
                             setFormData(prev => ({ ...prev, address: details.fullAddress }));
                         }}
                         googleApiKey={GOOGLE_API_KEY}
-                        customApiEndpoint="/api/addresses/search"
+                        customApiEndpoint={ADDRESS_SEARCH_ENDPOINT}
                         placeholder="Search your address (e.g., Wuse 2, Jabi, Gwarinpa)..."
                         disabled={isLoading}
                     />

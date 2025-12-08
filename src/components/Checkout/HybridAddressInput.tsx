@@ -2,6 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Edit3, Search } from 'lucide-react';
 
+const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? 'https://api.farmchops.com/api';
+const DEFAULT_ADDRESS_SEARCH_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/addresses/search`;
+
 interface AddressDetails {
     fullAddress: string;
     area?: string;
@@ -42,7 +45,7 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
     onAddressSelect,
     onAddressChange,
     googleApiKey,
-    customApiEndpoint = '/api/addresses/search',
+    customApiEndpoint = DEFAULT_ADDRESS_SEARCH_ENDPOINT,
     placeholder = "Search for your address...",
     disabled = false,
 }) => {

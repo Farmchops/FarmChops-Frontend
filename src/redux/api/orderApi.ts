@@ -13,8 +13,10 @@ import type {
 } from '@/types/orders';
 import { walletApi } from './walletApi';
 
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
+
 const baseQuery = fetchBaseQuery({
-    baseUrl: '/api',
+    baseUrl: API_BASE_URL,
     credentials: 'include', // keep session cookies for cart/order flows (same-origin)
     prepareHeaders: (headers, { getState }) => {
         const token = (getState() as RootState).auth.token;
