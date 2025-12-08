@@ -47,10 +47,10 @@ const CustomerSupport: React.FC = () => {
               Speak directly with our support team.
             </p>
             <a
-              href="tel:+2341234567890"
+              href="tel:07077744060"
               className="text-[#1D7B3C] font-semibold hover:text-[#20571E]"
             >
-              +234 123 456 7890
+              07077744060
             </a>
           </div>
         </div>
