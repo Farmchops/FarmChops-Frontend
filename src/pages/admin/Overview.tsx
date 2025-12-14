@@ -161,9 +161,9 @@ const Overview: React.FC = () => {
     };
 
     // Map backend keys to display names
-    // Backend uses: completed/delivered, active/pending, cancelled
+    // Backend uses: completed/delivered, pending_payment, cancelled
     const delivered = getStatusData("completed", "delivered");
-    const pending = getStatusData("active", "pending");
+    const pending = getStatusData("pending_payment", "active");
     const cancelled = getStatusData("cancelled");
 
     return [

@@ -37,7 +37,7 @@ const OrderHistory = () => {
   // Get status badge styling
   const getStatusBadge = (status: OrderStatus) => {
   const statusStyles: Record<OrderStatus, { bg: string; text: string; icon: typeof Clock }> = {
-    pending: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock },
+    pending_payment: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock },
     ready_for_processing: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock },
     processing: { bg: "bg-blue-100", text: "text-blue-800", icon: Package },
     packed: { bg: "bg-blue-100", text: "text-blue-800", icon: Package },
@@ -50,7 +50,7 @@ const OrderHistory = () => {
     failed_delivery: { bg: "bg-red-100", text: "text-red-800", icon: XCircle },
   };
 
-  const config = statusStyles[status] ?? statusStyles.pending;
+  const config = statusStyles[status] ?? statusStyles.pending_payment;
   const Icon = config.icon;
 
   return (
@@ -215,7 +215,7 @@ const OrderHistory = () => {
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 appearance-none"
               >
                 <option value="all">All Orders</option>
-                <option value="pending">Pending</option>
+                <option value="pending_payment">Pending Payment</option>
                 <option value="processing">Processing</option>
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
@@ -421,9 +421,9 @@ const OrderHistory = () => {
           </div>
           <div className="bg-white rounded-lg shadow p-4 text-center">
             <p className="text-2xl font-bold text-yellow-600">
-              {orders.filter(o => o.orderStatus === "pending").length}
+              {orders.filter(o => o.orderStatus === "pending_payment").length}
             </p>
-            <p className="text-sm text-gray-600">Pending</p>
+            <p className="text-sm text-gray-600">Pending Payment</p>
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import type { PaginationMeta } from "./api";
 export type StageOwnerRole = 'operations' | 'processing' | 'packaging' | 'logistics' | 'rider' | 'support' | 'supervisor' | 'customer_support' | 'finance';
 
 export type OrderStatus =
-    | 'pending'
+    | 'pending_payment'
     | 'ready_for_processing'
     | 'processing'
     | 'packed'

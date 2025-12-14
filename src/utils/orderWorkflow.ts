@@ -74,12 +74,12 @@ export interface OrderActionConfig {
  * They are not assigned as stage owners and cannot perform workflow actions.
  */
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, OrderStatusConfig> = {
-  pending: {
-    key: "pending",
-    label: "Pending",
+  pending_payment: {
+    key: "pending_payment",
+    label: "Pending Payment",
     ownerRole: "operations",
     accent: "bg-yellow-500",
-    description: "Awaiting verification before processing",
+    description: "Awaiting payment verification before processing",
     nextActions: ["mark-processing", "cancel"],
   },
   ready_for_processing: {
@@ -295,7 +295,7 @@ export const getVisibleStatusesForRole = (
 	// Map each role to the statuses they should see
 	const roleStatusMap: Record<StageOwnerRole, OrderStatus[]> = {
 		// Operations sees early-stage orders
-		operations: ['pending', 'ready_for_processing', 'processing'],
+		operations: ['pending_payment', 'ready_for_processing', 'processing'],
 
 		// Processing team sees orders they're working on
 		processing: ['processing', 'packed', 'ready_for_dispatch'],
