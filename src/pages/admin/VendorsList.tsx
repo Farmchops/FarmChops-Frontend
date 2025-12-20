@@ -1,35 +1,35 @@
 
 import React, { useState } from 'react';
-import { useGetVendorsQuery, useUpdateVendorStatusMutation, useDeleteVendorMutation } from '@/redux/api/vendorsApi';
+import { useGetFarmersQuery, useUpdateFarmerStatusMutation, useDeleteFarmerMutation } from '@/redux/api/vendorsApi';
 import { Trash2 } from 'lucide-react';
 import type { ApiResponse } from '@/types/api';
 import AlertModal from '@/components/AlertModal';
 
-type VendorItem = { name?: string; description?: string; unit?: string };
-type Vendor = { _id: string; id?: string; firstName?: string; lastName?: string; address?: string; phone?: string; email?: string; status?: string; contact?: { phone?: string; email?: string }; items?: VendorItem[] };
+type FarmerItem = { name?: string; description?: string; unit?: string };
+type Farmer = { _id: string; id?: string; firstName?: string; lastName?: string; address?: string; phone?: string; email?: string; status?: string; contact?: { phone?: string; email?: string }; items?: FarmerItem[] };
 
-const VendorsList: React.FC = () => {
+const FarmersList: React.FC = () => {
   const [page, setPage] = useState(1);
-  const { data, error, isLoading, isFetching } = useGetVendorsQuery({ page, perPage: 20 });
-  const [updateStatus] = useUpdateVendorStatusMutation();
+  const { data, error, isLoading, isFetching } = useGetFarmersQuery({ page, perPage: 20 });
+  const [updateStatus] = useUpdateFarmerStatusMutation();
   const [updatingId, setUpdatingId] = React.useState<string | null>(null);
   const [localStatuses, setLocalStatuses] = React.useState<Record<string, string>>({});
-  const [deleteVendor] = useDeleteVendorMutation();
+  const [deleteFarmer] = useDeleteFarmerMutation();
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmTarget, setConfirmTarget] = React.useState<{ id?: string; name?: string } | null>(null);
 
   // Backend may return different shapes. Normalize safely using type guards.
   const raw = data as ApiResponse<unknown> | undefined;
-  let vendors: Vendor[] = [];
+  let farmers: Farmer[] = [];
   let meta: Record<string, unknown> | undefined = undefined;
 
   if (raw) {
-    // Case: { success:true, data: { vendors: [...], meta: {...} } }
+    // Case: { success:true, data: { vendors: [...], meta: {...} } } (backend returns 'vendors')
     if (raw.data && typeof raw.data === 'object' && !Array.isArray(raw.data)) {
       const dataObj = raw.data as Record<string, unknown>;
       if (Array.isArray(dataObj.vendors)) {
-        vendors = dataObj.vendors as Vendor[];
+        farmers = dataObj.vendors as Farmer[];
       }
       if (dataObj.meta && typeof dataObj.meta === 'object') {
         meta = dataObj.meta as Record<string, unknown>;
@@ -37,30 +37,30 @@ const VendorsList: React.FC = () => {
     }
 
     // Case: { success:true, vendors: [...] }
-    if (vendors.length === 0) {
+    if (farmers.length === 0) {
       const root = raw as unknown as Record<string, unknown>;
       if ('vendors' in root && Array.isArray(root['vendors'])) {
-        vendors = root['vendors'] as Vendor[];
+        farmers = root['vendors'] as Farmer[];
       }
     }
 
     // Case: { success:true, data: [...] }
-    if (vendors.length === 0 && Array.isArray(raw.data)) {
-      vendors = raw.data as Vendor[];
+    if (farmers.length === 0 && Array.isArray(raw.data)) {
+      farmers = raw.data as Farmer[];
     }
   }
 
   // Debug: log API response to console to help diagnose mismatched shapes
-  if (raw) console.debug('getVendors API response (normalized):', { raw, vendors, meta });
+  if (raw) console.debug('getFarmers API response (normalized):', { raw, farmers, meta });
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Vendors</h1>
+      <h1 className="text-2xl font-semibold mb-4">Farmers</h1>
 
       {isLoading ? (
-        <p>Loading vendors...</p>
+        <p>Loading farmers...</p>
       ) : error ? (
-        <p className="text-red-500">Failed to load vendors.</p>
+        <p className="text-red-500">Failed to load farmers.</p>
       ) : (
         <div>
           <table className="w-full table-auto border-collapse bg-white shadow-sm rounded">
@@ -76,26 +76,26 @@ const VendorsList: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {vendors.map((v, i) => {
-                const vendorPhone = v.phone ?? v.contact?.phone ?? '—';
-                const vendorEmail = v.email ?? v.contact?.email ?? '—';
-                const vendorId = v._id ?? v.id;
+              {farmers.map((v, i) => {
+                const farmerPhone = v.phone ?? v.contact?.phone ?? '—';
+                const farmerEmail = v.email ?? v.contact?.email ?? '—';
+                const farmerId = v._id ?? v.id;
 
                 const onStatusChange = async (next: string) => {
-                  if (!vendorId) return;
+                  if (!farmerId) return;
                   // Optimistically update UI
                   const prev = v.status ?? '';
-                  setLocalStatuses((s) => ({ ...s, [vendorId]: next }));
-                  setUpdatingId(vendorId);
+                  setLocalStatuses((s) => ({ ...s, [farmerId]: next }));
+                  setUpdatingId(farmerId);
                   try {
-                    await updateStatus({ id: vendorId, status: next }).unwrap();
+                    await updateStatus({ id: farmerId, status: next }).unwrap();
                   } catch (err) {
-                    console.error('Failed to update vendor status', err);
+                    console.error('Failed to update farmer status', err);
                     // revert optimistic update
                     setLocalStatuses((s) => {
                       const copy = { ...s };
-                      if (prev) copy[vendorId] = prev;
-                      else delete copy[vendorId];
+                      if (prev) copy[farmerId] = prev;
+                      else delete copy[farmerId];
                       return copy;
                     });
                   } finally {
@@ -110,8 +110,8 @@ const VendorsList: React.FC = () => {
                       <div className="font-medium">{v.firstName} {v.lastName}</div>
                     </td>
                     <td className="p-3 align-top">{v.address ?? '—'}</td>
-                    <td className="p-3 align-top">{vendorPhone}</td>
-                    <td className="p-3 align-top">{vendorEmail}</td>
+                    <td className="p-3 align-top">{farmerPhone}</td>
+                    <td className="p-3 align-top">{farmerEmail}</td>
                     <td className="p-3 align-top">
                       {Array.isArray(v.items) && v.items.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -132,9 +132,9 @@ const VendorsList: React.FC = () => {
                     <td className="p-3 align-top">
                       <div className="flex items-center gap-2">
                         <select
-                          value={localStatuses[vendorId] ?? (v.status ?? '')}
+                          value={localStatuses[farmerId] ?? (v.status ?? '')}
                           onChange={(e) => onStatusChange(e.target.value)}
-                          disabled={updatingId === vendorId || deletingId === vendorId}
+                          disabled={updatingId === farmerId || deletingId === farmerId}
                           className="border rounded px-2 py-1 text-sm"
                           aria-label={`Change status for ${v.firstName} ${v.lastName}`}
                         >
@@ -146,15 +146,15 @@ const VendorsList: React.FC = () => {
                         </select>
                         <button
                           onClick={() => {
-                            setConfirmTarget({ id: vendorId, name: `${v.firstName ?? ''} ${v.lastName ?? ''}`.trim() });
+                            setConfirmTarget({ id: farmerId, name: `${v.firstName ?? ''} ${v.lastName ?? ''}`.trim() });
                             setConfirmOpen(true);
                           }}
-                          disabled={deletingId === vendorId}
+                          disabled={deletingId === farmerId}
                           className="px-2 py-1 border rounded bg-red-50 text-red-700 text-sm flex items-center justify-center"
                           aria-label={`Delete ${v.firstName} ${v.lastName}`}
                           title={`Delete ${v.firstName} ${v.lastName}`}
                         >
-                          {deletingId === vendorId ? 'Deleting…' : <Trash2 size={16} />}
+                          {deletingId === farmerId ? 'Deleting…' : <Trash2 size={16} />}
                         </button>
                       </div>
                     </td>
@@ -190,16 +190,16 @@ const VendorsList: React.FC = () => {
           setConfirmTarget(null);
         }}
         type="confirm"
-        title="Delete vendor"
-        message={`Delete ${confirmTarget?.name ?? 'this vendor'}? This action cannot be undone.`}
+        title="Delete farmer"
+        message={`Delete ${confirmTarget?.name ?? 'this farmer'}? This action cannot be undone.`}
         onConfirm={async () => {
           if (!confirmTarget?.id) return;
           setDeletingId(confirmTarget.id);
           try {
-            await deleteVendor(confirmTarget.id).unwrap();
+            await deleteFarmer(confirmTarget.id).unwrap();
           } catch (err) {
-            console.error('Failed to delete vendor', err);
-            alert('Failed to delete vendor');
+            console.error('Failed to delete farmer', err);
+            alert('Failed to delete farmer');
           } finally {
             setDeletingId(null);
             setConfirmOpen(false);
@@ -211,4 +211,4 @@ const VendorsList: React.FC = () => {
   );
 };
 
-export default VendorsList;
+export default FarmersList;

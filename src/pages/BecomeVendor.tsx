@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '@/redux/store';
-import vendorHeroFallback from "../assets/AboutIcon/forfarmer.png";
+import farmerHeroFallback from "../assets/AboutIcon/forfarmer.png";
 
-const BecomeVendor: React.FC = () => {
+const BecomeFarmer: React.FC = () => {
   const [items, setItems] = useState<string[]>([""]);
   const [form, setForm] = useState({
     firstName: "",
@@ -18,7 +18,7 @@ const BecomeVendor: React.FC = () => {
   });
   const navigate = useNavigate();
 
-  // If a user is logged in, include their token when submitting (backend will attach vendor.user)
+  // If a user is logged in, include their token when submitting (backend will attach farmer.user)
   const token = useSelector((state: RootState) => state.auth.token);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -59,7 +59,7 @@ const BecomeVendor: React.FC = () => {
     };
 
     try {
-      const res = await fetch('https://api.farmchops.com/api/vendors', {
+      const res = await fetch('https://api.farmchops.com/api/farmers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,11 +69,11 @@ const BecomeVendor: React.FC = () => {
       });
 
       if (res.status === 201) {
-        // success - parse response and navigate to thank you page with created vendor data
+        // success - parse response and navigate to thank you page with created farmer data
         const data = await res.json().catch(() => null);
-        const vendor = data?.data || null;
-        // navigate and pass vendor in state so thank-you can show details
-        navigate('/thank-you', { state: { vendor } });
+        const farmer = data?.data || null;
+        // navigate and pass farmer in state so thank-you can show details
+        navigate('/thank-you', { state: { farmer } });
       } else if (res.status === 400) {
         const err = await res.json().catch(() => null);
         alert(err?.message || 'Validation error. Please check your input.');
@@ -82,7 +82,7 @@ const BecomeVendor: React.FC = () => {
         alert(err?.message || 'Something went wrong. Please try again later.');
       }
     } catch (error) {
-      console.error('Create vendor failed', error);
+      console.error('Create farmer failed', error);
       alert('Network error. Please try again.');
     }
   };
@@ -92,14 +92,14 @@ const BecomeVendor: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 items-stretch">
         <div className="order-1 md:order-0 overflow-hidden">
              <img
-               src="/vendor-hero.png"
+               src="/farmer-hero.png"
                alt="Farmers holding produce"
                className="w-full h-80 md:h-full object-cover block object-[25%_center]"
-               onError={(e) => { (e.currentTarget as HTMLImageElement).src = vendorHeroFallback; }}
+               onError={(e) => { (e.currentTarget as HTMLImageElement).src = farmerHeroFallback; }}
              />
         </div>
         <div className="bg-white p-6 flex flex-col justify-center">
-          <h2 className="text-3xl font-bold text-[#1D7B3C] mb-2">Become a Vendor</h2>
+          <h2 className="text-3xl font-bold text-[#1D7B3C] mb-2">Become a Farmer</h2>
           <p className="mb-6 text-gray-700">
             Are you a farmer or producer of quality goods and produce? Would you like to join the FarmChops team? Let's get you started!
           </p>
@@ -170,4 +170,4 @@ const BecomeVendor: React.FC = () => {
   );
 };
 
-export default BecomeVendor;
+export default BecomeFarmer;

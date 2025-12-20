@@ -2,12 +2,12 @@ import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  useGetVendorQuery,
-  useUpdateVendorStatusMutation,
-  useCreateVendorContactMutation,
-  useCreateVendorRequestInfoMutation,
-  useCreateVendorNoteMutation,
-  useDeleteVendorMutation,
+  useGetFarmerQuery,
+  useUpdateFarmerStatusMutation,
+  useCreateFarmerContactMutation,
+  useCreateFarmerRequestInfoMutation,
+  useCreateFarmerNoteMutation,
+  useDeleteFarmerMutation,
 } from '@/redux/api/vendorsApi';
 import AlertModal from '@/components/AlertModal';
 
@@ -18,7 +18,7 @@ type Item = {
   available?: boolean;
 };
 
-type Vendor = {
+type Farmer = {
   _id?: string;
   id?: string;
   firstName?: string;
@@ -30,48 +30,48 @@ type Vendor = {
   [k: string]: unknown;
 };
 
-const VendorDetail: React.FC = () => {
+const FarmerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { data, isLoading, error } = useGetVendorQuery(id || '');
+  const { data, isLoading, error } = useGetFarmerQuery(id || '');
 
   // Normalize possible response shapes from backend
   // Backend may return either:
-  // - { success: true, data: { vendor: {...} } }
-  // - { success: true, data: { _id: '...', ... } } (data is vendor)
-  // - { success: true, vendor: { ... } }
-  let vendor: Vendor | undefined;
+  // - { success: true, data: { farmer: {...} } }
+  // - { success: true, data: { _id: '...', ... } } (data is farmer)
+  // - { success: true, farmer: { ... } }
+  let farmer: Farmer | undefined;
 
   if (data) {
     const root = data as unknown as Record<string, unknown>;
-    console.debug('VendorDetail raw response:', root);
+    console.debug('FarmerDetail raw response:', root);
     if (root.data && typeof root.data === 'object') {
       const d = root.data as Record<string, unknown>;
-      if (d.vendor && typeof d.vendor === 'object') vendor = d.vendor as Vendor;
-      else if ((d as Vendor)._id) vendor = d as Vendor;
+      if (d.farmer && typeof d.farmer === 'object') farmer = d.farmer as Farmer;
+      else if ((d as Farmer)._id) farmer = d as Farmer;
     }
 
-    if (!vendor && 'vendor' in root && typeof (root as Record<string, unknown>)['vendor'] === 'object') {
-      vendor = (root as Record<string, unknown>)['vendor'] as Vendor;
+    if (!farmer && 'farmer' in root && typeof (root as Record<string, unknown>)['farmer'] === 'object') {
+      farmer = (root as Record<string, unknown>)['farmer'] as Farmer;
     }
   }
 
-  const [updateStatus] = useUpdateVendorStatusMutation();
-  const [createContact] = useCreateVendorContactMutation();
-  const [createRequest] = useCreateVendorRequestInfoMutation();
-  const [createNote] = useCreateVendorNoteMutation();
-  const [deleteVendor, { isLoading: isDeleting }] = useDeleteVendorMutation();
+  const [updateStatus] = useUpdateFarmerStatusMutation();
+  const [createContact] = useCreateFarmerContactMutation();
+  const [createRequest] = useCreateFarmerRequestInfoMutation();
+  const [createNote] = useCreateFarmerNoteMutation();
+  const [deleteFarmer, { isLoading: isDeleting }] = useDeleteFarmerMutation();
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmLoading, setConfirmLoading] = React.useState(false);
 
-  if (isLoading) return <div className="p-6">Loading vendor...</div>;
-  if (error) return <div className="p-6 text-red-500">Failed to load vendor.</div>;
-  if (!vendor) return <div className="p-6">Vendor not found.</div>;
+  if (isLoading) return <div className="p-6">Loading farmer...</div>;
+  if (error) return <div className="p-6 text-red-500">Failed to load farmer.</div>;
+  if (!farmer) return <div className="p-6">Farmer not found.</div>;
 
-  const vendorId = (vendor._id ?? vendor.id) as string;
+  const farmerId = (farmer._id ?? farmer.id) as string;
 
   const statusClass = (() => {
-    switch (vendor.status) {
+    switch (farmer.status) {
       case 'pending':
         return 'bg-yellow-50 text-yellow-800';
       case 'needs_info':
@@ -88,7 +88,7 @@ const VendorDetail: React.FC = () => {
   })();
 
   const handleChangeStatus = async () => {
-    const next = window.prompt('Enter status (pending, needs_info, contacted, partnered, declined):', (vendor?.status as string) || 'pending');
+    const next = window.prompt('Enter status (pending, needs_info, contacted, partnered, declined):', (farmer?.status as string) || 'pending');
     if (!next) return;
     if (!['pending','needs_info','contacted','partnered','declined'].includes(next)) {
       alert('Invalid status');
@@ -96,7 +96,7 @@ const VendorDetail: React.FC = () => {
     }
 
     try {
-  await updateStatus({ id: vendorId, status: next }).unwrap();
+  await updateStatus({ id: farmerId, status: next }).unwrap();
       alert('Status updated');
     } catch (err) {
       console.error(err);
@@ -108,7 +108,7 @@ const VendorDetail: React.FC = () => {
     const note = window.prompt('Contact note:');
     if (!note) return;
     try {
-  await createContact({ id: vendorId, note }).unwrap();
+  await createContact({ id: farmerId, note }).unwrap();
       alert('Contact recorded');
     } catch (err) {
       console.error(err);
@@ -117,10 +117,10 @@ const VendorDetail: React.FC = () => {
   };
 
   const handleRequestInfo = async () => {
-    const message = window.prompt('Message to vendor:');
+    const message = window.prompt('Message to farmer:');
     if (!message) return;
     try {
-  await createRequest({ id: vendorId, message, notify: true }).unwrap();
+  await createRequest({ id: farmerId, message, notify: true }).unwrap();
       alert('Request created');
     } catch (err) {
       console.error(err);
@@ -132,7 +132,7 @@ const VendorDetail: React.FC = () => {
     const text = window.prompt('Internal note text:');
     if (!text) return;
     try {
-  await createNote({ id: vendorId, text }).unwrap();
+  await createNote({ id: farmerId, text }).unwrap();
       alert('Note created');
     } catch (err) {
       console.error(err);
@@ -142,9 +142,9 @@ const VendorDetail: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Vendor: {vendor.firstName} {vendor.lastName}</h1>
-      <p className="mb-2">Address: {vendor.address as string}</p>
-      <p className="mb-4">Status: {vendor.status}</p>
+      <h1 className="text-2xl font-semibold mb-4">Farmer: {farmer.firstName} {farmer.lastName}</h1>
+      <p className="mb-2">Address: {farmer.address as string}</p>
+      <p className="mb-4">Status: {farmer.status}</p>
 
       <div className="flex gap-2 mb-4">
         <button onClick={handleChangeStatus} className="px-3 py-1 border rounded">Change Status</button>
@@ -160,20 +160,20 @@ const VendorDetail: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-600">Created</div>
-              <div className="text-sm text-gray-800">{vendor.createdAt ? new Date(vendor.createdAt).toLocaleString() : '—'}</div>
+              <div className="text-sm text-gray-800">{farmer.createdAt ? new Date(farmer.createdAt).toLocaleString() : '—'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Status</div>
               <div className="mt-1 flex items-center gap-3">
                 <div className={`inline-block px-2 py-1 rounded text-sm font-medium ${statusClass}`}>
-                  {vendor.status}
+                  {farmer.status}
                 </div>
                 <button
                   onClick={() => setConfirmOpen(true)}
                   disabled={isDeleting || confirmLoading}
                   className="px-2 py-1 border rounded bg-red-50 text-red-700 text-sm flex items-center justify-center"
-                  aria-label="Delete vendor"
-                  title="Delete vendor"
+                  aria-label="Delete farmer"
+                  title="Delete farmer"
                 >
                   {isDeleting || confirmLoading ? 'Deleting…' : <Trash2 size={16} />}
                 </button>
@@ -183,9 +183,9 @@ const VendorDetail: React.FC = () => {
 
           <div className="mt-4">
             <h3 className="font-medium mb-2">Items</h3>
-            {Array.isArray(vendor.items) && vendor.items.length > 0 ? (
+            {Array.isArray(farmer.items) && farmer.items.length > 0 ? (
               <ul className="divide-y">
-                {vendor.items.map((it: Item, idx: number) => (
+                {farmer.items.map((it: Item, idx: number) => (
                   <li key={idx} className="py-2 flex justify-between">
                     <div>
                       <div className="font-medium">{it.name}</div>
@@ -210,20 +210,20 @@ const VendorDetail: React.FC = () => {
         isOpen={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         type="confirm"
-        title="Delete vendor"
-        message="Delete this vendor? This action cannot be undone."
+        title="Delete farmer"
+        message="Delete this farmer? This action cannot be undone."
         onConfirm={async () => {
           setConfirmLoading(true);
           try {
-            await deleteVendor(vendorId).unwrap();
+            await deleteFarmer(farmerId).unwrap();
             setConfirmLoading(false);
             setConfirmOpen(false);
-            navigate('/admin/vendors');
+            navigate('/admin/farmers');
           } catch (err) {
-            console.error('Failed to delete vendor', err);
+            console.error('Failed to delete farmer', err);
             setConfirmLoading(false);
             setConfirmOpen(false);
-            alert('Failed to delete vendor');
+            alert('Failed to delete farmer');
           }
         }}
       />
@@ -231,4 +231,4 @@ const VendorDetail: React.FC = () => {
   );
 };
 
-export default VendorDetail;
+export default FarmerDetail;

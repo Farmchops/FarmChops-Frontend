@@ -170,7 +170,8 @@ const router = createBrowserRouter([
                 ],
             },
             { path: "/bulk-buying", element: <BulkBuyingPage /> },
-            { path: "/become-vendor", element: <BecomeVendor /> },
+            { path: "/become-farmer", element: <BecomeVendor /> },
+            { path: "/become-vendor", element: <Navigate to="/become-farmer" replace /> },
 
             // PayLater routes (Protected)
             {
