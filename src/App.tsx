@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { AuthSessionHandler } from './lib/authSessionHandler';
 import type { RootState } from './redux/store';
 import { useSelector } from 'react-redux';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
 //Checking if I can update git
 function App() {
@@ -48,14 +49,16 @@ function App() {
     }
   }, [isAuthenticated, profileComplete, location, navigate]);
 
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
+
   return (
-    <>
+    <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey}>
       <Navbar />
 
       <main>
         <Outlet />
       </main>
-    </>
+    </GoogleReCaptchaProvider>
   )
 }
 

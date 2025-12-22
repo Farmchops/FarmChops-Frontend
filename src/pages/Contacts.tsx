@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import Footer from '../components/Footer';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 const Contacts: React.FC = () => {
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [fullName, setFullName] = useState("");
@@ -20,11 +22,20 @@ const Contacts: React.FC = () => {
       return;
     }
 
+    if (!executeRecaptcha) {
+      setStatus('error');
+      setErrorMessage("reCAPTCHA not available. Please try again.");
+      return;
+    }
+
     setIsLoading(true);
     setStatus('idle');
     setErrorMessage("");
 
     try {
+      // Get reCAPTCHA token
+      const recaptchaToken = await executeRecaptcha('contact_form');
+
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/contact`, {
         method: 'POST',
         headers: {
@@ -34,6 +45,7 @@ const Contacts: React.FC = () => {
           email,
           message,
           fullName,
+          recaptchaToken,
         }),
       });
 
@@ -149,6 +161,18 @@ const Contacts: React.FC = () => {
                   <span>Send Now</span>
                 )}
               </button>
+
+              <p className="text-xs text-gray-500 text-center">
+                This site is protected by reCAPTCHA and the Google{' '}
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  Privacy Policy
+                </a>{' '}
+                and{' '}
+                <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  Terms of Service
+                </a>{' '}
+                apply.
+              </p>
             </form>
 
             {/* Map Placeholder */}
