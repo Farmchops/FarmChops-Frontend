@@ -172,8 +172,18 @@ export default function MarketersListPage() {
             <LoadingSpinner />
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center py-12">
-            <p className="text-red-500">Failed to load marketers</p>
+          <div className="flex flex-col items-center justify-center py-12 px-6">
+            <p className="text-red-500 font-semibold mb-2">Failed to load marketers</p>
+            <p className="text-sm text-gray-600 mb-4">
+              {error && 'status' in error && error.status === 401
+                ? 'Authentication failed. Please check if you have the "manage_marketing" permission.'
+                : error && 'data' in error && typeof error.data === 'object' && error.data && 'message' in error.data
+                ? String(error.data.message)
+                : 'An error occurred while fetching marketers.'}
+            </p>
+            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-200 font-mono">
+              {error && 'status' in error ? `Status: ${error.status}` : 'Unknown error'}
+            </div>
           </div>
         ) : marketers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">

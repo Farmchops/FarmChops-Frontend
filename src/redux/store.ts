@@ -26,6 +26,7 @@ import { walletApi } from './api/walletApi';
 import { paylaterApi } from './api/paylaterApi';
 import { marketersApi } from './api/marketersApi';
 import { couponsApi } from './api/couponsApi';
+import { discountsApi } from './api/discountsApi';
 
 // Middleware
 import { authErrorMiddleware } from './middleware/authErrorMiddleware';
@@ -59,6 +60,7 @@ export const store = configureStore({
         [paylaterApi.reducerPath]: paylaterApi.reducer,
         [marketersApi.reducerPath]: marketersApi.reducer,
         [couponsApi.reducerPath]: couponsApi.reducer,
+        [discountsApi.reducerPath]: discountsApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
@@ -81,6 +83,7 @@ export const store = configureStore({
             paylaterApi.middleware,
             marketersApi.middleware,
             couponsApi.middleware,
+            discountsApi.middleware,
         ),
 });
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useCalculateDiscountsMutation } from '../redux/api/couponsApi';
+import { useCalculateDiscountsMutation } from '../redux/api/discountsApi';
 import type { OrderDiscountResponse } from '../types/marketing';
 
 export const useDiscountCalculation = (subtotal: number) => {

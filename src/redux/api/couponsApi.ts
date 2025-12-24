@@ -15,7 +15,7 @@ import type {
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
+    const token = (getState() as RootState).adminAuth.token;
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
@@ -96,30 +96,6 @@ export const couponsApi = createApi({
       ],
     }),
 
-    // Validate coupon (user endpoint - requires auth)
-    validateCoupon: builder.mutation<
-      ApiResponse<CouponValidation>,
-      { couponCode: string; orderAmount: number }
-    >({
-      query: (body) => ({
-        url: '/coupons/validate',
-        method: 'POST',
-        body,
-      }),
-    }),
-
-    // Calculate order discounts (user endpoint - requires auth)
-    calculateDiscounts: builder.mutation<
-      ApiResponse<OrderDiscountResponse>,
-      { subtotal: number; couponCode?: string }
-    >({
-      query: (body) => ({
-        url: '/orders/calculate-discounts',
-        method: 'POST',
-        body,
-      }),
-    }),
-
     // Get coupon usage report (admin endpoint)
     getCouponReport: builder.query<ApiResponse<CouponUsageReport>, string>({
       query: (couponId) => `/admin/coupons/${couponId}/report`,
@@ -136,8 +112,6 @@ export const {
   useCreateCouponMutation,
   useUpdateCouponMutation,
   useDeleteCouponMutation,
-  useValidateCouponMutation,
-  useCalculateDiscountsMutation,
   useGetCouponReportQuery,
 } = couponsApi;
 
