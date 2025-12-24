@@ -178,6 +178,8 @@ export interface MarketerReport {
   topProducts: TopProduct[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   recentOrders: any[];  // Define based on your Order type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  commissionPayments?: any[];  // Commission payment records
 }
 
 export interface AllMarketersReportSummary {
@@ -250,6 +252,9 @@ export interface CreateCommissionPaymentPayload {
   notes?: string;
 }
 
+// Alias for backward compatibility
+export type PayCommissionPayload = CreateCommissionPaymentPayload;
+
 // Coupon Usage Report
 export interface CouponUsageMetrics {
   totalUses: number;
@@ -268,6 +273,10 @@ export interface CouponUsageReport {
   metrics: CouponUsageMetrics;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   recentUses: any[];  // Define based on your needs
+  lifetimeUniqueUsers?: number;  // Total unique users who used this coupon
+  lifetimeTotalDiscount?: number;  // Total discount amount in kobo
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  topUsers?: any[];  // Top users by usage
 }
 
 // Pagination

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, DollarSign } from 'lucide-react';
 import { usePayCommissionMutation } from '@/redux/api/marketersApi';
-import type { Marketer, PayCommissionPayload } from '@/types/marketing';
+import type { Marketer, CreateCommissionPaymentPayload } from '@/types/marketing';
 
 interface PayCommissionModalProps {
   isOpen: boolean;
@@ -18,9 +18,8 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
 }) => {
   const [payCommission, { isLoading }] = usePayCommissionMutation();
 
-  const [formData, setFormData] = useState<PayCommissionPayload>({
-    marketerId: marketer._id,
-    amount: marketer.unpaidCommission, // in kobo
+  const [formData, setFormData] = useState<CreateCommissionPaymentPayload>({
+    commissionAmount: marketer.unpaidCommission, // in kobo
     periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     periodEnd: new Date().toISOString().split('T')[0],
     paymentMethod: 'bank_transfer',
@@ -32,16 +31,16 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
   const [serverError, setServerError] = useState<string>('');
 
   // Convert kobo to naira for display
-  const amountInNaira = (formData.amount || 0) / 100;
+  const amountInNaira = (formData.commissionAmount || 0) / 100;
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.amount || formData.amount <= 0) {
+    if (!formData.commissionAmount || formData.commissionAmount <= 0) {
       newErrors.amount = 'Amount must be greater than 0';
     }
 
-    if (formData.amount && formData.amount > marketer.unpaidCommission) {
+    if (formData.commissionAmount && formData.commissionAmount > marketer.unpaidCommission) {
       newErrors.amount = 'Amount cannot exceed unpaid commission';
     }
 
@@ -76,7 +75,10 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
     if (!validate()) return;
 
     try {
-      const result = await payCommission(formData).unwrap();
+      const result = await payCommission({
+        marketerId: marketer._id,
+        data: formData
+      }).unwrap();
 
       if (result.success) {
         onSuccess?.();
@@ -89,8 +91,7 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
 
   const handleClose = () => {
     setFormData({
-      marketerId: marketer._id,
-      amount: marketer.unpaidCommission,
+      commissionAmount: marketer.unpaidCommission,
       periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       periodEnd: new Date().toISOString().split('T')[0],
       paymentMethod: 'bank_transfer',
@@ -160,14 +161,13 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
                   value={amountInNaira}
                   onChange={(e) => {
                     const nairaValue = parseFloat(e.target.value) || 0;
-                    setFormData((prev) => ({
+                    setFormData((prev: CreateCommissionPaymentPayload) => ({
                       ...prev,
-                      amount: Math.round(nairaValue * 100), // Convert Naira to Kobo
+                      commissionAmount: Math.round(nairaValue * 100), // Convert Naira to Kobo
                     }));
                   }}
-                  className={`w-full px-3 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    errors.amount ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.amount ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="0.00"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -193,11 +193,10 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
                   type="date"
                   value={formData.periodStart}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, periodStart: e.target.value }))
+                    setFormData((prev: CreateCommissionPaymentPayload) => ({ ...prev, periodStart: e.target.value }))
                   }
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    errors.periodStart ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.periodStart ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.periodStart && (
                   <p className="mt-1 text-xs text-red-500">{errors.periodStart}</p>
@@ -213,11 +212,10 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
                   type="date"
                   value={formData.periodEnd}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, periodEnd: e.target.value }))
+                    setFormData((prev: CreateCommissionPaymentPayload) => ({ ...prev, periodEnd: e.target.value }))
                   }
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    errors.periodEnd ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.periodEnd ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.periodEnd && (
                   <p className="mt-1 text-xs text-red-500">{errors.periodEnd}</p>
@@ -234,14 +232,13 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
                 id="pay-method"
                 value={formData.paymentMethod}
                 onChange={(e) =>
-                  setFormData((prev) => ({
+                  setFormData((prev: CreateCommissionPaymentPayload) => ({
                     ...prev,
-                    paymentMethod: e.target.value as PayCommissionPayload['paymentMethod'],
+                    paymentMethod: e.target.value as CreateCommissionPaymentPayload['paymentMethod'],
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  errors.paymentMethod ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.paymentMethod ? 'border-red-500' : 'border-gray-300'
+                  }`}
               >
                 <option value="bank_transfer">Bank Transfer</option>
                 <option value="cash">Cash</option>
@@ -264,7 +261,7 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
                 type="text"
                 value={formData.paymentReference || ''}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, paymentReference: e.target.value }))
+                  setFormData((prev: CreateCommissionPaymentPayload) => ({ ...prev, paymentReference: e.target.value }))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Transaction ID, check number, etc."
@@ -283,7 +280,7 @@ export const PayCommissionModal: React.FC<PayCommissionModalProps> = ({
                 id="pay-notes"
                 value={formData.notes || ''}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                  setFormData((prev: CreateCommissionPaymentPayload) => ({ ...prev, notes: e.target.value }))
                 }
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"

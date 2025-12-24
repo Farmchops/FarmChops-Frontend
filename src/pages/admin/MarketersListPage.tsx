@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, UserPlus, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { Plus, Filter, UserPlus, DollarSign, Users, TrendingUp, Search } from 'lucide-react';
 import { useGetMarketersQuery } from '@/redux/api/marketersApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { CreateMarketerModal } from '@/components/modals/CreateMarketerModal';
-import type { Marketer } from '@/types/marketing';
 
 export default function MarketersListPage() {
   const navigate = useNavigate();
@@ -12,7 +11,7 @@ export default function MarketersListPage() {
   const [status, setStatus] = useState<string>('');
   const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedMarketer, setSelectedMarketer] = useState<Marketer | null>(null);
+
 
   const { data, isLoading, error } = useGetMarketersQuery({
     page,
@@ -257,9 +256,8 @@ export default function MarketersListPage() {
                         {formatCurrency(marketer.totalCommission)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm font-medium ${
-                          marketer.unpaidCommission > 0 ? 'text-orange-600' : 'text-gray-500'
-                        }`}>
+                        <span className={`text-sm font-medium ${marketer.unpaidCommission > 0 ? 'text-orange-600' : 'text-gray-500'
+                          }`}>
                           {formatCurrency(marketer.unpaidCommission)}
                         </span>
                       </td>

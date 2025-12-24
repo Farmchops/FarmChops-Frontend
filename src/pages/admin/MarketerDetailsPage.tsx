@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -20,7 +20,6 @@ import {
   useUpdateMarketerMutation
 } from '@/redux/api/marketersApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import type { Marketer } from '@/types/marketing';
 
 export default function MarketerDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +35,7 @@ export default function MarketerDetailsPage() {
   });
 
   const { data: reportData, isLoading: isLoadingReport } = useGetMarketerReportQuery({
-    id: id!,
+    marketerId: id!,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
   }, {
@@ -46,7 +45,7 @@ export default function MarketerDetailsPage() {
   const [updateMarketer] = useUpdateMarketerMutation();
 
   const marketer = marketerData?.data?.marketer;
-  const report = reportData?.data?.report;
+  const report = reportData?.data;
 
   const formatCurrency = (amountInKobo: number) => {
     return `₦${(amountInKobo / 100).toLocaleString()}`;
@@ -82,11 +81,12 @@ export default function MarketerDetailsPage() {
 
     try {
       await updateMarketer({
-        id: marketer._id,
+        marketerId: marketer._id,
         data: { status: newStatus }
       }).unwrap();
-    } catch (error: any) {
-      alert(error?.data?.message || 'Failed to update status');
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
+      alert(err?.data?.message || 'Failed to update status');
     }
   };
 
@@ -231,8 +231,9 @@ export default function MarketerDetailsPage() {
               <p className="text-2xl font-semibold text-green-600">{marketer.commissionRate}%</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Attribution Window</p>
-              <p className="text-sm font-medium">{marketer.attributionWindowDays} days</p>
+              <p className="text-xs text-gray-500">Commission Model</p>
+              <p className="text-sm font-medium">First Order Only</p>
+              <p className="text-xs text-gray-400 mt-1">Commission paid on customer's first order only</p>
             </div>
           </div>
         </div>
@@ -324,22 +325,22 @@ export default function MarketerDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Period Signups</p>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">{report.periodSignups}</p>
+              <p className="text-2xl font-semibold text-gray-900 mt-1">{report.metrics?.newSignups || 0}</p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Period Orders</p>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">{report.periodOrders}</p>
+              <p className="text-2xl font-semibold text-gray-900 mt-1">{report.metrics?.totalOrders || 0}</p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Period Revenue</p>
               <p className="text-2xl font-semibold text-gray-900 mt-1">
-                {formatCurrency(report.periodRevenue)}
+                {formatCurrency(report.metrics?.totalRevenue || 0)}
               </p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Period Commission</p>
               <p className="text-2xl font-semibold text-green-600 mt-1">
-                {formatCurrency(report.periodCommission)}
+                {formatCurrency(report.metrics?.totalCommission || 0)}
               </p>
             </div>
           </div>
@@ -363,7 +364,15 @@ export default function MarketerDetailsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {report.recentOrders.map((order) => (
+                    {report.recentOrders.map((order: {
+                      orderId: string;
+                      orderNumber: string;
+                      customerName: string;
+                      createdAt: string;
+                      orderTotal: number;
+                      commissionEarned: number;
+                      commissionPaid: boolean;
+                    }) => (
                       <tr key={order.orderId} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           #{order.orderNumber}
@@ -414,7 +423,16 @@ export default function MarketerDetailsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {report.commissionPayments.map((payment) => (
+                    {report.commissionPayments.map((payment: {
+                      _id: string;
+                      paymentDate: string;
+                      amount: number;
+                      periodStart: string;
+                      periodEnd: string;
+                      paymentMethod: string;
+                      paymentReference?: string;
+                      paidBy: string;
+                    }) => (
                       <tr key={payment._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatDate(payment.paymentDate)}

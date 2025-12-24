@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -31,18 +31,14 @@ export default function CouponDetailsPage() {
     skip: !id,
   });
 
-  const { data: reportData, isLoading: isLoadingReport } = useGetCouponReportQuery({
-    id: id!,
-    startDate: dateRange.startDate,
-    endDate: dateRange.endDate,
-  }, {
+  const { data: reportData, isLoading: isLoadingReport } = useGetCouponReportQuery(id!, {
     skip: !id,
   });
 
   const [updateCoupon] = useUpdateCouponMutation();
 
   const coupon = couponData?.data?.coupon;
-  const report = reportData?.data?.report;
+  const report = reportData?.data;
 
   const formatCurrency = (amountInKobo: number) => {
     return `₦${(amountInKobo / 100).toLocaleString()}`;
@@ -91,7 +87,7 @@ export default function CouponDetailsPage() {
 
     try {
       await updateCoupon({
-        id: coupon._id,
+        couponId: coupon._id,
         data: { status: newStatus }
       }).unwrap();
     } catch (error: any) {
@@ -222,8 +218,8 @@ export default function CouponDetailsPage() {
                 {coupon.discountType === 'percentage'
                   ? `${coupon.discountValue}%`
                   : coupon.discountType === 'fixed_amount'
-                  ? formatCurrency(coupon.discountValue)
-                  : 'Free Delivery'}
+                    ? formatCurrency(coupon.discountValue)
+                    : 'Free Delivery'}
               </p>
             </div>
             {coupon.maxDiscountAmount && (
@@ -324,7 +320,7 @@ export default function CouponDetailsPage() {
             <input
               type="date"
               value={dateRange.startDate}
-              onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+              onChange={(e) => setDateRange((prev: { startDate: string; endDate: string }) => ({ ...prev, startDate: e.target.value }))}
               className="px-3 py-1 border border-gray-300 rounded-md text-sm"
             />
           </div>
@@ -333,7 +329,7 @@ export default function CouponDetailsPage() {
             <input
               type="date"
               value={dateRange.endDate}
-              onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+              onChange={(e) => setDateRange((prev: { startDate: string; endDate: string }) => ({ ...prev, endDate: e.target.value }))}
               className="px-3 py-1 border border-gray-300 rounded-md text-sm"
             />
           </div>
@@ -351,28 +347,28 @@ export default function CouponDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Period Uses</p>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">{report.periodUses}</p>
+              <p className="text-2xl font-semibold text-gray-900 mt-1">{report?.metrics?.totalUses || 0}</p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Period Users</p>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">{report.periodUniqueUsers}</p>
+              <p className="text-2xl font-semibold text-gray-900 mt-1">{report?.metrics?.uniqueUsers || 0}</p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Period Discount</p>
               <p className="text-2xl font-semibold text-gray-900 mt-1">
-                {formatCurrency(report.periodTotalDiscount)}
+                {formatCurrency(report?.metrics?.totalDiscount || 0)}
               </p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <p className="text-sm text-gray-600">Avg Discount/Use</p>
               <p className="text-2xl font-semibold text-green-600 mt-1">
-                {formatCurrency(report.periodAverageDiscount)}
+                {formatCurrency(report?.metrics?.averageDiscount || 0)}
               </p>
             </div>
           </div>
 
           {/* Recent Usage */}
-          {report.recentUsage && report.recentUsage.length > 0 && (
+          {report?.recentUses && report.recentUses.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-semibold">Recent Usage (Period)</h3>
@@ -389,8 +385,8 @@ export default function CouponDetailsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {report.recentUsage.map((usage) => (
-                      <tr key={usage.orderId} className="hover:bg-gray-50">
+                    {report.recentUses.map((usage: any) => (
+                      <tr key={usage._id || usage.orderId} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           #{usage.orderNumber}
                         </td>
@@ -431,7 +427,7 @@ export default function CouponDetailsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {report.topUsers.map((user) => (
+                    {report.topUsers.map((user: any) => (
                       <tr key={user.userId} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           {user.userName}

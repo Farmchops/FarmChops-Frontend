@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Tag, TrendingDown, Users, DollarSign } from 'lucide-react';
+import { Plus, Tag, TrendingDown, Users, DollarSign } from 'lucide-react';
 import { useGetCouponsQuery } from '@/redux/api/couponsApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { CreateCouponModal } from '@/components/modals/CreateCouponModal';
