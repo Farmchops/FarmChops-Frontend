@@ -74,6 +74,12 @@ import AdminGroupOrders from "../pages/admin/AdminGroupOrders";
 import AdminGroupDetail from "../pages/admin/AdminGroupDetail";
 import CreateGroupOrder from "../pages/admin/CreateGroupOrder";
 
+// Marketing Pages
+import MarketersListPage from "../pages/admin/MarketersListPage";
+import MarketerDetailsPage from "../pages/admin/MarketerDetailsPage";
+import CouponsListPage from "../pages/admin/CouponsListPage";
+import CouponDetailsPage from "../pages/admin/CouponDetailsPage";
+
 // PayLater Pages
 import PayLaterPage from "../pages/PayLater";
 import PayLaterCart from "../pages/PayLater/PayLaterCart";
@@ -346,6 +352,40 @@ const router = createBrowserRouter([
                 element: (
                     <AdminRoute requiredPermission="manage_vendors">
                         <VendorDetail />
+                    </AdminRoute>
+                ),
+            },
+
+            // Marketing - Marketers & Coupons
+            {
+                path: "marketers",
+                element: (
+                    <AdminRoute requiredPermission="manage_marketing">
+                        <MarketersListPage />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "marketers/:id",
+                element: (
+                    <AdminRoute requiredPermission="manage_marketing">
+                        <MarketerDetailsPage />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "coupons",
+                element: (
+                    <AdminRoute requiredPermission="manage_marketing">
+                        <CouponsListPage />
+                    </AdminRoute>
+                ),
+            },
+            {
+                path: "coupons/:id",
+                element: (
+                    <AdminRoute requiredPermission="manage_marketing">
+                        <CouponDetailsPage />
                     </AdminRoute>
                 ),
             },

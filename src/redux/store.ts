@@ -24,6 +24,8 @@ import { groupOrdersApi } from './api/groupOrdersApi';
 import { adminDashboardApi } from './api/adminDashboardApi';
 import { walletApi } from './api/walletApi';
 import { paylaterApi } from './api/paylaterApi';
+import { marketersApi } from './api/marketersApi';
+import { couponsApi } from './api/couponsApi';
 
 // Middleware
 import { authErrorMiddleware } from './middleware/authErrorMiddleware';
@@ -55,6 +57,8 @@ export const store = configureStore({
         [adminDashboardApi.reducerPath]: adminDashboardApi.reducer,
         [walletApi.reducerPath]: walletApi.reducer,
         [paylaterApi.reducerPath]: paylaterApi.reducer,
+        [marketersApi.reducerPath]: marketersApi.reducer,
+        [couponsApi.reducerPath]: couponsApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
@@ -75,6 +79,8 @@ export const store = configureStore({
             adminDashboardApi.middleware,
             walletApi.middleware,
             paylaterApi.middleware,
+            marketersApi.middleware,
+            couponsApi.middleware,
         ),
 });
 

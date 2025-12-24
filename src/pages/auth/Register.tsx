@@ -1,12 +1,15 @@
 // src/pages/auth/Register.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { CheckCircle, XCircle } from "lucide-react";
 import Footer from "../../components/Footer";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { useSignupMutation } from "../../redux/api/authApi";
+import { useValidateReferralCodeMutation } from "../../redux/api/marketersApi";
 
 interface RegisterFormData {
     email: string;
+    referralCode: string;
     acceptTerms: boolean;
 }
 
@@ -15,17 +18,52 @@ type ErrorMessages = Record<string, string>;
 export default function Register() {
     const navigate = useNavigate();
     const [signup, { isLoading }] = useSignupMutation();
+    const [validateReferralCode, { isLoading: isValidatingCode }] = useValidateReferralCodeMutation();
 
     const location = useLocation();
     const from = (location.state as any)?.from?.pathname || "/";
 
     const [formData, setFormData] = useState<RegisterFormData>({
         email: "",
+        referralCode: "",
         acceptTerms: false,
     });
 
     const [errors, setErrors] = useState<ErrorMessages>({});
     const [serverError, setServerError] = useState<string>("");
+    const [referralValidation, setReferralValidation] = useState<{
+        isValid: boolean;
+        marketerName?: string;
+        message?: string;
+    } | null>(null);
+
+    // Validate referral code with debounce
+    useEffect(() => {
+        if (formData.referralCode.trim() === "") {
+            setReferralValidation(null);
+            return;
+        }
+
+        // Debounce validation
+        const timer = setTimeout(async () => {
+            try {
+                const result = await validateReferralCode({
+                    referralCode: formData.referralCode.trim().toUpperCase()
+                }).unwrap();
+
+                if (result.success && result.data) {
+                    setReferralValidation(result.data);
+                }
+            } catch (error) {
+                setReferralValidation({
+                    isValid: false,
+                    message: "Unable to validate code"
+                });
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [formData.referralCode, validateReferralCode]);
 
     const validate = (): boolean => {
         const newErrors: ErrorMessages = {};
@@ -62,7 +100,14 @@ export default function Register() {
         if (!validate()) return;
 
         try {
-            const result = await signup({ email: formData.email }).unwrap();
+            const payload: any = { email: formData.email };
+
+            // Include referral code if provided and valid
+            if (formData.referralCode.trim() && referralValidation?.isValid) {
+                payload.referralCode = formData.referralCode.trim().toUpperCase();
+            }
+
+            const result = await signup(payload).unwrap();
 
             if (result.success) {
                 // Navigate to verification page with email
@@ -93,9 +138,60 @@ export default function Register() {
                         value={formData.email}
                         onChange={handleChange}
                         disabled={isLoading}
-                        className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#E6E6E6] rounded-md mb-3 outline-none placeholder:text-sm disabled:bg-gray-50"
+                        className="w-full py-2 px-3 border border-[#E6E6E6] focus:border-[#1D7B3C] rounded-md mb-3 outline-none placeholder:text-sm disabled:bg-gray-50"
                     />
                     {errors.email && <p className="text-red-500 text-xs mb-3">{errors.email}</p>}
+
+                    {/* Referral Code Field */}
+                    <div className="mb-3">
+                        <label className="block text-sm text-gray-700 mb-1">
+                            Referral Code <span className="text-gray-400">(Optional)</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                name="referralCode"
+                                placeholder="Enter referral code"
+                                value={formData.referralCode}
+                                onChange={(e) => {
+                                    const value = e.target.value.toUpperCase();
+                                    setFormData((prev) => ({ ...prev, referralCode: value }));
+                                }}
+                                disabled={isLoading}
+                                maxLength={12}
+                                className="w-full py-2 px-3 pr-10 border border-[#E6E6E6] focus:border-[#1D7B3C] rounded-md outline-none placeholder:text-sm disabled:bg-gray-50 uppercase"
+                            />
+                            {isValidatingCode && formData.referralCode && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <LoadingSpinner size="sm" />
+                                </div>
+                            )}
+                            {!isValidatingCode && formData.referralCode && referralValidation && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {referralValidation.isValid ? (
+                                        <CheckCircle className="w-5 h-5 text-green-600" />
+                                    ) : (
+                                        <XCircle className="w-5 h-5 text-red-500" />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        {!isValidatingCode && formData.referralCode && referralValidation && (
+                            <div className="mt-1">
+                                {referralValidation.isValid && referralValidation.marketerName ? (
+                                    <p className="text-xs text-green-600 flex items-center gap-1">
+                                        <CheckCircle className="w-3 h-3" />
+                                        Referred by {referralValidation.marketerName}
+                                    </p>
+                                ) : (
+                                    <p className="text-xs text-red-500 flex items-center gap-1">
+                                        <XCircle className="w-3 h-3" />
+                                        {referralValidation.message || "Invalid referral code"}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
                     <div className="flex items-center mb-3 mt-2">
                         <input

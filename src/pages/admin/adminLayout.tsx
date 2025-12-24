@@ -182,7 +182,9 @@ import {
     UserCog,
     Truck,
     Tag,
-    CreditCard
+    CreditCard,
+    Megaphone,
+    Ticket
 } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -312,9 +314,21 @@ const AdminLayout = () => {
             },
             {
                 path: "vendors",
-                label: "Vendors",
+                label: "Farmers",
                 icon: UserCog,
                 permission: "manage_vendors",
+            },
+            {
+                path: "marketers",
+                label: "Marketers",
+                icon: Megaphone,
+                permission: "manage_marketing",
+            },
+            {
+                path: "coupons",
+                label: "Coupons",
+                icon: Ticket,
+                permission: "manage_marketing",
             },
             {
                 path: "admins",

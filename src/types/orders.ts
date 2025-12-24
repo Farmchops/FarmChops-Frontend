@@ -229,6 +229,7 @@ export interface CreateOrderRequest {
     paymentMethod: PaymentMethod;
     deliveryFee: number;
     notes?: string; // pass buyer's note so backend can persist it
+    couponCode?: string; // optional coupon code for discount
     items: Array<{
         productId: string;
         name: string;

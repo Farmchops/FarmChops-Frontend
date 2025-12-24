@@ -9,7 +9,7 @@ import {
 	MapPin,
 	Package,
 	RefreshCcw,
-		Search,
+	Search,
 	ShieldCheck,
 	Truck,
 	Users,
@@ -60,8 +60,15 @@ interface StatusHistoryMetadata {
 	attachments?: StatusHistoryAttachment[];
 }
 
-const formatCurrency = (amount: number) =>
-	new Intl.NumberFormat(undefined, { style: "currency", currency: "NGN" }).format(amount);
+const formatCurrency = (amount: number) => {
+	// API returns amounts in Naira (e.g., 6246 = ₦6,246)
+	// Use en-US locale to avoid automatic currency conversions
+	const formatted = amount.toLocaleString('en-US', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	});
+	return `₦${formatted}`;
+};
 
 const formatDateTime = (iso?: string, withTime = true) => {
 	if (!iso) return "-";
@@ -112,18 +119,19 @@ const resolveErrorMessage = (error: unknown): string => {
 };
 
 const getOrderCurrencyMeta = (order: AdminOrder) => {
-	const summaryTotal = typeof order.summary?.totalAmountInNaira === "number"
-		? order.summary.totalAmountInNaira
-		: undefined;
-	const usesNormalized = summaryTotal !== undefined;
+	// API returns totalAmount in Naira (e.g., 6246 = ₦6,246)
+	// DO NOT use summary.totalAmountInNaira - it's incorrectly divided by 100 on backend
+	// Always use order.totalAmount directly
 	const normalizeAmount = (value?: number | null) => {
 		if (typeof value !== "number" || Number.isNaN(value)) return 0;
-		return usesNormalized ? value : value / 100;
+		// No conversion - values are already in Naira
+		return value;
 	};
+
 	return {
-		usesNormalized,
+		usesNormalized: false,
 		normalizeAmount,
-		displayTotal: summaryTotal ?? normalizeAmount(order.totalAmount),
+		displayTotal: normalizeAmount(order.totalAmount),
 	};
 };
 
@@ -362,7 +370,7 @@ const OrderActionModal = ({
 						</div>
 					)}
 
-		{localError ? <p className="text-xs text-red-600">{localError}</p> : null}
+					{localError ? <p className="text-xs text-red-600">{localError}</p> : null}
 					{error ? <p className="text-xs text-red-600">{error}</p> : null}
 				</div>
 
@@ -492,7 +500,7 @@ const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLo
 														<p className="text-xs text-gray-500">Qty: {item.quantity}</p>
 													</div>
 													<p className="font-medium text-gray-800">{formatCurrency(lineTotal)}</p>
-											</div>
+												</div>
 											);
 										})
 									) : (
@@ -561,8 +569,8 @@ const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLo
 															</div>
 														) : null}
 													</div>
-											</div>
-										);
+												</div>
+											);
 										})
 									) : (
 										<p className="text-sm text-gray-500">No history available.</p>
@@ -873,8 +881,8 @@ const AdminOrders = () => {
 					return order.items?.some(item => item.deal);
 				case "regular":
 					return !order.groupOrder?.isGroupOrder &&
-						   order.paymentMethod !== "pay_later" &&
-						   !order.items?.some(item => item.deal);
+						order.paymentMethod !== "pay_later" &&
+						!order.items?.some(item => item.deal);
 				default:
 					return true;
 			}
@@ -894,17 +902,17 @@ const AdminOrders = () => {
 		const exportData = filteredOrders.map((order) => {
 			const { displayTotal } = getOrderCurrencyMeta(order);
 			return ({
-			"Order Number": order.orderNumber,
-			"Order Type": getOrderTypeLabel(order),
-			"Customer": formatName(order),
-			"Status": order.orderStatus,
-			"Payment Status": order.paymentStatus,
-			"Payment Method": order.paymentMethod,
-			"Total Amount": formatCurrency(displayTotal),
-			"Items": order.items?.length ?? 0,
-			"Created At": formatDateTime(order.createdAt),
-			"Delivery Address": order.deliveryInfo?.address ?? "-",
-			"Phone": order.deliveryInfo?.phoneNumber ?? "-",
+				"Order Number": order.orderNumber,
+				"Order Type": getOrderTypeLabel(order),
+				"Customer": formatName(order),
+				"Status": order.orderStatus,
+				"Payment Status": order.paymentStatus,
+				"Payment Method": order.paymentMethod,
+				"Total Amount": formatCurrency(displayTotal),
+				"Items": order.items?.length ?? 0,
+				"Created At": formatDateTime(order.createdAt),
+				"Delivery Address": order.deliveryInfo?.address ?? "-",
+				"Phone": order.deliveryInfo?.phoneNumber ?? "-",
 			});
 		});
 
@@ -914,8 +922,8 @@ const AdminOrders = () => {
 
 		const filterLabel = orderTypeFilter === "all" ? "All Orders" :
 			orderTypeFilter === "group_sharing" ? "Group Sharing Orders" :
-			orderTypeFilter === "pay_later" ? "Pay Later Orders" :
-			orderTypeFilter === "deal_of_day" ? "Deal of Day Orders" : "Regular Orders";
+				orderTypeFilter === "pay_later" ? "Pay Later Orders" :
+					orderTypeFilter === "deal_of_day" ? "Deal of Day Orders" : "Regular Orders";
 
 		XLSX.writeFile(workbook, `${filterLabel}_${new Date().toISOString().split('T')[0]}.xlsx`);
 	};
@@ -927,8 +935,8 @@ const AdminOrders = () => {
 
 		const filterLabel = orderTypeFilter === "all" ? "All Orders" :
 			orderTypeFilter === "group_sharing" ? "Group Sharing Orders" :
-			orderTypeFilter === "pay_later" ? "Pay Later Orders" :
-			orderTypeFilter === "deal_of_day" ? "Deal of Day Orders" : "Regular Orders";
+				orderTypeFilter === "pay_later" ? "Pay Later Orders" :
+					orderTypeFilter === "deal_of_day" ? "Deal of Day Orders" : "Regular Orders";
 
 		const printContent = `
 			<!DOCTYPE html>
@@ -972,14 +980,14 @@ const AdminOrders = () => {
 					</thead>
 					<tbody>
 						${filteredOrders.map((order) => {
-							const orderTotal = getOrderCurrencyMeta(order).displayTotal;
-							const orderType = getOrderTypeLabel(order);
-							const badgeClass =
-								orderType === "Group Sharing" ? "group-sharing" :
-								orderType === "Pay Later" ? "pay-later" :
-								orderType === "Deal of Day" ? "deal-of-day" : "";
+			const orderTotal = getOrderCurrencyMeta(order).displayTotal;
+			const orderType = getOrderTypeLabel(order);
+			const badgeClass =
+				orderType === "Group Sharing" ? "group-sharing" :
+					orderType === "Pay Later" ? "pay-later" :
+						orderType === "Deal of Day" ? "deal-of-day" : "";
 
-							return `
+			return `
 								<tr>
 									<td>${order.orderNumber}</td>
 									<td><span class="badge ${badgeClass}">${orderType}</span></td>
@@ -990,7 +998,7 @@ const AdminOrders = () => {
 									<td>${formatDateTime(order.createdAt)}</td>
 								</tr>
 							`;
-						}).join('')}
+		}).join('')}
 					</tbody>
 				</table>
 			</body>
@@ -1170,7 +1178,7 @@ const AdminOrders = () => {
 				<div>
 					<h1 className="text-2xl font-semibold text-[#1D7B3C]">Orders workflow</h1>
 				</div>
-								<div className="flex items-center gap-3">
+				<div className="flex items-center gap-3">
 					<button
 						onClick={() => refetch()}
 						type="button"

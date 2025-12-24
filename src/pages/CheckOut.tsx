@@ -10,6 +10,9 @@ import { useGetWalletBalanceQuery, useCreatePaymentLinkMutation } from "@/redux/
 import type { CheckoutResponse } from "@/types/orders";
 import type { CreatePaymentLinkResponse } from "@/types/wallet";
 import { Wallet, AlertCircle, Link2, Copy, Check, Share2, X, Loader2 } from "lucide-react";
+import { useDiscountCalculation } from "@/hooks/useDiscountCalculation";
+import { CouponInput } from "@/components/CouponInput";
+import { DiscountDisplay } from "@/components/DiscountDisplay";
 
 
 // Google Maps types (for TypeScript)
@@ -150,6 +153,18 @@ const Checkout: React.FC = () => {
     const cart = cartData?.cart;
     const totalItems = cartData?.cart?.totalItems || 0;
     const totalAmount = cartData?.cart?.totalAmount || 0;
+
+    // Discount calculation hook - amounts in KOBO
+    const totalAmountInKobo = totalAmount * 100; // Convert Naira to Kobo
+    const {
+        couponCode,
+        applyCoupon,
+        removeCoupon,
+        discountData,
+        isCalculating: isCalculatingDiscount,
+        finalAmount: finalAmountInKobo,
+        totalDiscount: totalDiscountInKobo,
+    } = useDiscountCalculation(totalAmountInKobo);
 
     // Redirect if cart is empty
     useEffect(() => {
@@ -390,6 +405,7 @@ const Checkout: React.FC = () => {
             paymentMethod,
             deliveryFee: deliveryData.delivery.fee ?? 0,
             notes: formData.notes || undefined,
+            couponCode: couponCode.trim() || undefined, // Include coupon code if applied
             items,
         }).unwrap();
 
@@ -663,10 +679,43 @@ const Checkout: React.FC = () => {
                     <div className="space-y-6">
                         <div className="border border-[#9FA5A3]/30 bg-green-100 rounded-lg p-6 sticky top-4">
                             <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+
+                            {/* Coupon Input */}
+                            <div className="mb-4">
+                                <CouponInput
+                                    onApply={applyCoupon}
+                                    isLoading={isCalculatingDiscount}
+                                    currentCode={couponCode}
+                                />
+                            </div>
+
+                            {/* Discount Display */}
+                            {discountData && discountData.discounts.length > 0 && (
+                                <div className="mb-4">
+                                    <DiscountDisplay
+                                        discountData={discountData}
+                                        onRemoveCoupon={removeCoupon}
+                                    />
+                                </div>
+                            )}
+
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between text-gray-600">
-                                    <span>Items ({totalItems}):</span>
+                                    <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'}):</span>
                                     <span className="font-medium">₦{totalAmount.toLocaleString()}</span>
+                                </div>
+
+                                {/* Show discount if applied */}
+                                {totalDiscountInKobo > 0 && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Discount:</span>
+                                        <span className="font-medium">-₦{(totalDiscountInKobo / 100).toLocaleString()}</span>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between text-gray-600">
+                                    <span>Items after discount:</span>
+                                    <span className="font-medium">₦{(finalAmountInKobo / 100).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span>Shipping:</span>
