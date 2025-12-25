@@ -156,6 +156,7 @@ const Checkout: React.FC = () => {
 
     // Discount calculation hook - amounts in KOBO
     const totalAmountInKobo = totalAmount * 100; // Convert Naira to Kobo
+    const deliveryFeeInKobo = checkoutData?.delivery?.fee ? checkoutData.delivery.fee * 100 : 0;
     const {
         couponCode,
         applyCoupon,
@@ -164,7 +165,7 @@ const Checkout: React.FC = () => {
         isCalculating: isCalculatingDiscount,
         finalAmount: finalAmountInKobo,
         totalDiscount: totalDiscountInKobo,
-    } = useDiscountCalculation(totalAmountInKobo);
+    } = useDiscountCalculation(totalAmountInKobo, deliveryFeeInKobo);
 
     // Redirect if cart is empty
     useEffect(() => {

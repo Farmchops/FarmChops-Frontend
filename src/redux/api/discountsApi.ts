@@ -39,7 +39,7 @@ export const discountsApi = createApi({
     // Calculate order discounts (user endpoint - requires user auth)
     calculateDiscounts: builder.mutation<
       ApiResponse<OrderDiscountResponse>,
-      { subtotal: number; couponCode?: string }
+      { subtotal: number; couponCode?: string; deliveryFee?: number }
     >({
       query: (body) => ({
         url: '/orders/calculate-discount',

@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useCalculateDiscountsMutation } from '../redux/api/discountsApi';
 import type { OrderDiscountResponse } from '../types/marketing';
 
-export const useDiscountCalculation = (subtotal: number) => {
+export const useDiscountCalculation = (subtotal: number, deliveryFee: number = 0) => {
   const [couponCode, setCouponCode] = useState<string>('');
   const [discountData, setDiscountData] = useState<OrderDiscountResponse | null>(null);
   const [calculateDiscounts, { isLoading }] = useCalculateDiscountsMutation();
 
-  // Calculate discounts when subtotal or coupon changes
+  // Calculate discounts when subtotal, deliveryFee, or coupon changes
   useEffect(() => {
     const fetchDiscounts = async () => {
       if (subtotal <= 0) {
@@ -19,6 +19,7 @@ export const useDiscountCalculation = (subtotal: number) => {
         const result = await calculateDiscounts({
           subtotal,
           couponCode: couponCode.trim() || undefined,
+          deliveryFee,
         }).unwrap();
 
         if (result.success && result.data) {
@@ -31,7 +32,7 @@ export const useDiscountCalculation = (subtotal: number) => {
     };
 
     fetchDiscounts();
-  }, [subtotal, couponCode, calculateDiscounts]);
+  }, [subtotal, deliveryFee, couponCode, calculateDiscounts]);
 
   const applyCoupon = (code: string) => {
     setCouponCode(code.toUpperCase());
