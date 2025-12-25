@@ -73,10 +73,13 @@ export const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       newErrors.description = 'Description is required';
     }
 
-    if (!formData.discountValue || formData.discountValue <= 0) {
-      newErrors.discountValue = 'Discount value is required';
-    } else if (formData.discountType === 'percentage' && formData.discountValue > 100) {
-      newErrors.discountValue = 'Percentage cannot exceed 100%';
+    // Discount value validation - NOT required for free_delivery type
+    if (formData.discountType !== 'free_delivery') {
+      if (!formData.discountValue || formData.discountValue <= 0) {
+        newErrors.discountValue = 'Discount value is required';
+      } else if (formData.discountType === 'percentage' && formData.discountValue > 100) {
+        newErrors.discountValue = 'Percentage cannot exceed 100%';
+      }
     }
 
     if (formData.maxUsesPerUser && formData.maxUsesPerUser < 1) {
@@ -106,7 +109,9 @@ export const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
         code: formData.code.trim().toUpperCase(),
         discountValue: formData.discountType === 'percentage'
           ? formData.discountValue
-          : (formData.discountValue || 0) * 100, // Convert to kobo
+          : formData.discountType === 'free_delivery'
+          ? 1 // Backend requires a value, use 1 (not used for free_delivery logic)
+          : (formData.discountValue || 0) * 100, // Convert fixed_amount to kobo
         maxDiscountAmount: formData.maxDiscountAmount
           ? formData.maxDiscountAmount * 100
           : undefined,
@@ -233,20 +238,23 @@ export const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {formData.discountType === 'percentage' ? 'Percentage (%)' :
                  formData.discountType === 'fixed_amount' ? 'Amount (₦)' :
-                 'Value'} <span className="text-red-500">*</span>
+                 'Value'} {formData.discountType !== 'free_delivery' && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="number"
                 name="discountValue"
-                value={formData.discountValue || ''}
+                value={formData.discountType === 'free_delivery' ? 'N/A' : (formData.discountValue || '')}
                 onChange={handleChange}
                 disabled={isLoading || formData.discountType === 'free_delivery'}
                 min="0"
                 max={formData.discountType === 'percentage' ? 100 : undefined}
                 step={formData.discountType === 'percentage' ? '1' : '100'}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-green-600 disabled:bg-gray-100"
-                placeholder={formData.discountType === 'percentage' ? 'e.g., 20' : 'e.g., 5000'}
+                placeholder={formData.discountType === 'percentage' ? 'e.g., 20' : formData.discountType === 'free_delivery' ? 'Not applicable' : 'e.g., 5000'}
               />
+              {formData.discountType === 'free_delivery' && (
+                <p className="text-xs text-gray-500 mt-1">Free delivery coupons waive the entire delivery fee</p>
+              )}
               {errors.discountValue && (
                 <p className="text-xs text-red-500 mt-1">{errors.discountValue}</p>
               )}

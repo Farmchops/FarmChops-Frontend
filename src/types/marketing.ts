@@ -118,11 +118,11 @@ export interface DiscountCalculation {
 }
 
 export interface OrderDiscountResponse {
-  subtotal: number;  // in kobo
-  discounts: DiscountCalculation[];
-  bestDiscount?: DiscountCalculation;
-  totalDiscount: number;  // in kobo
-  finalSubtotal: number;  // in kobo
+  subtotalBeforeDiscount: number;  // in kobo (original subtotal)
+  availableDiscounts: DiscountCalculation[];  // All available discounts
+  bestDiscount?: DiscountCalculation;  // The best discount (highest value)
+  totalDiscount: number;  // in kobo (amount of best discount)
+  finalSubtotal: number;  // in kobo (subtotal after discount)
 }
 
 // Referral Code Validation

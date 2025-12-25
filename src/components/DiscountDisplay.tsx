@@ -11,7 +11,7 @@ export const DiscountDisplay: React.FC<DiscountDisplayProps> = ({
   discountData,
   onRemoveCoupon
 }) => {
-  if (!discountData || discountData.discounts.length === 0) {
+  if (!discountData || discountData.availableDiscounts.length === 0) {
     return null;
   }
 
@@ -28,7 +28,13 @@ export const DiscountDisplay: React.FC<DiscountDisplayProps> = ({
 
       {/* Show all available discounts */}
       <div className="space-y-2">
-        {discountData.discounts.map((discount, index) => (
+        {discountData.availableDiscounts.map((discount: {
+          type: string;
+          code?: string;
+          description: string;
+          amount: number;
+          applied: boolean;
+        }, index: number) => (
           <div
             key={index}
             className={`flex items-start justify-between text-sm ${
@@ -77,7 +83,7 @@ export const DiscountDisplay: React.FC<DiscountDisplayProps> = ({
               {formatCurrency(discountData.totalDiscount)}
             </span>
           </div>
-          {discountData.discounts.length > 1 && (
+          {discountData.availableDiscounts.length > 1 && (
             <p className="text-xs text-green-700 mt-1">
               We automatically applied the best discount for you
             </p>

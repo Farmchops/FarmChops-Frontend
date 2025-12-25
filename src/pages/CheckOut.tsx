@@ -690,7 +690,7 @@ const Checkout: React.FC = () => {
                             </div>
 
                             {/* Discount Display */}
-                            {discountData && discountData.discounts.length > 0 && (
+                            {discountData && discountData.availableDiscounts.length > 0 && (
                                 <div className="mb-4">
                                     <DiscountDisplay
                                         discountData={discountData}
