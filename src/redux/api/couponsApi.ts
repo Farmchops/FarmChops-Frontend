@@ -5,8 +5,6 @@ import type {
   Coupon,
   CreateCouponPayload,
   UpdateCouponPayload,
-  CouponValidation,
-  OrderDiscountResponse,
   CouponUsageReport,
   PaginationParams,
   PaginationMeta,
