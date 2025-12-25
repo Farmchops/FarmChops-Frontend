@@ -115,14 +115,17 @@ export interface DiscountCalculation {
   description: string;
   amount: number;  // in kobo
   applied: boolean;
+  isFreeDelivery?: boolean;  // true if it's a free delivery coupon
 }
 
 export interface OrderDiscountResponse {
-  subtotalBeforeDiscount: number;  // in kobo (original subtotal)
-  availableDiscounts: DiscountCalculation[];  // All available discounts
+  subtotal: number;  // in kobo (subtotal before discount)
+  discounts: DiscountCalculation[];  // All available discounts
   bestDiscount?: DiscountCalculation;  // The best discount (highest value)
   totalDiscount: number;  // in kobo (amount of best discount)
   finalSubtotal: number;  // in kobo (subtotal after discount)
+  hasFreeDelivery?: boolean;  // whether free delivery applies
+  freeDeliveryCoupon?: string | null;  // coupon code if free delivery
 }
 
 // Referral Code Validation
