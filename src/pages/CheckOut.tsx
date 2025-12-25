@@ -724,12 +724,22 @@ const Checkout: React.FC = () => {
                                         {isCalculatingDelivery ? (
                                             <span className="text-gray-400">Calculating...</span>
                                         ) : checkoutData ? (
-                                            <span className="text-green-600">₦{checkoutData.delivery.fee.toLocaleString()}</span>
+                                            discountData?.hasFreeDelivery ? (
+                                                <span className="text-green-600 line-through">₦{checkoutData.delivery.fee.toLocaleString()}</span>
+                                            ) : (
+                                                <span className="text-green-600">₦{checkoutData.delivery.fee.toLocaleString()}</span>
+                                            )
                                         ) : (
                                             <span className="text-gray-400">Enter address</span>
                                         )}
                                     </span>
                                 </div>
+                                {discountData?.hasFreeDelivery && checkoutData && (
+                                    <div className="flex justify-between text-green-600 font-medium">
+                                        <span>Free Delivery Applied:</span>
+                                        <span>-₦{checkoutData.delivery.fee.toLocaleString()}</span>
+                                    </div>
+                                )}
                                 {checkoutData && !isCalculatingDelivery && (
                                     <div className="text-xs text-gray-500 animate-fade-in">
                                         <p>📍 Distance: {checkoutData.delivery.distanceText}</p>
@@ -745,7 +755,18 @@ const Checkout: React.FC = () => {
                                 <div className="flex justify-between font-bold text-lg border-t border-[#9FA5A3]/30 pt-3 mt-3">
                                     <span>Total:</span>
                                     <span className="text-[#1D7B3C]">
-                                        ₦{checkoutData ? checkoutData.totals.grandTotal.toLocaleString() : totalAmount.toLocaleString()}
+                                        {checkoutData ? (
+                                            (() => {
+                                                // Calculate correct total considering free delivery
+                                                const actualDeliveryFee = discountData?.hasFreeDelivery ? 0 : checkoutData.delivery.fee;
+                                                const subtotalAfterDiscount = finalAmountInKobo / 100; // Already in Naira
+                                                const tax = Math.round(subtotalAfterDiscount * 0.075);
+                                                const total = subtotalAfterDiscount + actualDeliveryFee + tax;
+                                                return `₦${total.toLocaleString()}`;
+                                            })()
+                                        ) : (
+                                            `₦${totalAmount.toLocaleString()}`
+                                        )}
                                     </span>
                                 </div>
                             </div>
