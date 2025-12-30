@@ -188,6 +188,7 @@ export interface MarketerReport {
 export interface AllMarketersReportSummary {
   totalMarketers: number;
   activeMarketers: number;
+  marketersWithActivity: number;
   totalSignups: number;
   totalOrders: number;
   totalRevenue: number;  // in kobo
