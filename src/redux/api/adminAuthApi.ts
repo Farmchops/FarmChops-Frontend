@@ -1,7 +1,7 @@
 // src/store/api/adminAuthApi.ts
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { createAdminAuthBaseQuery } from './baseQuery';
-import { setAdminCredentials, logoutAdmin } from '../features/auth/adminAuthSlice';
+import { setAdminCredentials } from '../features/auth/adminAuthSlice';
 import type { ApiResponse } from '@/types/api';
 
 // Admin Types
