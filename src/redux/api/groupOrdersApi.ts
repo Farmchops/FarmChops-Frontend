@@ -1,6 +1,6 @@
 // src/redux/api/groupOrdersApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAuthBaseQuery } from './baseQuery';
 import type {
   GroupOrder,
   GroupOrderListResponse,
@@ -22,17 +22,7 @@ import type {
 
 export const groupOrdersApi = createApi({
   reducerPath: 'groupOrdersApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: 'https://api.farmchops.com/api',
-    prepareHeaders: (headers, { getState }) => {
-      const state = getState() as RootState;
-      const token = state.adminAuth?.token || state.auth?.token;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: createAuthBaseQuery('https://api.farmchops.com/api'),
   tagTypes: ['GroupOrders', 'MyGroups', 'AdminGroups'],
   endpoints: (builder) => ({
     // ==================== PUBLIC ENDPOINTS ====================

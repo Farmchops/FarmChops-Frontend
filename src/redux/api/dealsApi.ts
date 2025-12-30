@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAuthBaseQuery } from './baseQuery';
 import type {
     ActiveDealPayload,
     AdminDealsListResponse,
@@ -7,7 +8,6 @@ import type {
     UpcomingDealPayload,
 } from '@/types/deals';
 import type { ApiResponse } from '@/types/api';
-import type { RootState } from '../store';
 
 const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
 
@@ -57,20 +57,7 @@ interface UpdateDealStatusPayload {
     reason?: string;
 }
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    prepareHeaders: (headers, { getState }) => {
-        const state = getState() as RootState;
-        const adminToken = state.adminAuth?.token;
-        const customerToken = state.auth?.token;
-        const bearer = adminToken ?? customerToken;
-        if (bearer) {
-            headers.set('authorization', `Bearer ${bearer}`);
-        }
-        headers.set('accept', 'application/json');
-        return headers;
-    },
-});
+const baseQuery = createAuthBaseQuery(API_BASE_URL);
 
 export const dealsApi = createApi({
     reducerPath: 'dealsApi',

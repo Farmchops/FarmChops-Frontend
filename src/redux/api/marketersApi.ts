@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAdminAuthBaseQuery } from './baseQuery';
 import type { ApiResponse } from '@/types/api';
 import type {
   Marketer,
@@ -14,17 +14,7 @@ import type {
   ReferralCodeValidation
 } from '@/types/marketing';
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_BASE_URL,
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).adminAuth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    headers.set('content-type', 'application/json');
-    return headers;
-  },
-});
+const baseQuery = createAdminAuthBaseQuery(import.meta.env.VITE_API_BASE_URL);
 
 export const marketersApi = createApi({
   reducerPath: 'marketersApi',

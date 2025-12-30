@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAuthBaseQuery } from './baseQuery';
 import type { ApiResponse } from '@/types/api';
 import type {
   CouponValidation,
@@ -7,17 +7,7 @@ import type {
 } from '@/types/marketing';
 
 // This API uses USER auth token for customer-facing discount operations
-const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_BASE_URL,
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    headers.set('content-type', 'application/json');
-    return headers;
-  },
-});
+const baseQuery = createAuthBaseQuery(import.meta.env.VITE_API_BASE_URL);
 
 export const discountsApi = createApi({
   reducerPath: 'discountsApi',

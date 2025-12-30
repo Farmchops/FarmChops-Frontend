@@ -1,5 +1,5 @@
 // src/store/api/authApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { logout, setCredentials } from '../features/auth/authSlice';
 import type {
     User,
@@ -12,33 +12,11 @@ import type {
     ApiResponse,
 } from '../../types/auth';
 import type { RootState } from '../store';
-
-const baseQuery = fetchBaseQuery({
-    baseUrl: 'https://api.farmchops.com/api/auth',
-    prepareHeaders: (headers, { getState }) => {
-        const token = ((getState as () => RootState)()).auth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        headers.set('content-type', 'application/json');
-        return headers;
-    },
-});
-
-const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
-    let result = await baseQuery(args, api, extraOptions);
-
-    if (result.error?.status === 401) {
-        // Token expired or invalid, logout user
-        api.dispatch(logout());
-    }
-
-    return result;
-};
+import { createAuthBaseQuery } from './baseQuery';
 
 export const authApi = createApi({
     reducerPath: 'authApi',
-    baseQuery: baseQueryWithReauth,
+    baseQuery: createAuthBaseQuery('https://api.farmchops.com/api/auth'),
     tagTypes: ['User'],
     endpoints: (builder) => ({
         // Initial signup (email only)

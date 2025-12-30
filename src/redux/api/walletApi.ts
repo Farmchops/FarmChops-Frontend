@@ -1,6 +1,5 @@
 // src/redux/api/walletApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { ApiResponse } from '@/types/api';
 import type {
   WalletBalance,
@@ -21,25 +20,13 @@ import type {
   MyPaymentLinksResponse,
   CancelPaymentLinkResponse,
 } from '@/types/wallet';
+import { createAuthBaseQuery } from './baseQuery';
 
 const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: API_BASE_URL,
-  credentials: 'include',
-  prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    headers.set('content-type', 'application/json');
-    return headers;
-  },
-});
-
 export const walletApi = createApi({
   reducerPath: 'walletApi',
-  baseQuery,
+  baseQuery: createAuthBaseQuery(API_BASE_URL),
   tagTypes: ['WalletBalance', 'WalletTransactions', 'PaymentLinks', 'PaymentLink'],
   endpoints: (builder) => ({
     // ==================== WALLET ENDPOINTS ====================

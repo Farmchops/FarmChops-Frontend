@@ -1,7 +1,7 @@
 // src/store/api/adminAuthApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAdminAuthBaseQuery } from './baseQuery';
 import { setAdminCredentials, logoutAdmin } from '../features/auth/adminAuthSlice';
-import type { RootState } from '../store';
 import type { ApiResponse } from '@/types/api';
 
 // Admin Types
@@ -67,28 +67,7 @@ export interface AdminSendInviteResponse {
     expiresIn: string;
 }
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: 'https://api.farmchops.com/api/admin/auth',
-    prepareHeaders: (headers, { getState }) => {
-        const token = ((getState as () => RootState)()).adminAuth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        headers.set('content-type', 'application/json');
-        return headers;
-    },
-});
-
-const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
-    let result = await baseQuery(args, api, extraOptions);
-
-    if (result.error?.status === 401) {
-        // Token expired or invalid, logout admin
-        api.dispatch(logoutAdmin());
-    }
-
-    return result;
-};
+const baseQueryWithReauth = createAdminAuthBaseQuery('https://api.farmchops.com/api/admin/auth');
 
 export const adminAuthApi = createApi({
     reducerPath: 'adminAuthApi',

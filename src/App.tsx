@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import { useEffect } from 'react';
 
 import { AuthSessionHandler } from './lib/authSessionHandler';
+import { checkAppVersion } from './lib/versionCheck';
 import type { RootState } from './redux/store';
 import { useSelector } from 'react-redux';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
@@ -14,6 +15,11 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, profileComplete } = useSelector((state: RootState) => state.auth);
+
+  // Check app version and clear cache if needed (run once on app load)
+  useEffect(() => {
+    checkAppVersion();
+  }, []);
 
   // Initialize session handler
   useEffect(() => {

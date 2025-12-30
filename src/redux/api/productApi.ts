@@ -1,6 +1,5 @@
 // src/store/api/productApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type {
     Product,
     ProductsListResponse,
@@ -10,26 +9,11 @@ import type {
     GroupConfig
 } from '@/types/product';
 import type { ApiResponse } from '@/types/api';
-
-const baseQuery = fetchBaseQuery({
-    baseUrl: 'https://api.farmchops.com/api',
-    prepareHeaders: (headers, { getState }) => {
-        const state = getState() as RootState;
-        const token = state.adminAuth.token;
-        // Debug logging - check if token exists
-        if (!token) {
-            console.warn('[Product API] No admin token found in Redux state.');
-        }
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        return headers;
-    },
-});
+import { createAdminAuthBaseQuery } from './baseQuery';
 
 export const productApi = createApi({
     reducerPath: 'productApi',
-    baseQuery,
+    baseQuery: createAdminAuthBaseQuery('https://api.farmchops.com/api'),
     tagTypes: ['Product', 'Products', 'ProductStats'],
     endpoints: (builder) => ({
         // Get all products with pagination (public endpoint)

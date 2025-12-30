@@ -1,6 +1,6 @@
 // src/redux/api/adminDashboardApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAdminAuthBaseQuery } from './baseQuery';
 import type { ApiResponse } from '@/types/api';
 
 // Response Types
@@ -109,22 +109,7 @@ export interface TopProductsQueryArgs extends DashboardDateFilter {
 
 const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: API_BASE_URL,
-  prepareHeaders: (headers, { getState }) => {
-    const state = getState() as RootState;
-    const token = state.adminAuth.token;
-    // Debug logging - check if token exists (can be removed in production)
-    if (!token) {
-      console.warn('[Dashboard API] No admin token found in Redux state. Check if you are logged in.');
-    }
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    headers.set('accept', 'application/json');
-    return headers;
-  },
-});
+const baseQuery = createAdminAuthBaseQuery(API_BASE_URL);
 
 export const adminDashboardApi = createApi({
   reducerPath: 'adminDashboardApi',

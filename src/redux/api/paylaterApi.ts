@@ -1,6 +1,6 @@
 // src/redux/api/paylaterApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAuthBaseQuery, createAdminAuthBaseQuery } from './baseQuery';
 
 // ==================== TYPES ====================
 
@@ -183,35 +183,10 @@ export interface AdminPayLaterUser {
 
 // ==================== API ====================
 
-// Base query for user endpoints (uses auth.token)
-const userBaseQuery = fetchBaseQuery({
-    baseUrl: "https://api.farmchops.com/api/",
-    credentials: 'include',
-    prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).auth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        headers.set('content-type', 'application/json');
-        return headers;
-    },
-});
-
-// Base query for admin endpoints (uses adminAuth.token)
-const adminBaseQuery = fetchBaseQuery({
-    baseUrl: "https://api.farmchops.com/api/",
-    credentials: 'include',
-    prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).adminAuth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        headers.set('content-type', 'application/json');
-        return headers;
-    },
-});
-
 // Dynamic base query that chooses based on endpoint
+const userBaseQuery = createAuthBaseQuery("https://api.farmchops.com/api/");
+const adminBaseQuery = createAdminAuthBaseQuery("https://api.farmchops.com/api/");
+
 const baseQuery: typeof userBaseQuery = async (args, api, extraOptions) => {
     // Check if this is an admin endpoint
     const url = typeof args === 'string' ? args : args.url;

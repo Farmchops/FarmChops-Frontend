@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAdminAuthBaseQuery } from './baseQuery';
 import type { ApiResponse } from '@/types/api';
 
 // Minimal farmer shape used by the admin UI. Extend as needed.
@@ -12,15 +12,7 @@ type Farmer = {
     [key: string]: unknown;
 };
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: 'https://api.farmchops.com/api',
-    prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).adminAuth?.token;
-        if (token) headers.set('authorization', `Bearer ${token}`);
-        headers.set('content-type', 'application/json');
-        return headers;
-    },
-});
+const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api');
 
 export const vendorsApi = createApi({
     reducerPath: 'vendorsApi',

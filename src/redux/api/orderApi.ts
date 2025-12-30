@@ -1,6 +1,5 @@
 // src/store/api/orderApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { ApiResponse } from '@/types/api';
 import type {
     CheckoutRequest,
@@ -12,25 +11,13 @@ import type {
     Order,
 } from '@/types/orders';
 import { walletApi } from './walletApi';
+import { createAuthBaseQuery } from './baseQuery';
 
 const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    credentials: 'include', // keep session cookies for cart/order flows (same-origin)
-    prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).auth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        headers.set('content-type', 'application/json');
-        return headers;
-    },
-});
-
 export const orderApi = createApi({
     reducerPath: 'orderApi',
-    baseQuery,
+    baseQuery: createAuthBaseQuery(API_BASE_URL),
     tagTypes: ['Order', 'Orders', 'ActiveDeal'],
     endpoints: (builder) => ({
         // Step 1: Checkout - Validate cart and calculate delivery

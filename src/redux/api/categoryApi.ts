@@ -1,6 +1,6 @@
 // src/store/api/categoryApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAdminAuthBaseQuery } from './baseQuery';
 
 // API Response types
 interface ApiResponse<T = any> {
@@ -50,16 +50,7 @@ interface DeleteCategoryResponse {
 //     isActive?: boolean;
 // }
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: 'https://api.farmchops.com/api',
-    prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).adminAuth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        return headers;
-    },
-});
+const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api');
 
 export const categoryApi = createApi({
     reducerPath: 'categoryApi',

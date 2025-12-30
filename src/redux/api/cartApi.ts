@@ -1,7 +1,7 @@
 // src/store/api/cartApi.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { ApiResponse } from '@/types/api';
+import { createAuthBaseQuery } from './baseQuery';
 
 // Cart Types
 export interface CartItem {
@@ -60,24 +60,9 @@ export interface ApiResponseCart {
 }
 
 
-const baseQuery = fetchBaseQuery({
-    // baseUrl: '/api',
-    baseUrl: "https://api.farmchops.com/api/",
-    credentials: 'include', // ✅ CRITICAL: Sends cookies (for session)
-    prepareHeaders: (headers, { getState }) => {
-        // Send JWT if logged in
-        const token = (getState() as RootState).auth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        headers.set('content-type', 'application/json');
-        return headers;
-    },
-});
-
 export const cartApi = createApi({
     reducerPath: 'cartApi',
-    baseQuery,
+    baseQuery: createAuthBaseQuery('https://api.farmchops.com/api'),
     tagTypes: ['Cart'],
     endpoints: (builder) => ({
         // Get cart items (works for both anonymous and logged-in users)
