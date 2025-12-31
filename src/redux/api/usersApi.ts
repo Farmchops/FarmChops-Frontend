@@ -54,7 +54,7 @@ export const usersApi = createApi({
         if (search) params.set('search', search);
         if (sortBy) params.set('sortBy', sortBy);
         if (order) params.set('order', order);
-        return `/admin/users?${params.toString()}`;
+        return `/users/admin/getAllUsers?${params.toString()}`;
       },
       providesTags: (result) =>
         result?.data?.users
