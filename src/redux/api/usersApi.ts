@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { createAdminAuthBaseQuery } from './baseQuery';
 import type { ApiResponse } from '@/types/api';
 
-const baseQuery = createAdminAuthBaseQuery(import.meta.env.VITE_API_BASE_URL);
+const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api/users/admin');
 
 export interface User {
   _id: string;
@@ -54,7 +54,7 @@ export const usersApi = createApi({
         if (search) params.set('search', search);
         if (sortBy) params.set('sortBy', sortBy);
         if (order) params.set('order', order);
-        return `/users/admin/getAllUsers?${params.toString()}`;
+        return `/getAllUsers?${params.toString()}`;
       },
       providesTags: (result) =>
         result?.data?.users
