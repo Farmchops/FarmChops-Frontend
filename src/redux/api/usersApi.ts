@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { createAdminAuthBaseQuery } from './baseQuery';
 import type { ApiResponse } from '@/types/api';
 
-const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api/users/admin');
+const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api/admin/users');
 
 export interface User {
   _id: string;
@@ -54,7 +54,7 @@ export const usersApi = createApi({
         if (search) params.set('search', search);
         if (sortBy) params.set('sortBy', sortBy);
         if (order) params.set('order', order);
-        return `/getAllUsers?${params.toString()}`;
+        return `/?${params.toString()}`;
       },
       providesTags: (result) =>
         result?.data?.users
