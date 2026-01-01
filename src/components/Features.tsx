@@ -40,8 +40,8 @@ const features = [
     },
     {
         id: 6,
-    icon: group,
-    title: "Become a Farmer",
+        icon: group,
+        title: "Become a Vendor",
         description:
             "Grow with Farmchops. Are you a farmer or producer passionate about sustainability and quality? Join our growing network of local farmers and showcase your harvest to thousands of happy customers."
     }

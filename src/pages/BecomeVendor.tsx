@@ -91,79 +91,79 @@ const BecomeFarmer: React.FC = () => {
     <div className="max-w-5xl mx-auto p-0 bg-white rounded-lg shadow mt-8 overflow-hidden">
       <div className="grid grid-cols-1 md:grid-cols-2 items-stretch">
         <div className="order-1 md:order-0 overflow-hidden">
-             <img
-               src="/farmer-hero.png"
-               alt="Farmers holding produce"
-               className="w-full h-80 md:h-full object-cover block object-[25%_center]"
-               onError={(e) => { (e.currentTarget as HTMLImageElement).src = farmerHeroFallback; }}
-             />
+          <img
+            src="/farmer-hero.png"
+            alt="Farmers holding produce"
+            className="w-full h-80 md:h-full object-cover block object-[25%_center]"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = farmerHeroFallback; }}
+          />
         </div>
         <div className="bg-white p-6 flex flex-col justify-center">
-          <h2 className="text-3xl font-bold text-[#1D7B3C] mb-2">Become a Farmer</h2>
+          <h2 className="text-3xl font-bold text-[#1D7B3C] mb-2">Become a Vendor</h2>
           <p className="mb-6 text-gray-700">
             Are you a farmer or producer of quality goods and produce? Would you like to join the FarmChops team? Let's get you started!
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium mb-1">First name</label>
-            <input name="firstName" value={form.firstName} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Last name</label>
-            <input name="lastName" value={form.lastName} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-          </div>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Gender</label>
-          <select name="gender" value={form.gender} onChange={handleChange} required className="w-full border rounded px-3 py-2">
-            <option value="">Select</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Address</label>
-          <input name="address" value={form.address} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Phone number</label>
-          <input name="phone" value={form.phone} onChange={handleChange} placeholder="e.g. +2348012345678" className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Email</label>
-          <input name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" type="email" className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Nationality</label>
-          <input name="nationality" value={form.nationality} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">NIN</label>
-          <input name="nin" value={form.nin} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Items/Produce for Sale</label>
-          {items.map((item, idx) => (
-            <div key={idx} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={item}
-                onChange={e => handleItemChange(idx, e.target.value)}
-                placeholder="e.g. Tomatoes, Yams"
-                className="flex-1 border rounded px-3 py-2"
-                required
-              />
-              {items.length > 1 && (
-                <button type="button" onClick={() => removeItem(idx)} className="text-red-500 px-2">Remove</button>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-medium mb-1">First name</label>
+                <input name="firstName" value={form.firstName} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Last name</label>
+                <input name="lastName" value={form.lastName} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+              </div>
             </div>
-          ))}
-          <button type="button" onClick={addItem} className="text-[#1D7B3C] font-medium">+ Add another item</button>
-        </div>
-        <button type="submit" className="w-full bg-[#1D7B3C] text-white py-2 rounded font-semibold hover:bg-green-800 transition">Submit</button>
-      </form>
+            <div>
+              <label className="block font-medium mb-1">Gender</label>
+              <select name="gender" value={form.gender} onChange={handleChange} required className="w-full border rounded px-3 py-2">
+                <option value="">Select</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Address</label>
+              <input name="address" value={form.address} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Phone number</label>
+              <input name="phone" value={form.phone} onChange={handleChange} placeholder="e.g. +2348012345678" className="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Email</label>
+              <input name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" type="email" className="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Nationality</label>
+              <input name="nationality" value={form.nationality} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">NIN</label>
+              <input name="nin" value={form.nin} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Items/Produce for Sale</label>
+              {items.map((item, idx) => (
+                <div key={idx} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={item}
+                    onChange={e => handleItemChange(idx, e.target.value)}
+                    placeholder="e.g. Tomatoes, Yams"
+                    className="flex-1 border rounded px-3 py-2"
+                    required
+                  />
+                  {items.length > 1 && (
+                    <button type="button" onClick={() => removeItem(idx)} className="text-red-500 px-2">Remove</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={addItem} className="text-[#1D7B3C] font-medium">+ Add another item</button>
+            </div>
+            <button type="submit" className="w-full bg-[#1D7B3C] text-white py-2 rounded font-semibold hover:bg-green-800 transition">Submit</button>
+          </form>
         </div>
       </div>
     </div>

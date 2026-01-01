@@ -2,6 +2,11 @@ import React from 'react'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 import { ArrowRight, CreditCard, Tag, Users, ShoppingCart, Wallet } from 'lucide-react'
+import paylaterImg from '../assets/paylater_realistic_1767287390281.png'
+import payformeImg from '../assets/payforme_realistic_1767287422338.png'
+import dealImg from '../assets/deal_realistic_1767287461795.png'
+import bulkImg from '../assets/bulk_realistic_1767287511931.png'
+import walletImg from '../assets/wallet_realistic_1767287547039.png'
 
 const Services: React.FC = () => {
   const services = [
@@ -11,6 +16,7 @@ const Services: React.FC = () => {
       tagline: "Shop Now, Pay Later",
       description: "Get fresh produce today and pay later from your salary. Approved customers can shop now and have the amount automatically deducted from their salary after a month.",
       icon: <CreditCard className="w-12 h-12" />,
+      image: paylaterImg,
       link: "/paylater",
       features: [
         "Automatic salary deduction after a month",
@@ -25,6 +31,7 @@ const Services: React.FC = () => {
       tagline: "Share Your Cart, Share the Love",
       description: "Shopping for someone else or need someone to pay for you? Generate a secure payment link and share it with family, friends, or partners.",
       icon: <Users className="w-12 h-12" />,
+      image: payformeImg,
       link: "/checkout",
       features: [
         "Secure payment links",
@@ -39,6 +46,7 @@ const Services: React.FC = () => {
       tagline: "Unbeatable Daily Discounts",
       description: "Discover amazing deals on fresh produce every day. Limited quantities at discounted prices - grab them before they're gone!",
       icon: <Tag className="w-12 h-12" />,
+      image: dealImg,
       link: "/deals",
       features: [
         "Daily rotating deals on premium produce",
@@ -53,6 +61,7 @@ const Services: React.FC = () => {
       tagline: "Buy More, Save More",
       description: "Purchase in bulk and enjoy significant savings. Perfect for families, restaurants, or group orders. Share with friends and split the cost!",
       icon: <ShoppingCart className="w-12 h-12" />,
+      image: bulkImg,
       link: "/group-sharing",
       features: [
         "Wholesale prices for bulk orders",
@@ -67,6 +76,7 @@ const Services: React.FC = () => {
       tagline: "Quick & Easy Payments",
       description: "Load funds into your FarmChops wallet for faster checkouts and seamless transactions. Enjoy the convenience of instant payments and track your spending easily.",
       icon: <Wallet className="w-12 h-12" />,
+      image: walletImg,
       link: "/profile/wallet",
       features: [
         "Instant payment processing",
@@ -78,7 +88,7 @@ const Services: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-green-50">
       {/* Hero Section */}
       <section className="relative px-6 md:px-12 lg:px-20 py-20 md:py-28 bg-gradient-to-br from-[#1D7B3C] to-[#20571E] text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -103,18 +113,27 @@ const Services: React.FC = () => {
             {services.map((service, index) => (
               <div
                 key={service.id}
-                className={`group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden ${
-                  index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-                } flex flex-col md:flex`}
+                className={`group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+                  } flex flex-col md:flex`}
               >
                 {/* Gradient Background */}
                 <div className="absolute inset-0 bg-gradient-to-r from-[#1D7B3C] to-[#20571E] opacity-0 group-hover:opacity-5 transition-opacity duration-500"></div>
 
-                {/* Icon Section */}
-                <div className="relative flex items-center justify-center p-12 md:w-2/5 bg-gradient-to-br from-[#1D7B3C] to-[#20571E]">
-                  <div className="text-white transform group-hover:scale-110 transition-transform duration-500">
-                    {service.icon}
-                  </div>
+                {/* Image/Icon Section */}
+                <div className="relative flex items-center justify-center md:w-2/5 overflow-hidden">
+                  {service.image ? (
+                    <img
+                      src={service.image}
+                      alt={service.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center p-12 w-full h-full bg-gradient-to-br from-[#1D7B3C] to-[#20571E]">
+                      <div className="text-white transform group-hover:scale-110 transition-transform duration-500">
+                        {service.icon}
+                      </div>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
                 </div>
 

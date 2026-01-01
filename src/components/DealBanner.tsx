@@ -9,7 +9,7 @@ const quickOptions = [
     { label: "Bulk Buying", breakpoint: "sm" as const, alwaysVisible: false },
     { label: "Pay Later", breakpoint: "sm" as const, alwaysVisible: false },
     { label: "Group Sharing", breakpoint: "sm" as const, alwaysVisible: false },
-    { label: "Become a farmer", breakpoint: "md" as const, alwaysVisible: false },
+    { label: "Become a Vendor", breakpoint: "md" as const, alwaysVisible: false },
 ] as const;
 
 export const DealBanner = () => {
@@ -42,7 +42,7 @@ export const DealBanner = () => {
                         "Bulk Buying": "/bulk-buying",
                         "Pay Later": "/paylater",
                         "Group Sharing": "/group-sharing",
-                        "Become a farmer": "/become-farmer"
+                        "Become a Vendor": "/become-farmer"
                     };
                     const link = linkMap[option.label];
 
@@ -91,7 +91,7 @@ export const DealBanner = () => {
                         "Bulk Buying": "/bulk-buying",
                         "Pay Later": "/paylater",
                         "Group Sharing": "/group-sharing",
-                        "Become a farmer": "/become-farmer"
+                        "Become a Vendor": "/become-farmer"
                     };
                     const link = linkMap[option.label];
 
