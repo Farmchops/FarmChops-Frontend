@@ -13,6 +13,7 @@ import type {
 } from '../../types/auth';
 import type { RootState } from '../store';
 import { createAuthBaseQuery } from './baseQuery';
+import { cartApi } from './cartApi';
 
 export const authApi = createApi({
     reducerPath: 'authApi',
@@ -44,6 +45,9 @@ export const authApi = createApi({
                             token: data.data.token,
                             profileComplete: false, // New user needs to complete profile
                         }));
+
+                        // Invalidate cart cache to fetch merged cart from backend
+                        dispatch(cartApi.util.invalidateTags(['Cart']));
                     }
                 } catch (error) {
                     // Handle error
@@ -71,6 +75,9 @@ export const authApi = createApi({
                             token: data.data.token,
                             profileComplete,
                         }));
+
+                        // Invalidate cart cache to fetch merged cart from backend
+                        dispatch(cartApi.util.invalidateTags(['Cart']));
                     }
                 } catch (error) {
                     // Handle error

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Users as UsersIcon, ShoppingBag, Wallet } from 'lucide-react';
+import { Search, Users as UsersIcon } from 'lucide-react';
 import { useGetUsersQuery } from '@/redux/api/usersApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
@@ -16,19 +16,6 @@ const Users = () => {
   const users = data?.data?.users || [];
   const pagination = data?.data?.pagination;
 
-  const formatCurrency = (amountInKobo: number) => {
-    return `₦${(amountInKobo / 100).toLocaleString()}`;
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   return (
     <div className="p-6">
       {/* Header */}
@@ -37,50 +24,6 @@ const Users = () => {
         <p className="text-sm text-gray-600 mt-1">View all registered customers and their purchase history</p>
       </div>
 
-      {/* Summary Cards */}
-      {pagination && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Users</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">{pagination.total}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <UsersIcon className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Orders</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">
-                  {users.reduce((sum, u) => sum + u.purchaseStats.totalOrders, 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <ShoppingBag className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Wallet Balance</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">
-                  {formatCurrency(users.reduce((sum, u) => sum + u.walletBalance, 0))}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Wallet className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Search */}
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
@@ -121,22 +64,16 @@ const Users = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                    Full Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phone
+                    Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Orders
+                    Phone Number
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Spent
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Wallet Balance
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Order
+                    Orders
                   </th>
                 </tr>
               </thead>
@@ -144,12 +81,12 @@ const Users = () => {
                 {users.map((user) => (
                   <tr key={user._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {user.firstName} {user.lastName}
-                        </div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
+                      <div className="font-medium text-gray-900">
+                        {user.firstName} {user.lastName}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {user.phone}
@@ -158,19 +95,6 @@ const Users = () => {
                       <span className="px-2 py-1 text-sm font-semibold bg-blue-100 text-blue-800 rounded">
                         {user.purchaseStats.totalOrders}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatCurrency(user.purchaseStats.totalSpent)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-sm font-medium ${
-                        user.walletBalance > 0 ? 'text-green-600' : 'text-gray-500'
-                      }`}>
-                        {formatCurrency(user.walletBalance)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(user.purchaseStats.lastOrderDate)}
                     </td>
                   </tr>
                 ))}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, Download, Calendar, TrendingUp, ShoppingCart, UserCheck, ChevronDown } from 'lucide-react';
+import { Plus, Download, Calendar, ChevronDown, Users } from 'lucide-react';
 import { useGetAllMarketersReportQuery } from '@/redux/api/marketersApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { CreateMarketerModal } from '@/components/modals/CreateMarketerModal';
@@ -224,73 +224,6 @@ export default function MarketersListPage() {
         )}
       </div>
 
-      {/* Summary Cards */}
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Marketers</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">{summary.totalMarketers || 0}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Marketers</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">{summary.activeMarketers || 0}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <UserCheck className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">With Activity</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">{summary.marketersWithActivity || 0}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <UserCheck className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Orders</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">{summary.totalOrders || 0}</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <ShoppingCart className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Sales</p>
-                <p className="text-2xl font-semibold text-gray-900 mt-1">
-                  {formatCurrency(summary.totalRevenue || 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-indigo-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-indigo-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {isLoading ? (
@@ -342,7 +275,7 @@ export default function MarketersListPage() {
                     Orders
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Revenue
+                    Sales
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Commission
