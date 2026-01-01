@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Download, Calendar, ChevronDown, Users } from 'lucide-react';
+import { Plus, Download, Calendar, ChevronDown, Users, X } from 'lucide-react';
 import { useGetAllMarketersReportQuery } from '@/redux/api/marketersApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { CreateMarketerModal } from '@/components/modals/CreateMarketerModal';
@@ -22,6 +22,7 @@ export default function MarketersListPage() {
   const navigate = useNavigate();
   const [selectedMarketerId, setSelectedMarketerId] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   // Date filtering - default to current month
   const currentMonth = getCurrentMonthDates();
@@ -142,6 +143,20 @@ export default function MarketersListPage() {
 
   return (
     <div className="p-6">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+          <p className="text-green-800 font-medium">{successMessage}</p>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage('')}
+            className="text-green-600 hover:text-green-800"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Marketers</h1>
@@ -331,8 +346,10 @@ export default function MarketersListPage() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {
-          // Optionally refetch or show success message
           setShowCreateModal(false);
+          setSuccessMessage('Marketer created successfully!');
+          // Auto-hide message after 5 seconds
+          setTimeout(() => setSuccessMessage(''), 5000);
         }}
       />
     </div>
