@@ -67,18 +67,18 @@ const Featured: React.FC = () => {
                         <Link
                             to={`/products/${product.slug}`}
                             key={product._id}
-                            className="w-fit m-auto overflow-hidden rounded-[5px] hover:-translate-y-2 hover:shadow-lg transition-all duration-300"
+                            className="w-fit m-auto overflow-hidden rounded-xl shadow-md hover:shadow-2xl hover:scale-105 transition-all duration-300 bg-white"
                         >
                             <img
                                 src={productImage}
                                 alt={product.name}
                                 className="w-50 h-40 md:w-80 md:h-60 object-cover"
                             />
-                            <div className="p-4 text-[#1A1A1A] bg-white">
-                                <h3 className="text-sm line-clamp-1">{product.name}</h3>
-                                <p className='font-medium'>₦{formatPrice(price)}</p>
-                                <button type="button" className="px-2 py-2 mt-2 rounded-md bg-[#20571E] text-white text-sm font-light hover:bg-[#1a4a18] transition flex gap-2">
-                                    View Product <img src={cartImg} alt="cart icon" />
+                            <div className="p-5 text-[#1A1A1A] bg-white">
+                                <h3 className="text-base font-medium line-clamp-1 mb-2">{product.name}</h3>
+                                <p className='text-lg font-semibold text-[#20571E] mb-3'>₦{formatPrice(price)}</p>
+                                <button type="button" className="w-full px-4 py-2.5 rounded-lg bg-[#20571E] text-white text-sm font-medium hover:bg-[#1a4a18] transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
+                                    View Product <img src={cartImg} alt="cart icon" className="w-4 h-4" />
                                 </button>
                             </div>
                         </Link>

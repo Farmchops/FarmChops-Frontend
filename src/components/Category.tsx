@@ -115,7 +115,7 @@ const Category: React.FC = () => {
                     <div
                         key={categ._id}
                         onClick={() => handleCategoryClick(categ._id)}
-                        className="flex flex-col overflow-hidden border border-[#1D7B3C] rounded-[5px] hover:-translate-y-2 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                        className="group flex flex-col overflow-hidden border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer bg-white"
                     >
                         <div className="w-full aspect-square">
                             <img
@@ -124,8 +124,8 @@ const Category: React.FC = () => {
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <div className="p-4 text-center text-[#1A1A1A] bg-white font-medium flex-grow flex flex-col justify-center">
-                            <h3 className="text-lg font-semibold">{categ.name}</h3>
+                        <div className="relative p-5 text-center text-[#1A1A1A] bg-white font-medium flex-grow flex flex-col justify-center group-hover:bg-green-50 transition-colors">
+                            <h3 className="text-lg font-semibold group-hover:text-[#1D7B3C] transition-colors">{categ.name}</h3>
                         </div>
                     </div>
                 ))}

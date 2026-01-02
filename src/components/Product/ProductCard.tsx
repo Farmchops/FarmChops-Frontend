@@ -81,7 +81,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     return (
         <>
-            <div className="max-w-72 bg-white rounded-xl shadow hover:-translate-y-2 hover:shadow-lg transition-transform duration-300 overflow-hidden relative p-1 md:p-3 flex flex-col h-full">
+            <div className="max-w-72 bg-white rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden relative p-1 md:p-3 flex flex-col h-full">
                 {/* Badges */}
                 <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
                     {(product.groupConfig?.enabled || (product as any).groupBuyingEnabled) && (
@@ -130,11 +130,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 {/* Price & Buttons */}
                 <div className="px-3 pb-3 space-y-2 mt-auto relative" ref={dropdownRef}>
                     {/* Price Display with unit in parentheses - PricePally style */}
-                    <div className="flex items-baseline gap-1">
-                        <p className="text-base md:text-lg font-semibold text-[#1A1A1A]">
+                    <div className="flex items-baseline gap-1.5">
+                        <p className="text-lg md:text-xl font-bold text-[#1D7B3C]">
                             ₦{product.pricing.retail.price.toLocaleString()}
                         </p>
-                        <span className="text-sm md:text-base text-gray-500">
+                        <span className="text-sm md:text-base text-gray-500 font-medium">
                             ({product.pricing.retail.unit})
                         </span>
                     </div>
@@ -143,9 +143,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     <button
                         type="button"
                         onClick={handleOptionsClick}
-                        className="flex items-center justify-center gap-1 text-sm text-gray-700 hover:text-[#1D7B3C] transition w-full py-3"
+                        className="flex items-center justify-center gap-2 text-sm font-medium text-gray-700 hover:text-[#1D7B3C] hover:bg-gray-50 rounded-lg transition-all w-full py-2.5 border border-gray-200"
                     >
-                        Options: {allTiers.length}
+                        <span className="font-semibold">{allTiers.length}</span> Options
                         <ChevronDown size={16} className={`text-gray-600 transition-transform ${showOptionsDropdown ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -185,13 +185,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         type="button"
                         onClick={() => setShowBulkModal(true)}
                         disabled={isOutOfStock}
-                        className={`w-full flex items-center justify-center gap-1 px-4 py-3 rounded-md text-white text-xs transition ${isOutOfStock
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg ${isOutOfStock
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-[#1D7B3C] hover:bg-green-700"
                             }`}
                     >
                         {isOutOfStock ? "Out of Stock" : "Add to cart"}
-                        {!isOutOfStock && <img src={cartImg} alt="cart" className="w-3 h-3" />}
+                        {!isOutOfStock && <img src={cartImg} alt="cart" className="w-4 h-4" />}
                     </button>
                 </div>
             </div>
