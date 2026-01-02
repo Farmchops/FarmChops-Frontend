@@ -2,11 +2,11 @@ import React from 'react'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 import { ArrowRight, CreditCard, Tag, Users, ShoppingCart, Wallet } from 'lucide-react'
-import paylaterImg from '../assets/paylater_realistic_1767287390281.png'
+import paylaterImg from '../assets/paylater_branded_1767309578601.png'
 import payformeImg from '../assets/payforme_realistic_1767287422338.png'
 import dealImg from '../assets/deal_realistic_1767287461795.png'
 import bulkImg from '../assets/bulk_realistic_1767287511931.png'
-import walletImg from '../assets/wallet_realistic_1767287547039.png'
+import walletImg from '../assets/wallet_naira_bright_1767309413179.png'
 
 const Services: React.FC = () => {
   const services = [
