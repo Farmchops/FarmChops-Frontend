@@ -1,8 +1,10 @@
 // src/pages/PayLater/PayLaterApplication.tsx
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Shield, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { CreditCard, Shield, Clock, CheckCircle, AlertCircle, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useSubmitApplicationMutation } from '@/redux/api/paylaterApi';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/redux/store';
 
 interface FormData {
     email: string;
@@ -10,8 +12,10 @@ interface FormData {
     lastName: string;
     gender: 'male' | 'female' | '';
     phoneNumber: string;
+    ippis: string; // Government workers only
     bvn: string;
-    nin: string;
+    ninCardImage: File | null;
+    passportPhoto: File | null;
 }
 
 interface FormErrors {
@@ -20,13 +24,18 @@ interface FormErrors {
     lastName?: string;
     gender?: string;
     phoneNumber?: string;
+    ippis?: string;
     bvn?: string;
-    nin?: string;
+    ninCardImage?: string;
+    passportPhoto?: string;
 }
 
 const PayLaterApplication = () => {
     const navigate = useNavigate();
-    const [submitApplication, { isLoading }] = useSubmitApplicationMutation();
+    const [submitApplication, { isLoading: isSubmitting }] = useSubmitApplicationMutation();
+
+    const ninCardInputRef = useRef<HTMLInputElement>(null);
+    const passportPhotoInputRef = useRef<HTMLInputElement>(null);
 
     const [step, setStep] = useState<'intro' | 'form'>('intro');
     const [formData, setFormData] = useState<FormData>({
@@ -35,9 +44,13 @@ const PayLaterApplication = () => {
         lastName: '',
         gender: '',
         phoneNumber: '',
+        ippis: '',
         bvn: '',
-        nin: '',
+        ninCardImage: null,
+        passportPhoto: null,
     });
+    const [ninPreview, setNinPreview] = useState<string | null>(null);
+    const [passportPreview, setPassportPreview] = useState<string | null>(null);
     const [errors, setErrors] = useState<FormErrors>({});
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -69,16 +82,24 @@ const PayLaterApplication = () => {
             newErrors.phoneNumber = 'Please enter a valid Nigerian phone number';
         }
 
+        if (!formData.ippis) {
+            newErrors.ippis = 'IPPIS number is required (Government workers only)';
+        } else if (!/^[0-9]+$/.test(formData.ippis)) {
+            newErrors.ippis = 'IPPIS must contain only digits';
+        }
+
         if (!formData.bvn) {
             newErrors.bvn = 'BVN is required';
         } else if (!/^[0-9]{11}$/.test(formData.bvn)) {
             newErrors.bvn = 'BVN must be 11 digits';
         }
 
-        if (!formData.nin) {
-            newErrors.nin = 'NIN is required';
-        } else if (!/^[0-9]{11}$/.test(formData.nin)) {
-            newErrors.nin = 'NIN must be 11 digits';
+        if (!formData.ninCardImage) {
+            newErrors.ninCardImage = 'NIN card image is required';
+        }
+
+        if (!formData.passportPhoto) {
+            newErrors.passportPhoto = 'Passport photograph is required';
         }
 
         setErrors(newErrors);
@@ -94,6 +115,45 @@ const PayLaterApplication = () => {
         }
     };
 
+    const handleImageUpload = (field: 'ninCardImage' | 'passportPhoto', file: File) => {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setErrors(prev => ({ ...prev, [field]: 'Please upload an image file' }));
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setErrors(prev => ({ ...prev, [field]: 'Image size must be less than 5MB' }));
+            return;
+        }
+
+        setFormData(prev => ({ ...prev, [field]: file }));
+        setErrors(prev => ({ ...prev, [field]: undefined }));
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (field === 'ninCardImage') {
+                setNinPreview(reader.result as string);
+            } else {
+                setPassportPreview(reader.result as string);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = (field: 'ninCardImage' | 'passportPhoto') => {
+        setFormData(prev => ({ ...prev, [field]: null }));
+        if (field === 'ninCardImage') {
+            setNinPreview(null);
+            if (ninCardInputRef.current) ninCardInputRef.current.value = '';
+        } else {
+            setPassportPreview(null);
+            if (passportPhotoInputRef.current) passportPhotoInputRef.current.value = '';
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitError(null);
@@ -101,20 +161,32 @@ const PayLaterApplication = () => {
         if (!validateForm()) return;
 
         try {
-            await submitApplication({
-                email: formData.email,
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                gender: formData.gender as 'male' | 'female',
-                phoneNumber: formData.phoneNumber,
-                bvn: formData.bvn,
-                nin: formData.nin,
-            }).unwrap();
+            // Create FormData for multipart upload
+            const formDataToSend = new FormData();
+            formDataToSend.append('email', formData.email);
+            formDataToSend.append('firstName', formData.firstName);
+            formDataToSend.append('lastName', formData.lastName);
+            formDataToSend.append('gender', formData.gender as string);
+            formDataToSend.append('phoneNumber', formData.phoneNumber);
+            formDataToSend.append('ippis', formData.ippis);
+            formDataToSend.append('bvn', formData.bvn);
 
-            setSubmitSuccess(true);
-        } catch (err) {
-            const error = err as { data?: { message?: string } };
-            setSubmitError(error.data?.message || 'Failed to submit application. Please try again.');
+            // Append images
+            if (formData.ninCardImage) {
+                formDataToSend.append('ninCardImage', formData.ninCardImage);
+            }
+            if (formData.passportPhoto) {
+                formDataToSend.append('passportPhoto', formData.passportPhoto);
+            }
+
+            // Submit using RTK Query mutation
+            const result = await submitApplication(formDataToSend).unwrap();
+
+            if (result.success) {
+                setSubmitSuccess(true);
+            }
+        } catch (err: any) {
+            setSubmitError(err.data?.message || 'Failed to submit application. Please try again.');
         }
     };
 
@@ -128,7 +200,7 @@ const PayLaterApplication = () => {
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
                         <p className="text-gray-600 mb-6">
-                            Your PayLater application has been received. A member of our team will contact you soonest to review your details and notify you via email once your application is processed.
+                            Your PayLater application has been received. Your identity verification is being processed. A member of our team will review your details and notify you via email once your application is processed.
                         </p>
                         <button
                             onClick={() => navigate('/paylater')}
@@ -155,6 +227,17 @@ const PayLaterApplication = () => {
                         <p className="text-gray-600">Shop now and pay later with automatic salary deduction</p>
                     </div>
 
+                    {/* Government Workers Notice */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                        <div className="flex gap-3">
+                            <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-sm text-blue-800 font-medium">For Government Workers Only</p>
+                                <p className="text-sm text-blue-700">This service is exclusively available for government employees with valid IPPIS numbers.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Info Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">How PayLater Works</h2>
@@ -166,7 +249,7 @@ const PayLaterApplication = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-gray-900">Apply for PayLater</h3>
-                                    <p className="text-sm text-gray-600">Fill out the application form with your personal and verification details</p>
+                                    <p className="text-sm text-gray-600">Fill out the application form with your personal details, IPPIS, BVN, and upload required documents</p>
                                 </div>
                             </div>
 
@@ -175,14 +258,24 @@ const PayLaterApplication = () => {
                                     2
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-gray-900">Get Approved</h3>
-                                    <p className="text-sm text-gray-600">Our team verifies your details and assigns you a credit limit</p>
+                                    <h3 className="font-medium text-gray-900">Identity Verification</h3>
+                                    <p className="text-sm text-gray-600">Our system verifies your IPPIS, BVN, and NIN to confirm your identity</p>
                                 </div>
                             </div>
 
                             <div className="flex gap-4">
                                 <div className="flex-shrink-0 w-8 h-8 bg-[#1D7B3C]/10 rounded-full flex items-center justify-center text-[#1D7B3C] font-semibold text-sm">
                                     3
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-900">Get Approved</h3>
+                                    <p className="text-sm text-gray-600">Our team reviews your application and assigns you a credit limit</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <div className="flex-shrink-0 w-8 h-8 bg-[#1D7B3C]/10 rounded-full flex items-center justify-center text-[#1D7B3C] font-semibold text-sm">
+                                    4
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-gray-900">Shop on Credit</h3>
@@ -192,11 +285,11 @@ const PayLaterApplication = () => {
 
                             <div className="flex gap-4">
                                 <div className="flex-shrink-0 w-8 h-8 bg-[#1D7B3C]/10 rounded-full flex items-center justify-center text-[#1D7B3C] font-semibold text-sm">
-                                    4
+                                    5
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-gray-900">Automatic Repayment</h3>
-                                    <p className="text-sm text-gray-600">Payment is automatically deducted from your salary via IPPIS within a month</p>
+                                    <p className="text-sm text-gray-600">Payment is automatically deducted from your salary via IPPIS within 30 days</p>
                                 </div>
                             </div>
                         </div>
@@ -207,7 +300,7 @@ const PayLaterApplication = () => {
                         <div className="bg-white rounded-xl p-4 border border-gray-100 text-center">
                             <Shield className="w-6 h-6 text-[#1D7B3C] mx-auto mb-2" />
                             <p className="text-sm font-medium text-gray-900">Secure & Verified</p>
-                            <p className="text-xs text-gray-500">BVN & NIN verification</p>
+                            <p className="text-xs text-gray-500">IPPIS, BVN & NIN verification</p>
                         </div>
                         <div className="bg-white rounded-xl p-4 border border-gray-100 text-center">
                             <Clock className="w-6 h-6 text-[#1D7B3C] mx-auto mb-2" />
@@ -306,9 +399,8 @@ const PayLaterApplication = () => {
                                         value={formData.email}
                                         onChange={handleInputChange}
                                         placeholder="Enter your email"
-                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${
-                                            errors.email ? 'border-red-300' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.email ? 'border-red-300' : 'border-gray-300'
+                                            }`}
                                     />
                                     {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                                 </div>
@@ -326,9 +418,8 @@ const PayLaterApplication = () => {
                                             value={formData.firstName}
                                             onChange={handleInputChange}
                                             placeholder="First name"
-                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${
-                                                errors.firstName ? 'border-red-300' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.firstName ? 'border-red-300' : 'border-gray-300'
+                                                }`}
                                         />
                                         {errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>}
                                     </div>
@@ -343,9 +434,8 @@ const PayLaterApplication = () => {
                                             value={formData.lastName}
                                             onChange={handleInputChange}
                                             placeholder="Last name"
-                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${
-                                                errors.lastName ? 'border-red-300' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.lastName ? 'border-red-300' : 'border-gray-300'
+                                                }`}
                                         />
                                         {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>}
                                     </div>
@@ -362,9 +452,8 @@ const PayLaterApplication = () => {
                                             name="gender"
                                             value={formData.gender}
                                             onChange={handleInputChange}
-                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] bg-white ${
-                                                errors.gender ? 'border-red-300' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] bg-white ${errors.gender ? 'border-red-300' : 'border-gray-300'
+                                                }`}
                                         >
                                             <option value="">Select gender</option>
                                             <option value="male">Male</option>
@@ -383,9 +472,8 @@ const PayLaterApplication = () => {
                                             value={formData.phoneNumber}
                                             onChange={handleInputChange}
                                             placeholder="+234 800 000 0000"
-                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${
-                                                errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
+                                                }`}
                                         />
                                         {errors.phoneNumber && <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>}
                                     </div>
@@ -396,12 +484,31 @@ const PayLaterApplication = () => {
                         {/* Verification Section */}
                         <div>
                             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Verification Details</h3>
-                            <p className="text-xs text-gray-500 mb-3">Required for eligibility verification</p>
+                            <p className="text-xs text-gray-500 mb-3">Required for identity verification</p>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                                {/* IPPIS Number */}
+                                <div>
+                                    <label htmlFor="ippis" className="block text-sm font-medium text-gray-700 mb-1">
+                                        IPPIS Number <span className="text-blue-600 text-xs">(Government Workers Only)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="ippis"
+                                        name="ippis"
+                                        value={formData.ippis}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter IPPIS number"
+                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.ippis ? 'border-red-300' : 'border-gray-300'
+                                            }`}
+                                    />
+                                    {errors.ippis && <p className="mt-1 text-sm text-red-600">{errors.ippis}</p>}
+                                </div>
+
+                                {/* BVN */}
                                 <div>
                                     <label htmlFor="bvn" className="block text-sm font-medium text-gray-700 mb-1">
-                                        BVN
+                                        BVN (Bank Verification Number)
                                     </label>
                                     <input
                                         type="text"
@@ -411,29 +518,92 @@ const PayLaterApplication = () => {
                                         onChange={handleInputChange}
                                         placeholder="11-digit BVN"
                                         maxLength={11}
-                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${
-                                            errors.bvn ? 'border-red-300' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.bvn ? 'border-red-300' : 'border-gray-300'
+                                            }`}
                                     />
                                     {errors.bvn && <p className="mt-1 text-sm text-red-600">{errors.bvn}</p>}
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Document Uploads Section */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Document Uploads</h3>
+                            <p className="text-xs text-gray-500 mb-3">Upload clear images of your NIN card and passport photograph</p>
+
+                            <div className="space-y-4">
+                                {/* NIN Card Upload */}
                                 <div>
-                                    <label htmlFor="nin" className="block text-sm font-medium text-gray-700 mb-1">
-                                        NIN
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        NIN Card (Front) *
                                     </label>
-                                    <input
-                                        type="text"
-                                        id="nin"
-                                        name="nin"
-                                        value={formData.nin}
-                                        onChange={handleInputChange}
-                                        placeholder="11-digit NIN"
-                                        maxLength={11}
-                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${
-                                            errors.nin ? 'border-red-300' : 'border-gray-300'
-                                        }`}
-                                    />
-                                    {errors.nin && <p className="mt-1 text-sm text-red-600">{errors.nin}</p>}
+                                    {!ninPreview ? (
+                                        <div
+                                            onClick={() => ninCardInputRef.current?.click()}
+                                            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-[#1D7B3C] transition ${errors.ninCardImage ? 'border-red-300' : 'border-gray-300'
+                                                }`}
+                                        >
+                                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                            <p className="text-sm text-gray-600 mb-1">Click to upload NIN card</p>
+                                            <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                            <input
+                                                ref={ninCardInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => e.target.files && handleImageUpload('ninCardImage', e.target.files[0])}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <img src={ninPreview} alt="NIN Card Preview" className="w-full h-48 object-cover rounded-lg" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage('ninCardImage')}
+                                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    {errors.ninCardImage && <p className="mt-1 text-sm text-red-600">{errors.ninCardImage}</p>}
+                                </div>
+
+                                {/* Passport Photo Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Passport Photograph *
+                                    </label>
+                                    {!passportPreview ? (
+                                        <div
+                                            onClick={() => passportPhotoInputRef.current?.click()}
+                                            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-[#1D7B3C] transition ${errors.passportPhoto ? 'border-red-300' : 'border-gray-300'
+                                                }`}
+                                        >
+                                            <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                            <p className="text-sm text-gray-600 mb-1">Click to upload passport photo</p>
+                                            <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                            <input
+                                                ref={passportPhotoInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => e.target.files && handleImageUpload('passportPhoto', e.target.files[0])}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <img src={passportPreview} alt="Passport Photo Preview" className="w-full h-48 object-cover rounded-lg" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage('passportPhoto')}
+                                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
+                                    {errors.passportPhoto && <p className="mt-1 text-sm text-red-600">{errors.passportPhoto}</p>}
                                 </div>
                             </div>
                         </div>
@@ -441,7 +611,7 @@ const PayLaterApplication = () => {
                         {/* Terms */}
                         <div className="bg-gray-50 rounded-lg p-4">
                             <p className="text-xs text-gray-600">
-                                By submitting this application, you agree to our Terms of Service and authorize FarmChops to verify your identity using the provided BVN and NIN. Your information is securely stored and will only be used for PayLater eligibility verification.
+                                By submitting this application, you agree to our Terms of Service and authorize FarmChops to verify your identity using the provided IPPIS, BVN, NIN card, and passport photograph. Your information is securely stored and will only be used for PayLater eligibility verification.
                             </p>
                         </div>
 
@@ -456,10 +626,10 @@ const PayLaterApplication = () => {
                             </button>
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                                 className="flex-1 py-3 px-4 bg-[#1D7B3C] text-white rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                {isLoading ? (
+                                {isSubmitting ? (
                                     <>
                                         <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

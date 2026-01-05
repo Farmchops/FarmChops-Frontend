@@ -5,14 +5,16 @@ import { createAuthBaseQuery, createAdminAuthBaseQuery } from './baseQuery';
 // ==================== TYPES ====================
 
 // Application Types
+// Note: The actual request will be FormData for multipart upload
 export interface PayLaterApplicationRequest {
     email: string;
     firstName: string;
     lastName: string;
     gender: 'male' | 'female';
     phoneNumber: string;
+    ippis: string; // IPPIS number (Government workers only)
     bvn: string;
-    nin: string;
+    // Files: ninCardImage (File) and passportPhoto (File) uploaded via FormData
 }
 
 export interface PayLaterApplication {
@@ -23,13 +25,24 @@ export interface PayLaterApplication {
     lastName: string;
     gender: 'male' | 'female';
     phoneNumber: string;
+    ippis: string; // IPPIS number (Government workers only)
     bvn: string;
-    nin: string;
-    status: 'pending' | 'approved' | 'rejected';
+    nin: string; // Extracted from NIN card via OCR
+    ninCardImage: string; // URL to uploaded NIN card image
+    passportPhoto: string; // URL to uploaded passport photograph
+    status: 'pending' | 'approved' | 'rejected' | 'verified';
     creditLimit: number | null;
     reviewedBy: string | null;
     reviewedAt: string | null;
     rejectionReason: string | null;
+    verificationStatus?: 'pending' | 'in_progress' | 'verified' | 'failed';
+    verificationScore?: number; // 0-100
+    verificationResults?: {
+        ippis?: { verified: boolean; confidence?: number };
+        bvn?: { verified: boolean; confidence?: number };
+        nin?: { verified: boolean; extractedNumber?: string };
+        faceMatch?: { matched: boolean; confidence?: number };
+    };
     createdAt: string;
     updatedAt: string;
 }
@@ -206,14 +219,16 @@ export const paylaterApi = createApi({
         // ==================== USER ENDPOINTS ====================
 
         // Submit PayLater Application
+        // Note: Accepts FormData for file uploads (ninCardImage, passportPhoto)
         submitApplication: builder.mutation<
-            { success: boolean; message: string; data: { applicationId: string; status: string; submittedAt: string } },
-            PayLaterApplicationRequest
+            { success: boolean; message: string; data: { applicationId: string; status: string; verificationScore?: number; submittedAt: string } },
+            FormData
         >({
-            query: (data) => ({
+            query: (formData) => ({
                 url: '/paylater/apply',
                 method: 'POST',
-                body: data,
+                body: formData,
+                // RTK Query will automatically set Content-Type for FormData
             }),
             invalidatesTags: ['PayLaterStatus'],
         }),

@@ -19,7 +19,12 @@ export const createAuthBaseQuery = (baseUrl: string): BaseQueryFn<string | Fetch
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }
-            headers.set('content-type', 'application/json');
+            // CRITICAL: Delete Content-Type to let browser set it automatically
+            // For FormData, browser will set: multipart/form-data; boundary=----...
+            // For JSON, RTK Query will set: application/json
+            if (headers.has('content-type')) {
+                headers.delete('content-type');
+            }
             return headers;
         },
     });
@@ -67,7 +72,12 @@ export const createAdminAuthBaseQuery = (baseUrl: string): BaseQueryFn<string | 
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }
-            headers.set('content-type', 'application/json');
+            // CRITICAL: Delete Content-Type to let browser set it automatically
+            // For FormData, browser will set: multipart/form-data; boundary=----...
+            // For JSON, RTK Query will set: application/json
+            if (headers.has('content-type')) {
+                headers.delete('content-type');
+            }
             return headers;
         },
     });
