@@ -14,6 +14,8 @@ export interface PayLaterApplicationRequest {
     phoneNumber: string;
     ippis: string; // IPPIS number (Government workers only)
     bvn: string;
+    nin: string; // 11-digit NIN number
+    dateOfBirth: string; // YYYY-MM-DD format
     // Files: ninCardImage (File) and passportPhoto (File) uploaded via FormData
 }
 
@@ -27,7 +29,8 @@ export interface PayLaterApplication {
     phoneNumber: string;
     ippis: string; // IPPIS number (Government workers only)
     bvn: string;
-    nin: string; // Extracted from NIN card via OCR
+    nin: string; // 11-digit NIN number (also extracted from NIN card via OCR)
+    dateOfBirth: string; // YYYY-MM-DD format
     ninCardImage: string; // URL to uploaded NIN card image
     passportPhoto: string; // URL to uploaded passport photograph
     status: 'pending' | 'approved' | 'rejected' | 'verified';

@@ -389,30 +389,6 @@ const PayLaterApplications = () => {
                                 <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
                                     <h4 className="font-semibold text-gray-900 mb-3">✅ Verification Details</h4>
 
-                                    {/* IPPIS Verification */}
-                                    {selectedApplication.verificationResults.ippis && (
-                                        <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div>
-                                                    <p className="font-medium text-gray-900 flex items-center gap-2">
-                                                        IPPIS Verification (Government Worker)
-                                                        {selectedApplication.verificationResults.ippis.verified ? (
-                                                            <span className="text-green-600">✓ 30 pts</span>
-                                                        ) : (
-                                                            <span className="text-red-600">✗ 0 pts</span>
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="text-sm space-y-1 text-gray-600">
-                                                <p>IPPIS: {selectedApplication.ippis}</p>
-                                                <p>Status: {selectedApplication.verificationResults.ippis.verified ? '✅ Verified' : '❌ Failed'}</p>
-                                                {selectedApplication.verificationResults.ippis.confidence && (
-                                                    <p>Confidence: {selectedApplication.verificationResults.ippis.confidence}%</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* BVN Verification */}
                                     {selectedApplication.verificationResults.bvn && (
@@ -422,7 +398,7 @@ const PayLaterApplications = () => {
                                                     <p className="font-medium text-gray-900 flex items-center gap-2">
                                                         BVN Verification
                                                         {selectedApplication.verificationResults.bvn.verified ? (
-                                                            <span className="text-green-600">✓ 30 pts</span>
+                                                            <span className="text-green-600">✓ 50 pts</span>
                                                         ) : (
                                                             <span className="text-red-600">✗ 0 pts</span>
                                                         )}
@@ -474,7 +450,7 @@ const PayLaterApplications = () => {
                                                     <p className="font-medium text-gray-900 flex items-center gap-2">
                                                         Face Matching
                                                         {selectedApplication.verificationResults.faceMatch.matched ? (
-                                                            <span className="text-green-600">✓ 10 pts</span>
+                                                            <span className="text-green-600">✓ 20 pts</span>
                                                         ) : (
                                                             <span className="text-red-600">✗ 0 pts</span>
                                                         )}
@@ -593,10 +569,10 @@ const PayLaterApplications = () => {
                                     <div className="flex items-center justify-between mb-3">
                                         <h4 className="font-semibold text-gray-900">📊 Verification Summary</h4>
                                         <span className={`px-3 py-1 rounded-full text-sm font-bold ${selectedApplication.verificationScore >= 80
-                                                ? 'bg-green-100 text-green-800'
-                                                : selectedApplication.verificationScore >= 50
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-red-100 text-red-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : selectedApplication.verificationScore >= 50
+                                                ? 'bg-yellow-100 text-yellow-800'
+                                                : 'bg-red-100 text-red-800'
                                             }`}>
                                             {selectedApplication.verificationScore}/100
                                         </span>
@@ -614,24 +590,11 @@ const PayLaterApplications = () => {
                                 <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
                                     <h4 className="font-semibold text-gray-900 mb-3">✅ Verification Details</h4>
 
-                                    {/* IPPIS */}
-                                    {selectedApplication.verificationResults.ippis && (
-                                        <div className="bg-white rounded-lg p-3 border">
-                                            <p className="font-medium text-gray-900 mb-1">
-                                                IPPIS Verification {selectedApplication.verificationResults.ippis.verified ? '✅ 30 pts' : '❌ 0 pts'}
-                                            </p>
-                                            <p className="text-sm text-gray-600">IPPIS: {selectedApplication.ippis}</p>
-                                            {selectedApplication.verificationResults.ippis.confidence && (
-                                                <p className="text-sm text-gray-600">Confidence: {selectedApplication.verificationResults.ippis.confidence}%</p>
-                                            )}
-                                        </div>
-                                    )}
 
-                                    {/* BVN */}
                                     {selectedApplication.verificationResults.bvn && (
                                         <div className="bg-white rounded-lg p-3 border">
                                             <p className="font-medium text-gray-900 mb-1">
-                                                BVN Verification {selectedApplication.verificationResults.bvn.verified ? '✅ 30 pts' : '❌ 0 pts'}
+                                                BVN Verification {selectedApplication.verificationResults.bvn.verified ? '✅ 50 pts' : '❌ 0 pts'}
                                             </p>
                                             <p className="text-sm text-gray-600">BVN: {selectedApplication.bvn}</p>
                                             {selectedApplication.verificationResults.bvn.confidence && (
@@ -659,7 +622,7 @@ const PayLaterApplications = () => {
                                     {selectedApplication.verificationResults.faceMatch && (
                                         <div className="bg-white rounded-lg p-3 border">
                                             <p className="font-medium text-gray-900 mb-1">
-                                                Face Matching {selectedApplication.verificationResults.faceMatch.matched ? '✅ 10 pts' : '❌ 0 pts'}
+                                                Face Matching {selectedApplication.verificationResults.faceMatch.matched ? '✅ 20 pts' : '❌ 0 pts'}
                                             </p>
                                             <p className="text-sm text-gray-600">
                                                 Status: {selectedApplication.verificationResults.faceMatch.matched ? 'Matched' : 'Not Matched'}

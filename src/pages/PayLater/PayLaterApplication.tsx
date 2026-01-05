@@ -12,6 +12,8 @@ interface FormData {
     phoneNumber: string;
     ippis: string; // Government workers only
     bvn: string;
+    nin: string; // NEW: 11-digit NIN number
+    dateOfBirth: string; // NEW: YYYY-MM-DD format
     ninCardImage: File | null;
     passportPhoto: File | null;
 }
@@ -24,6 +26,8 @@ interface FormErrors {
     phoneNumber?: string;
     ippis?: string;
     bvn?: string;
+    nin?: string;
+    dateOfBirth?: string;
     ninCardImage?: string;
     passportPhoto?: string;
 }
@@ -44,6 +48,8 @@ const PayLaterApplication = () => {
         phoneNumber: '',
         ippis: '',
         bvn: '',
+        nin: '',
+        dateOfBirth: '',
         ninCardImage: null,
         passportPhoto: null,
     });
@@ -90,6 +96,18 @@ const PayLaterApplication = () => {
             newErrors.bvn = 'BVN is required';
         } else if (!/^[0-9]{11}$/.test(formData.bvn)) {
             newErrors.bvn = 'BVN must be 11 digits';
+        }
+
+        if (!formData.nin) {
+            newErrors.nin = 'NIN is required';
+        } else if (!/^[0-9]{11}$/.test(formData.nin)) {
+            newErrors.nin = 'NIN must be exactly 11 digits';
+        }
+
+        if (!formData.dateOfBirth) {
+            newErrors.dateOfBirth = 'Date of Birth is required';
+        } else if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.dateOfBirth)) {
+            newErrors.dateOfBirth = 'Please enter date in YYYY-MM-DD format';
         }
 
         if (!formData.ninCardImage) {
@@ -168,6 +186,8 @@ const PayLaterApplication = () => {
             formDataToSend.append('phoneNumber', formData.phoneNumber);
             formDataToSend.append('ippis', formData.ippis);
             formDataToSend.append('bvn', formData.bvn);
+            formDataToSend.append('nin', formData.nin);
+            formDataToSend.append('dateOfBirth', formData.dateOfBirth);
 
             // Append images
             if (formData.ninCardImage) {
@@ -520,6 +540,43 @@ const PayLaterApplication = () => {
                                             }`}
                                     />
                                     {errors.bvn && <p className="mt-1 text-sm text-red-600">{errors.bvn}</p>}
+                                </div>
+
+                                {/* NIN Number */}
+                                <div>
+                                    <label htmlFor="nin" className="block text-sm font-medium text-gray-700 mb-1">
+                                        NIN (National Identity Number)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="nin"
+                                        name="nin"
+                                        value={formData.nin}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter your 11-digit NIN"
+                                        maxLength={11}
+                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.nin ? 'border-red-300' : 'border-gray-300'
+                                            }`}
+                                    />
+                                    {errors.nin && <p className="mt-1 text-sm text-red-600">{errors.nin}</p>}
+                                </div>
+
+                                {/* Date of Birth */}
+                                <div>
+                                    <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
+                                        Date of Birth
+                                    </label>
+                                    <input
+                                        type="date"
+                                        id="dateOfBirth"
+                                        name="dateOfBirth"
+                                        value={formData.dateOfBirth}
+                                        onChange={handleInputChange}
+                                        placeholder="YYYY-MM-DD"
+                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C] ${errors.dateOfBirth ? 'border-red-300' : 'border-gray-300'
+                                            }`}
+                                    />
+                                    {errors.dateOfBirth && <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>}
                                 </div>
                             </div>
                         </div>
