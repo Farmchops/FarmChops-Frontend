@@ -3,8 +3,6 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Shield, Clock, CheckCircle, AlertCircle, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useSubmitApplicationMutation } from '@/redux/api/paylaterApi';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/redux/store';
 
 interface FormData {
     email: string;
