@@ -99,7 +99,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const handleUnitSelectChange = (field: UnitField) => (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
         if (selectedValue === "custom") {
-            setForm(prev => ({ ...prev, [field]: prev[field] || "" }));
+            // Clear the field so custom input appears
+            setForm(prev => ({ ...prev, [field]: "" }));
             return;
         }
         setForm(prev => ({ ...prev, [field]: selectedValue }));

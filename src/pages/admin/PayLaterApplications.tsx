@@ -359,57 +359,117 @@ const PayLaterApplications = () => {
                             </button>
                         </div>
 
-                        <div className="p-5 max-h-[80vh] overflow-y-auto">
-                            {/* Verification Summary */}
+                        <div className="p-6 max-h-[80vh] overflow-y-auto">
+                            {/* Verification Summary - Redesigned */}
                             {selectedApplication.verificationScore !== undefined && (
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                                            📊 Verification Summary
-                                        </h4>
-                                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${selectedApplication.verificationScore >= 80
-                                            ? 'bg-green-100 text-green-800'
+                                <div className="relative overflow-hidden bg-white border-2 border-gray-100 rounded-xl p-6 mb-6 shadow-sm">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-bl-full opacity-50"></div>
+
+                                    <div className="relative">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div>
+                                                <h4 className="text-lg font-bold text-gray-900 mb-1">Verification Score</h4>
+                                                <p className="text-sm text-gray-500">Identity verification analysis</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-2xl ${selectedApplication.verificationScore >= 80
+                                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                                    : selectedApplication.verificationScore >= 50
+                                                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                                        : 'bg-red-50 text-red-700 border border-red-200'
+                                                    }`}>
+                                                    {selectedApplication.verificationScore}
+                                                    <span className="text-sm font-medium">/ 100</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className={`flex items-start gap-3 p-3 rounded-lg ${selectedApplication.verificationScore >= 80
+                                            ? 'bg-green-50 border border-green-100'
                                             : selectedApplication.verificationScore >= 50
-                                                ? 'bg-yellow-100 text-yellow-800'
-                                                : 'bg-red-100 text-red-800'
+                                                ? 'bg-amber-50 border border-amber-100'
+                                                : 'bg-red-50 border border-red-100'
                                             }`}>
-                                            {selectedApplication.verificationScore}/100
-                                        </span>
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${selectedApplication.verificationScore >= 80
+                                                ? 'bg-green-100'
+                                                : selectedApplication.verificationScore >= 50
+                                                    ? 'bg-amber-100'
+                                                    : 'bg-red-100'
+                                                }`}>
+                                                {selectedApplication.verificationScore >= 80 && <span className="text-xl">✓</span>}
+                                                {selectedApplication.verificationScore >= 50 && selectedApplication.verificationScore < 80 && <span className="text-xl">⚠</span>}
+                                                {selectedApplication.verificationScore < 50 && <span className="text-xl">✕</span>}
+                                            </div>
+                                            <div>
+                                                <p className={`font-semibold mb-1 ${selectedApplication.verificationScore >= 80
+                                                    ? 'text-green-900'
+                                                    : selectedApplication.verificationScore >= 50
+                                                        ? 'text-amber-900'
+                                                        : 'text-red-900'
+                                                    }`}>
+                                                    {selectedApplication.verificationScore >= 80 && 'Highly Recommended'}
+                                                    {selectedApplication.verificationScore >= 50 && selectedApplication.verificationScore < 80 && 'Requires Review'}
+                                                    {selectedApplication.verificationScore < 50 && 'Not Recommended'}
+                                                </p>
+                                                <p className={`text-sm ${selectedApplication.verificationScore >= 80
+                                                    ? 'text-green-700'
+                                                    : selectedApplication.verificationScore >= 50
+                                                        ? 'text-amber-700'
+                                                        : 'text-red-700'
+                                                    }`}>
+                                                    {selectedApplication.verificationScore >= 80 && 'Strong candidate - Most verification checks passed successfully'}
+                                                    {selectedApplication.verificationScore >= 50 && selectedApplication.verificationScore < 80 && 'Some verification checks failed - Careful review recommended'}
+                                                    {selectedApplication.verificationScore < 50 && 'Multiple verification checks failed - High risk applicant'}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className="text-sm text-gray-700">
-                                        {selectedApplication.verificationScore >= 80 && '🟢 Highly Recommended - Strong candidate, most checks passed'}
-                                        {selectedApplication.verificationScore >= 50 && selectedApplication.verificationScore < 80 && '🟡 Review Carefully - Some checks failed, requires scrutiny'}
-                                        {selectedApplication.verificationScore < 50 && '🔴 Not Recommended - Multiple checks failed'}
-                                    </p>
                                 </div>
                             )}
 
-                            {/* Detailed Verification Results */}
+                            {/* Detailed Verification Results - Redesigned */}
                             {selectedApplication.verificationResults && (
-                                <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
-                                    <h4 className="font-semibold text-gray-900 mb-3">✅ Verification Details</h4>
-
+                                <div className="space-y-4 mb-6">
+                                    <h4 className="text-base font-bold text-gray-900 mb-4">Verification Breakdown</h4>
 
                                     {/* BVN Verification */}
                                     {selectedApplication.verificationResults.bvn && (
-                                        <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div>
-                                                    <p className="font-medium text-gray-900 flex items-center gap-2">
-                                                        BVN Verification
-                                                        {selectedApplication.verificationResults.bvn.verified ? (
-                                                            <span className="text-green-600">✓ 50 pts</span>
-                                                        ) : (
-                                                            <span className="text-red-600">✗ 0 pts</span>
-                                                        )}
-                                                    </p>
+                                        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedApplication.verificationResults.bvn.verified
+                                                            ? 'bg-green-100'
+                                                            : 'bg-red-100'
+                                                        }`}>
+                                                        <span className={`text-2xl ${selectedApplication.verificationResults.bvn.verified
+                                                                ? 'text-green-600'
+                                                                : 'text-red-600'
+                                                            }`}>
+                                                            {selectedApplication.verificationResults.bvn.verified ? '✓' : '✕'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900">BVN Verification</h5>
+                                                        <p className="text-xs text-gray-500">Bank Verification Number</p>
+                                                    </div>
+                                                </div>
+                                                <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedApplication.verificationResults.bvn.verified
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                    {selectedApplication.verificationResults.bvn.verified ? '50' : '0'} pts
                                                 </div>
                                             </div>
-                                            <div className="text-sm space-y-1 text-gray-600">
-                                                <p>BVN: {selectedApplication.bvn}</p>
-                                                <p>Status: {selectedApplication.verificationResults.bvn.verified ? '✅ Verified' : '❌ Failed'}</p>
+                                            <div className="grid grid-cols-2 gap-3 pl-15">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 mb-0.5">Number</p>
+                                                    <p className="text-sm font-medium text-gray-900">{selectedApplication.bvn}</p>
+                                                </div>
                                                 {selectedApplication.verificationResults.bvn.confidence && (
-                                                    <p>Confidence: {selectedApplication.verificationResults.bvn.confidence}%</p>
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 mb-0.5">Confidence</p>
+                                                        <p className="text-sm font-medium text-gray-900">{selectedApplication.verificationResults.bvn.confidence}%</p>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -417,25 +477,48 @@ const PayLaterApplications = () => {
 
                                     {/* NIN Verification */}
                                     {selectedApplication.verificationResults.nin && (
-                                        <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div>
-                                                    <p className="font-medium text-gray-900 flex items-center gap-2">
-                                                        NIN Verification
-                                                        {selectedApplication.verificationResults.nin.verified ? (
-                                                            <span className="text-green-600">✓ 30 pts</span>
-                                                        ) : (
-                                                            <span className="text-red-600">✗ 0 pts</span>
-                                                        )}
-                                                    </p>
+                                        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedApplication.verificationResults.nin.verified
+                                                            ? 'bg-green-100'
+                                                            : 'bg-red-100'
+                                                        }`}>
+                                                        <span className={`text-2xl ${selectedApplication.verificationResults.nin.verified
+                                                                ? 'text-green-600'
+                                                                : 'text-red-600'
+                                                            }`}>
+                                                            {selectedApplication.verificationResults.nin.verified ? '✓' : '✕'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900">NIN Verification</h5>
+                                                        <p className="text-xs text-gray-500">National Identity Number</p>
+                                                    </div>
+                                                </div>
+                                                <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedApplication.verificationResults.nin.verified
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                    {selectedApplication.verificationResults.nin.verified ? '30' : '0'} pts
                                                 </div>
                                             </div>
-                                            <div className="text-sm space-y-1 text-gray-600">
-                                                <p>Extracted NIN: {selectedApplication.verificationResults.nin.extractedNumber || selectedApplication.nin}</p>
-                                                <p>Status: {selectedApplication.verificationResults.nin.verified ? '✅ Verified' : '❌ Failed'}</p>
+                                            <div className="pl-15 space-y-2">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 mb-0.5">Extracted Number</p>
+                                                    <p className="text-sm font-medium text-gray-900">{selectedApplication.verificationResults.nin.extractedNumber || selectedApplication.nin}</p>
+                                                </div>
                                                 {selectedApplication.ninCardImage && (
-                                                    <a href={selectedApplication.ninCardImage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                        📸 View NIN Card Image
+                                                    <a
+                                                        href={selectedApplication.ninCardImage}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        View NIN Card
                                                     </a>
                                                 )}
                                             </div>
@@ -444,30 +527,61 @@ const PayLaterApplications = () => {
 
                                     {/* Face Match */}
                                     {selectedApplication.verificationResults.faceMatch && (
-                                        <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div>
-                                                    <p className="font-medium text-gray-900 flex items-center gap-2">
-                                                        Face Matching
-                                                        {selectedApplication.verificationResults.faceMatch.matched ? (
-                                                            <span className="text-green-600">✓ 20 pts</span>
-                                                        ) : (
-                                                            <span className="text-red-600">✗ 0 pts</span>
-                                                        )}
-                                                    </p>
+                                        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedApplication.verificationResults.faceMatch.matched
+                                                            ? 'bg-green-100'
+                                                            : 'bg-red-100'
+                                                        }`}>
+                                                        <span className={`text-2xl ${selectedApplication.verificationResults.faceMatch.matched
+                                                                ? 'text-green-600'
+                                                                : 'text-red-600'
+                                                            }`}>
+                                                            {selectedApplication.verificationResults.faceMatch.matched ? '✓' : '✕'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900">Face Matching</h5>
+                                                        <p className="text-xs text-gray-500">Biometric Verification</p>
+                                                    </div>
+                                                </div>
+                                                <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedApplication.verificationResults.faceMatch.matched
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                    {selectedApplication.verificationResults.faceMatch.matched ? '20' : '0'} pts
                                                 </div>
                                             </div>
-                                            <div className="text-sm space-y-1 text-gray-600">
-                                                <p>Status: {selectedApplication.verificationResults.faceMatch.matched ? '✅ Matched' : '❌ Not Matched'}</p>
+                                            <div className="grid grid-cols-2 gap-3 pl-15">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 mb-0.5">Status</p>
+                                                    <p className="text-sm font-medium text-gray-900">
+                                                        {selectedApplication.verificationResults.faceMatch.matched ? 'Matched' : 'Not Matched'}
+                                                    </p>
+                                                </div>
                                                 {selectedApplication.verificationResults.faceMatch.confidence && (
-                                                    <p>Confidence: {selectedApplication.verificationResults.faceMatch.confidence}%</p>
-                                                )}
-                                                {selectedApplication.passportPhoto && (
-                                                    <a href={selectedApplication.passportPhoto} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                        📸 View Passport Photo
-                                                    </a>
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 mb-0.5">Confidence</p>
+                                                        <p className="text-sm font-medium text-gray-900">{selectedApplication.verificationResults.faceMatch.confidence}%</p>
+                                                    </div>
                                                 )}
                                             </div>
+                                            {selectedApplication.passportPhoto && (
+                                                <div className="pl-15 mt-2">
+                                                    <a
+                                                        href={selectedApplication.passportPhoto}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        View Passport Photo
+                                                    </a>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
