@@ -94,13 +94,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         return UNIT_OPTIONS.some(option => option.value === value) ? value : "custom";
     };
 
-    const shouldShowCustomUnitInput = (value: string) => getUnitSelectValue(value) === "custom";
+    const shouldShowCustomUnitInput = (value: string) => {
+        // Show custom input if value is not empty and not in predefined options
+        return value && !UNIT_OPTIONS.some(option => option.value === value);
+    };
 
     const handleUnitSelectChange = (field: UnitField) => (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = event.target.value;
         if (selectedValue === "custom") {
-            // Clear the field so custom input appears
-            setForm(prev => ({ ...prev, [field]: "" }));
+            // Set to a space to trigger custom input (not in UNIT_OPTIONS and not empty)
+            setForm(prev => ({ ...prev, [field]: " " }));
             return;
         }
         setForm(prev => ({ ...prev, [field]: selectedValue }));
