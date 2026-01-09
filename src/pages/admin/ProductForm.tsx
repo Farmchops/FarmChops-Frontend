@@ -349,17 +349,28 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                     retail: {
                         price: parseFloat(form.retailPrice),
                         currency: "NGN",
-                        unit: form.retailUnit,
+                        unit: form.retailUnit.trim() || "piece", // Default to "piece" if empty
                         minQuantity: parseInt(form.retailMinQty),
                     },
                     bulkTiers: bulkTiersData.length > 0 ? bulkTiersData : undefined,
                 };
+
+                console.log("📦 Product payload:", {
+                    pricing,
+                    inventory: {
+                        availableStock: parseInt(form.availableStock),
+                        lowStockThreshold: parseInt(form.lowStockThreshold),
+                        unit: form.unit.trim() || "piece",
+                    },
+                    bulkTiersData
+                });
+
                 formData.append("pricing", JSON.stringify(pricing));
 
                 const inventory = {
                     availableStock: parseInt(form.availableStock),
                     lowStockThreshold: parseInt(form.lowStockThreshold),
-                    unit: form.unit,
+                    unit: form.unit.trim() || "piece", // Default to "piece" if empty
                 };
                 formData.append("inventory", JSON.stringify(inventory));
 
