@@ -12,7 +12,7 @@ export interface BulkTier {
     name: string;
     price: number;
     unit: string;
-    minQuantity: number;
+    minQuantity?: number; // Optional - backend defaults to 1
 }
 
 export interface ProductPricing {

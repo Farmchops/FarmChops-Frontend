@@ -17,7 +17,6 @@ interface BulkTierForm {
     name: string;
     price: string;
     unit: string;
-    minQuantity: string;
 }
 
 type FormState = {
@@ -63,7 +62,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
 
     const [bulkTiers, setBulkTiers] = useState<BulkTierForm[]>([
-        { id: '', name: '', price: '', unit: '', minQuantity: '' }
+        { id: '', name: '', price: '', unit: '' }
     ]);
 
     const [form, setForm] = useState<FormState>({
@@ -120,7 +119,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                     name: tier.name,
                     price: tier.price.toString(),
                     unit: tier.unit,
-                    minQuantity: tier.minQuantity.toString(),
                 }))
             );
         }
@@ -195,8 +193,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 id: String(Date.now()),
                 name: `Tier ${prev.length + 1}`,
                 price: '',
-                unit: 'kg',
-                minQuantity: '10'
+                unit: 'kg'
             }
         ]);
     };
@@ -230,7 +227,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
 
         // Only validate bulk tiers if ANY field in that tier has a value
         bulkTiers.forEach((tier, index) => {
-            const hasAnyValue = tier.name.trim() || tier.price || tier.minQuantity || tier.unit.trim();
+            const hasAnyValue = tier.name.trim() || tier.price || tier.unit.trim();
 
             // Only validate if user started filling this tier
             if (hasAnyValue) {
@@ -241,15 +238,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 const tierPrice = parseFloat(tier.price);
                 if (!tier.price || tierPrice <= 0) {
                     newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be greater than 0`;
-                }
-
-                // Bulk tier must be less than retail
-                // if (retailPrice && tierPrice && tierPrice >= retailPrice) {
-                //     newErrors[`bulkTier_${tier.id}_price`] = `Tier ${index + 1} price must be less than retail`;
-                // }
-
-                if (!tier.minQuantity || parseInt(tier.minQuantity) <= 0) {
-                    newErrors[`bulkTier_${tier.id}_minQty`] = `Tier ${index + 1} min quantity must be greater than 0`;
                 }
             }
         });
@@ -271,19 +259,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         if (!validate()) return;
 
         try {
-            // Filter out empty bulk tiers - must have price, minQuantity AND unit
+            // Filter out empty bulk tiers - must have price AND unit
             const validBulkTiers = bulkTiers.filter(tier => {
                 const hasPrice = tier.price && parseFloat(tier.price) > 0;
-                const hasMinQty = tier.minQuantity && parseInt(tier.minQuantity) > 0;
                 const hasUnit = tier.unit && tier.unit.trim().length > 0;
-                return hasPrice && hasMinQty && hasUnit;
+                return hasPrice && hasUnit;
             });
 
             const bulkTiersData = validBulkTiers.map(tier => ({
                 name: tier.name.trim(),
                 price: parseFloat(tier.price),
                 unit: tier.unit.trim(),
-                minQuantity: parseInt(tier.minQuantity),
             }));
 
             if (product) {
@@ -304,7 +290,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                             price: bulkTiersData.length > 0 ? bulkTiersData[0].price : 0,
                             currency: "NGN",
                             unit: bulkTiersData.length > 0 ? bulkTiersData[0].unit : "",
-                            minQuantity: bulkTiersData.length > 0 ? bulkTiersData[0].minQuantity : 0,
+                            minQuantity: 1, // Backend default
                         },
                         bulkTiers: bulkTiersData.length > 0 ? bulkTiersData : undefined,
                     },
@@ -677,7 +663,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                                         )}
                                                     </div>
 
-                                                    <div>
+                                                    <div className="col-span-2">
                                                         <label className="block text-xs text-gray-600 mb-1">Price (₦)</label>
                                                         <input
                                                             type="number"
@@ -690,22 +676,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                                         />
                                                         {errors[`bulkTier_${tier.id}_price`] && (
                                                             <p className="text-red-500 text-xs mt-1">{errors[`bulkTier_${tier.id}_price`]}</p>
-                                                        )}
-                                                        <p className="text-xs text-gray-500 mt-1">Must be less than retail</p>
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="block text-xs text-gray-600 mb-1">Min Quantity</label>
-                                                        <input
-                                                            type="number"
-                                                            value={tier.minQuantity}
-                                                            onChange={(e) => updateBulkTier(tier.id, 'minQuantity', e.target.value)}
-                                                            placeholder="10"
-                                                            min="1"
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
-                                                        />
-                                                        {errors[`bulkTier_${tier.id}_minQty`] && (
-                                                            <p className="text-red-500 text-xs mt-1">{errors[`bulkTier_${tier.id}_minQty`]}</p>
                                                         )}
                                                     </div>
 
