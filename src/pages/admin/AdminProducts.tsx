@@ -43,7 +43,7 @@ const AdminProducts = () => {
     checkoutWindowHours: 48,
   });
 
-  const { data, isLoading, refetch, error: productsError } = useGetAdminProductsQuery({ page, limit: 100 }); // Fetch more for client-side filtering
+  const { data, isLoading, refetch, error: productsError } = useGetAdminProductsQuery({ page, limit: 15 }); // 15 products per page
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const [configureGroupBuying, { isLoading: isConfiguringGroup }] = useConfigureGroupBuyingMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -539,8 +539,8 @@ const AdminProducts = () => {
                         type="button"
                         onClick={() => handleOpenGroupModal(p)}
                         className={`p-2 rounded transition-colors ${p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
-                            ? "text-[#1D7B3C] bg-green-50"
-                            : "hover:text-[#1D7B3C] hover:bg-green-50"
+                          ? "text-[#1D7B3C] bg-green-50"
+                          : "hover:text-[#1D7B3C] hover:bg-green-50"
                           }`}
                         title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
                       >
