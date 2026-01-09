@@ -109,22 +109,21 @@ const Category: React.FC = () => {
             <p className="text-xs text-[#00B207] font-semibold mb-2 uppercase text-center">Category</p>
             <h1 className="text-3xl font-medium mb-8 text-center">Shop by Category</h1>
 
-            {/* Category Grid */}
             <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-5 justify-center md:mx-16 lg:mx-32">
                 {categories.slice(0, 5).map((categ) => (
                     <div
                         key={categ._id}
                         onClick={() => handleCategoryClick(categ._id)}
-                        className="group flex flex-col overflow-hidden border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer bg-white"
+                        className="group flex flex-col h-full overflow-hidden border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer bg-white"
                     >
-                        <div className="w-full aspect-square">
+                        <div className="w-full aspect-square overflow-hidden">
                             <img
                                 src={categ.image || categoryImg}
                                 alt={categ.name}
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <div className="relative p-5 text-center text-[#1A1A1A] bg-white font-medium flex-grow flex flex-col justify-center group-hover:bg-green-50 transition-colors">
+                        <div className="p-5 text-center text-[#1A1A1A] bg-white font-medium min-h-[80px] flex items-center justify-center group-hover:bg-green-50 transition-colors">
                             <h3 className="text-lg font-semibold group-hover:text-[#1D7B3C] transition-colors">{categ.name}</h3>
                         </div>
                     </div>
