@@ -25,7 +25,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const canBuyBulk =
         hasBulkTiers &&
         product.pricing.bulkTiers?.some(
-            (tier) => product.inventory.availableStock >= tier.minQuantity
+            (tier) => product.inventory.availableStock >= (tier.minQuantity || 1)
         ) &&
         !isOutOfStock;
 
@@ -73,8 +73,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
 
     const formatTierName = (tier: BulkTier) => {
-        if (hasBulkTiers && tier.minQuantity > 1) {
-            return `${tier.name} (${tier.minQuantity} ${product.inventory.unit})`;
+        if (hasBulkTiers && (tier.minQuantity || 1) > 1) {
+            return `${tier.name} (${tier.minQuantity || 1} ${product.inventory.unit})`;
         }
         return tier.name;
     };
