@@ -86,18 +86,16 @@ export const categoryApi = createApi({
             invalidatesTags: [{ type: 'Categories', id: 'LIST' }],
         }),
 
-        // Update category (Admin only)
+        // Update category (Admin only) - Now supports image uploads via FormData
         updateCategory: builder.mutation<
             ApiResponse<CategoryDetailResponse>,
-            { id: string; body: { name?: string; description?: string; isActive?: boolean } }
+            { id: string; body: FormData }
         >({
             query: ({ id, body }) => ({
                 url: `/categories/admin/categories/${id}`,
                 method: 'PUT',
                 body,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                // Don't set Content-Type - let browser set it with boundary for FormData
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: 'Category', id },
