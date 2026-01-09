@@ -538,11 +538,10 @@ const AdminProducts = () => {
                       <button
                         type="button"
                         onClick={() => handleOpenGroupModal(p)}
-                        className={`p-2 rounded transition-colors ${
-                          p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
+                        className={`p-2 rounded transition-colors ${p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)
                             ? "text-[#1D7B3C] bg-green-50"
                             : "hover:text-[#1D7B3C] hover:bg-green-50"
-                        }`}
+                          }`}
                         title={p.groupConfig?.enabled || ((p as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled) ? "Group buying enabled" : "Configure group buying"}
                       >
                         <Users className="w-4 h-4" />
