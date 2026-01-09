@@ -462,7 +462,7 @@ const AdminProducts = () => {
             ) : (
               filteredProducts.map((p, idx) => (
                 <tr key={p._id} className={`border-b hover:bg-gray-50 ${p.isLowStock ? "bg-orange-50" : ""}`}>
-                  <td className="p-3">{idx + 1}</td>
+                  <td className="p-3">{(page - 1) * 15 + idx + 1}</td>
                   <td className="p-3">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded bg-gray-100 overflow-hidden flex-shrink-0">
