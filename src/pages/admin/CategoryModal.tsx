@@ -68,7 +68,7 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
 
   if (!open) return null;
 
-  const MAX_BYTES = 2 * 1024 * 1024; // 2MB
+  const MAX_BYTES = 25 * 1024 * 1024; // 25MB
   const acceptTypes = ["image/jpeg", "image/png", "image/webp"];
 
   function validateAndSetFile(candidate?: File | null) {
@@ -82,7 +82,7 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
       return;
     }
     if (candidate.size > MAX_BYTES) {
-      setError("Image too large — max 2MB.");
+      setError("Image too large — max 25MB.");
       return;
     }
     setFile(candidate);
@@ -247,7 +247,7 @@ export default function CategoryModal({ open, initial, onClose, onSave }: Props)
                 />
               </svg>
               <p className="mb-2 text-sm text-gray-600">Drop image here or click to browse</p>
-              <p className="text-xs text-gray-400">JPG, PNG, WEBP (Max 2MB)</p>
+              <p className="text-xs text-gray-400">JPG, PNG, WEBP (Max 25MB)</p>
             </div>
           )}
         </div>
