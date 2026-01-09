@@ -271,15 +271,18 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
         if (!validate()) return;
 
         try {
-            // Filter out empty bulk tiers
-            const validBulkTiers = bulkTiers.filter(tier =>
-                tier.price && parseFloat(tier.price) > 0
-            );
+            // Filter out empty bulk tiers - must have price, minQuantity AND unit
+            const validBulkTiers = bulkTiers.filter(tier => {
+                const hasPrice = tier.price && parseFloat(tier.price) > 0;
+                const hasMinQty = tier.minQuantity && parseInt(tier.minQuantity) > 0;
+                const hasUnit = tier.unit && tier.unit.trim().length > 0;
+                return hasPrice && hasMinQty && hasUnit;
+            });
 
             const bulkTiersData = validBulkTiers.map(tier => ({
                 name: tier.name.trim(),
                 price: parseFloat(tier.price),
-                unit: tier.unit,
+                unit: tier.unit.trim(),
                 minQuantity: parseInt(tier.minQuantity),
             }));
 
