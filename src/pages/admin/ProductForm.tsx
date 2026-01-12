@@ -569,7 +569,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         RETAIL PRICING
                                     </label>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-3 gap-4">
                                         <div>
                                             <label className="block text-xs text-gray-600 mb-1">Price (₦) *</label>
                                             <input
@@ -586,6 +586,20 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                             {errors.retailPrice && (
                                                 <p className="text-red-500 text-xs mt-1">{errors.retailPrice}</p>
                                             )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-gray-600 mb-1">Min Quantity</label>
+                                            <input
+                                                type="number"
+                                                name="retailMinQty"
+                                                value={form.retailMinQty}
+                                                onChange={handleChange}
+                                                disabled={isLoading}
+                                                placeholder="1"
+                                                min="1"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">Default: 1</p>
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-600 mb-1">Unit</label>
