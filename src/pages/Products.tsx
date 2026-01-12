@@ -16,6 +16,8 @@ const Products: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 20;
 
   // Read category from URL parameter on mount
   useEffect(() => {
@@ -29,10 +31,21 @@ const Products: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>("latest");
 
   // Fetch products and categories from API
-  const { data: productsData, isLoading: productsLoading } = useGetProductsQuery({ page: 1, limit: 100 });
+  const { data: productsData, isLoading: productsLoading } = useGetProductsQuery({
+    page: currentPage,
+    limit: productsPerPage
+  });
   const { data: categoriesData, isLoading: categoriesLoading } = useGetCategoriesQuery();
 
   const categories = categoriesData?.data?.categories || [];
+
+  // Get pagination metadata from API response
+  const totalPages = productsData?.data?.pagination?.totalPages || 1;
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, priceRange, stockFilter, sortBy]);
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
@@ -92,6 +105,11 @@ const Products: React.FC = () => {
     return filtered;
   }, [productsData, searchTerm, selectedCategory, priceRange, stockFilter, sortBy]);
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   if (productsLoading || categoriesLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -137,7 +155,68 @@ const Products: React.FC = () => {
               <p className="text-gray-500">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <ProductGrid products={filteredProducts} />
+            <>
+              <ProductGrid products={filteredProducts} />
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8 bg-white rounded-lg p-4 shadow">
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === 1
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-[#1D7B3C] text-white hover:bg-green-700'
+                      }`}
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        // Show first page, last page, current page, and pages around current
+                        return (
+                          page === 1 ||
+                          page === totalPages ||
+                          Math.abs(page - currentPage) <= 1
+                        );
+                      })
+                      .map((page, idx, arr) => (
+                        <React.Fragment key={page}>
+                          {/* Add ellipsis if there's a gap */}
+                          {idx > 0 && arr[idx - 1] !== page - 1 && (
+                            <span className="px-2 text-gray-400">...</span>
+                          )}
+                          <button
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === page
+                                ? 'bg-[#1D7B3C] text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      ))}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === totalPages
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-[#1D7B3C] text-white hover:bg-green-700'
+                      }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
