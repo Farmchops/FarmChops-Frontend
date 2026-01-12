@@ -278,8 +278,8 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                                                 handleTierChange(tier);
                                             }}
                                             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium ${isSelected
-                                                    ? "bg-[#1D7B3C] text-white"
-                                                    : "bg-[#F5F6F7]"
+                                                ? "bg-[#1D7B3C] text-white"
+                                                : "bg-[#F5F6F7]"
                                                 }`}
                                         >
                                             Select
@@ -299,7 +299,10 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                         <div className="flex justify-between text-xs sm:text-sm">
                             <span className="text-gray-600">Quantity</span>
                             <span className="font-medium">
-                                {actualQuantity} {selectedTier.unit || product.inventory.unit || retailUnit}
+                                {currentMultiplier > 1 && selectedMinQuantity > 1
+                                    ? `${currentMultiplier} × ${selectedTier.name} (${actualQuantity} ${selectedTier.unit || product.inventory.unit || retailUnit} total)`
+                                    : `${actualQuantity} ${selectedTier.unit || product.inventory.unit || retailUnit}`
+                                }
                             </span>
                         </div>
                         <div className="flex justify-between text-xs sm:text-sm">
