@@ -17,6 +17,7 @@ interface BulkTierForm {
     name: string;
     price: string;
     unit: string;
+    minQuantity: string; // e.g., "6" for half dozen
 }
 
 type FormState = {
@@ -62,7 +63,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
 
     const [bulkTiers, setBulkTiers] = useState<BulkTierForm[]>([
-        { id: '', name: '', price: '', unit: '' }
+        { id: '', name: '', price: '', unit: '', minQuantity: '1' }
     ]);
 
     const [form, setForm] = useState<FormState>({
@@ -119,6 +120,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                     name: tier.name,
                     price: tier.price.toString(),
                     unit: tier.unit,
+                    minQuantity: tier.minQuantity?.toString() || '1',
                 }))
             );
         }
@@ -193,7 +195,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 id: String(Date.now()),
                 name: `Tier ${prev.length + 1}`,
                 price: '',
-                unit: 'kg'
+                unit: 'piece',
+                minQuantity: '1'
             }
         ]);
     };
@@ -270,6 +273,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                 name: tier.name.trim(),
                 price: parseFloat(tier.price),
                 unit: tier.unit.trim(),
+                minQuantity: parseInt(tier.minQuantity) || 1,
             }));
 
             if (product) {
@@ -680,14 +684,28 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                                     </div>
 
                                                     <div className="col-span-2">
+                                                        <label className="block text-xs text-gray-600 mb-1">Min Quantity</label>
+                                                        <input
+                                                            type="number"
+                                                            value={tier.minQuantity}
+                                                            onChange={(e) => updateBulkTier(tier.id, 'minQuantity', e.target.value)}
+                                                            placeholder="6"
+                                                            min="1"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
+                                                        />
+                                                        <p className="text-xs text-gray-500 mt-1">e.g., 6 for half dozen, 12 for dozen</p>
+                                                    </div>
+
+                                                    <div className="col-span-2">
                                                         <label className="block text-xs text-gray-600 mb-1">Unit</label>
                                                         <input
                                                             type="text"
                                                             value={tier.unit}
                                                             onChange={(e) => updateBulkTier(tier.id, 'unit', e.target.value)}
-                                                            placeholder="per kg"
+                                                            placeholder="piece"
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                                                         />
+                                                        <p className="text-xs text-gray-500 mt-1">Base unit (e.g., piece, kg, liter)</p>
                                                     </div>
                                                 </div>
                                             </div>
