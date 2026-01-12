@@ -88,8 +88,15 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
     // Helper function to pluralize units
     const pluralize = (unit: string, quantity: number): string => {
         if (quantity <= 1) return unit;
-        // Handle common irregular plurals and simple pluralization
+
+        // Don't pluralize weight/volume units
         const lowerUnit = unit.toLowerCase();
+        const noPluralizationUnits = ['g', 'kg', 'mg', 'ton', 'l', 'ml', 'litre', 'liter'];
+        if (noPluralizationUnits.includes(lowerUnit)) {
+            return unit;
+        }
+
+        // Handle common irregular plurals and simple pluralization
         if (lowerUnit.endsWith('s') || lowerUnit.endsWith('x') || lowerUnit.endsWith('z') || lowerUnit.endsWith('ch') || lowerUnit.endsWith('sh')) {
             return unit + 'es';
         }
@@ -104,11 +111,14 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
         const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
         const unitLabel = tier.unit || product.inventory.unit || retailUnit;
 
+        // Check if this is the retail tier (by comparing with retailTier)
+        const isRetailTier = tier.name === retailTier.name && tier.price === retailTier.price;
+
         // Check if tier name already contains the quantity (e.g., "500g")
         const nameContainsQuantity = tier.name?.includes(minQty.toString());
 
-        // Only add quantity in parentheses for bulk tiers that don't already show the quantity
-        if (hasBulkTiers && minQty > 1 && !nameContainsQuantity) {
+        // Only add quantity in parentheses for actual bulk tiers (not retail) that don't already show the quantity
+        if (hasBulkTiers && minQty > 1 && !isRetailTier && !nameContainsQuantity) {
             return `${tier.name} (${minQty} ${pluralize(unitLabel, minQty)})`;
         }
         return tier.name;
@@ -318,15 +328,20 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                             <span className="text-gray-600">{hasBulkTiers ? "Tier" : "Option"}</span>
                             <span className="font-medium text-right">{formatTierName(selectedTier)}</span>
                         </div>
-                        <div className="flex justify-between text-xs sm:text-sm">
-                            <span className="text-gray-600">Quantity</span>
-                            <span className="font-medium">
-                                {currentMultiplier > 1 && selectedMinQuantity > 1
-                                    ? `${currentMultiplier} × ${selectedTier.name} (${actualQuantity} ${pluralize(selectedTier.unit || product.inventory.unit || retailUnit, actualQuantity)} total)`
-                                    : `${actualQuantity} ${pluralize(selectedTier.unit || product.inventory.unit || retailUnit, actualQuantity)}`
-                                }
-                            </span>
-                        </div>
+
+                        {/* Only show quantity row if multiplier > 1 (buying multiples) */}
+                        {currentMultiplier > 1 && (
+                            <div className="flex justify-between text-xs sm:text-sm">
+                                <span className="text-gray-600">Quantity</span>
+                                <span className="font-medium">
+                                    {selectedMinQuantity > 1
+                                        ? `${currentMultiplier} × ${selectedTier.name}`
+                                        : `${actualQuantity} ${pluralize(selectedTier.unit || product.inventory.unit || retailUnit, actualQuantity)}`
+                                    }
+                                </span>
+                            </div>
+                        )}
+
                         <div className="flex justify-between text-xs sm:text-sm">
                             <span className="text-gray-600">Unit Price</span>
                             <span className="font-medium">
