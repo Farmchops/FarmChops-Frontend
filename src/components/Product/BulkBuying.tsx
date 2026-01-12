@@ -35,9 +35,17 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
         ? product.pricing.retail.minQuantity
         : 1;
     const retailUnit = product.pricing.retail?.unit || "piece";
-    // Display retail tier name as "500g" format when minQuantity > 1
+
+    // Helper to determine if we need space between quantity and unit
+    const needsSpace = (unit: string) => {
+        const lowerUnit = unit.toLowerCase();
+        const measurementUnits = ['g', 'kg', 'mg', 'ton', 'l', 'ml', 'litre', 'liter'];
+        return !measurementUnits.includes(lowerUnit);
+    };
+
+    // Display retail tier name as "500g" or "3 Pieces" format when minQuantity > 1
     const retailTierName = retailMinQuantity > 1
-        ? `${retailMinQuantity}${retailUnit}`
+        ? `${retailMinQuantity}${needsSpace(retailUnit) ? ' ' : ''}${retailUnit}`
         : product.pricing.retail?.unit || "Retail";
 
     // For non-bulk products, create a retail tier to show in the modal
