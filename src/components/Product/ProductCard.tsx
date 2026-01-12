@@ -32,11 +32,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const bulkSavings = product.bulkSavings?.percentage || 0;
 
     // Create retail tier for non-bulk products
+    const retailMinQuantity = product.pricing.retail.minQuantity || 1;
+    const retailUnit = product.pricing.retail.unit || "piece";
+    // Display retail tier name as "500g" format when minQuantity > 1
+    const retailTierName = retailMinQuantity > 1
+        ? `${retailMinQuantity}${retailUnit}`
+        : retailUnit;
+
     const retailTier: BulkTier = {
-        name: product.pricing.retail.unit || "1 Unit",
+        name: retailTierName,
         price: product.pricing.retail.price,
-        minQuantity: product.pricing.retail.minQuantity || 1,
-        unit: product.pricing.retail.unit || "piece",
+        minQuantity: retailMinQuantity,
+        unit: retailUnit,
     };
 
     // Get all available tiers - ALWAYS show retail + bulk tiers (if available)
@@ -73,8 +80,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
 
     const formatTierName = (tier: BulkTier) => {
-        if (hasBulkTiers && (tier.minQuantity || 1) > 1) {
-            return `${tier.name} (${tier.minQuantity || 1} ${product.inventory.unit})`;
+        const minQty = tier.minQuantity || 1;
+        const unitLabel = tier.unit || product.inventory.unit || "piece";
+
+        // Check if this is the retail tier
+        const isRetailTier = tier.name === retailTier.name && tier.price === retailTier.price;
+
+        // Check if tier name already contains the quantity (e.g., "500g")
+        const nameContainsQuantity = tier.name?.includes(minQty.toString());
+
+        // Only add quantity in parentheses for actual bulk tiers (not retail) that don't already show the quantity
+        if (hasBulkTiers && minQty > 1 && !isRetailTier && !nameContainsQuantity) {
+            return `${tier.name} (${minQty} ${unitLabel})`;
         }
         return tier.name;
     };
