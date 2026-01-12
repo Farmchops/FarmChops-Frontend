@@ -35,7 +35,10 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
         ? product.pricing.retail.minQuantity
         : 1;
     const retailUnit = product.pricing.retail?.unit || "piece";
-    const retailTierName = product.pricing.retail?.unit ? product.pricing.retail.unit : "Retail option";
+    // Display retail tier name as "500g" format when minQuantity > 1
+    const retailTierName = retailMinQuantity > 1
+        ? `${retailMinQuantity}${retailUnit}`
+        : product.pricing.retail?.unit || "Retail";
 
     // For non-bulk products, create a retail tier to show in the modal
     const retailTier: BulkTier = {
@@ -100,7 +103,12 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
     const formatTierName = (tier: BulkTier) => {
         const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
         const unitLabel = tier.unit || product.inventory.unit || retailUnit;
-        if (hasBulkTiers && minQty > 1) {
+
+        // Check if tier name already contains the quantity (e.g., "500g")
+        const nameContainsQuantity = tier.name?.includes(minQty.toString());
+
+        // Only add quantity in parentheses for bulk tiers that don't already show the quantity
+        if (hasBulkTiers && minQty > 1 && !nameContainsQuantity) {
             return `${tier.name} (${minQty} ${pluralize(unitLabel, minQty)})`;
         }
         return tier.name;
