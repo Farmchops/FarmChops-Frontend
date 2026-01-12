@@ -82,12 +82,26 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
     const actualQuantity = currentMultiplier * selectedMinQuantity;
     const totalPrice = selectedUnitPrice * currentMultiplier;
 
+    // Helper function to pluralize units
+    const pluralize = (unit: string, quantity: number): string => {
+        if (quantity <= 1) return unit;
+        // Handle common irregular plurals and simple pluralization
+        const lowerUnit = unit.toLowerCase();
+        if (lowerUnit.endsWith('s') || lowerUnit.endsWith('x') || lowerUnit.endsWith('z') || lowerUnit.endsWith('ch') || lowerUnit.endsWith('sh')) {
+            return unit + 'es';
+        }
+        if (lowerUnit.endsWith('y') && !['ay', 'ey', 'iy', 'oy', 'uy'].some(ending => lowerUnit.endsWith(ending))) {
+            return unit.slice(0, -1) + 'ies';
+        }
+        return unit + 's';
+    };
+
     // Helper function to format tier name with quantity
     const formatTierName = (tier: BulkTier) => {
         const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
         const unitLabel = tier.unit || product.inventory.unit || retailUnit;
         if (hasBulkTiers && minQty > 1) {
-            return `${tier.name} (${minQty} ${unitLabel})`;
+            return `${tier.name} (${minQty} ${pluralize(unitLabel, minQty)})`;
         }
         return tier.name;
     };
@@ -300,8 +314,8 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                             <span className="text-gray-600">Quantity</span>
                             <span className="font-medium">
                                 {currentMultiplier > 1 && selectedMinQuantity > 1
-                                    ? `${currentMultiplier} × ${selectedTier.name} (${actualQuantity} ${selectedTier.unit || product.inventory.unit || retailUnit} total)`
-                                    : `${actualQuantity} ${selectedTier.unit || product.inventory.unit || retailUnit}`
+                                    ? `${currentMultiplier} × ${selectedTier.name} (${actualQuantity} ${pluralize(selectedTier.unit || product.inventory.unit || retailUnit, actualQuantity)} total)`
+                                    : `${actualQuantity} ${pluralize(selectedTier.unit || product.inventory.unit || retailUnit, actualQuantity)}`
                                 }
                             </span>
                         </div>
