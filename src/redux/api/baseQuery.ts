@@ -14,6 +14,7 @@ import { isTokenExpired } from '../../lib/tokenUtils';
 export const createAuthBaseQuery = (baseUrl: string): BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> => {
     const baseQuery = fetchBaseQuery({
         baseUrl,
+        credentials: 'include', // CRITICAL: Send session cookies for guest carts
         prepareHeaders: (headers, { getState }) => {
             const token = ((getState as () => RootState)()).auth.token;
             if (token) {
@@ -67,6 +68,7 @@ export const createAuthBaseQuery = (baseUrl: string): BaseQueryFn<string | Fetch
 export const createAdminAuthBaseQuery = (baseUrl: string): BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> => {
     const baseQuery = fetchBaseQuery({
         baseUrl,
+        credentials: 'include', // CRITICAL: Send session cookies
         prepareHeaders: (headers, { getState }) => {
             const token = ((getState as () => RootState)()).adminAuth?.token;
             if (token) {
