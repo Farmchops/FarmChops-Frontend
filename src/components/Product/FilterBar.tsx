@@ -271,11 +271,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         value={selectedCategory}
                         onValueChange={(value) => onCategoryChange(value)}
                     >
-                        <SelectTrigger className="w-full-  rounded-md text-sm">
+                        <SelectTrigger className="w-full rounded-md text-sm">
                             <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Products ({totalProducts})</SelectItem>
+                            <SelectItem value="all">All Categories</SelectItem>
                             {categories.map((cat) => (
                                 <SelectItem key={cat._id} value={cat._id}>
                                     <div className="flex items-center gap-2">
@@ -287,9 +287,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             />
                                         )}
                                         <span>{cat.name}</span>
-                                        <span className="ml-auto text-xs text-gray-500 hidden">
-                                            ({cat.productCount})
-                                        </span>
                                     </div>
                                 </SelectItem>
                             ))}
@@ -306,7 +303,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                             : "text-[#1A1A1A]"
                             }`}
                     >
-                        <span>All Products</span>
+                        <span>All Categories</span>
                         <div className="bg-[#BCE3C9] w-8 h-8 flex items-center justify-center rounded-full hidden">
                             <span className="text-[#253D4E] font-medium text-xs ">
                                 {totalProducts}

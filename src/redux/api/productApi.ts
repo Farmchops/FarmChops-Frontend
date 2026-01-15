@@ -19,9 +19,31 @@ export const productApi = createApi({
         // Get all products with pagination (public endpoint)
         getProducts: builder.query<
             ApiResponse<ProductsListResponse>,
-            { page?: number; limit?: number }
+            { 
+                page?: number; 
+                limit?: number; 
+                category?: string;
+                search?: string;
+                minPrice?: number;
+                maxPrice?: number;
+                inStock?: boolean;
+                sortBy?: string;
+            }
         >({
-            query: ({ page = 1, limit = 20 }) => `/products?page=${page}&limit=${limit}`,
+            query: ({ page = 1, limit = 20, category, search, minPrice, maxPrice, inStock, sortBy }) => {
+                const params = new URLSearchParams();
+                params.append('page', page.toString());
+                params.append('limit', limit.toString());
+                
+                if (category) params.append('category', category);
+                if (search) params.append('search', search);
+                if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
+                if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
+                if (inStock !== undefined) params.append('inStock', inStock.toString());
+                if (sortBy) params.append('sortBy', sortBy);
+                
+                return `/products?${params.toString()}`;
+            },
             providesTags: (result) =>
                 result?.data?.products
                     ? [
@@ -37,9 +59,25 @@ export const productApi = createApi({
         // Get all products for admin (includes out_of_stock) - requires authentication
         getAdminProducts: builder.query<
             ApiResponse<ProductsListResponse>,
-            { page?: number; limit?: number }
+            { 
+                page?: number; 
+                limit?: number;
+                search?: string;
+                status?: string;
+                sortBy?: string;
+            }
         >({
-            query: ({ page = 1, limit = 20 }) => `/products/admin?page=${page}&limit=${limit}`,
+            query: ({ page = 1, limit = 20, search, status, sortBy }) => {
+                const params = new URLSearchParams();
+                params.append('page', page.toString());
+                params.append('limit', limit.toString());
+                
+                if (search) params.append('search', search);
+                if (status && status !== 'all') params.append('status', status);
+                if (sortBy) params.append('sortBy', sortBy);
+                
+                return `/products/admin?${params.toString()}`;
+            },
             providesTags: (result) =>
                 result?.data?.products
                     ? [

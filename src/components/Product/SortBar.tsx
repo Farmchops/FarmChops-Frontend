@@ -72,7 +72,6 @@
 // src/components/Product/SortBar.tsx
 import React from "react"
 import { Search } from "lucide-react"
-import filter from "../../assets/featureIcon/Filter.png"
 import {
     Select,
     SelectContent,
@@ -98,17 +97,9 @@ export const SortBar: React.FC<SortBarProps> = ({
     return (
         <div className="bg-green-50 p-4 md:px-8">
             <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-                {/* Left side - aligned with sidebar (25% width on large screens) */}
-                <div className="lg:w-1/4 flex items-center">
-                    {/* Filter Button (Mobile) */}
-                    <button type="button" className="px-3 py-2 rounded-full bg-[#1D7B3C] text-white text-sm font-light hover:bg-[#20571E] transition flex gap-2">
-                        Filter <img src={filter} alt="filter icon" className="w-4 h-4" />
-                    </button>
-                </div>
-
-                {/* Right side - aligned with products grid (75% width on large screens) */}
-                <div className="flex-1 flex flex-col sm:flex-row items-center gap-4">
-                    {/* Search and Sort - left aligned */}
+                {/* Search and Sort - full width */}
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                    {/* Search and Sort */}
                     <div className="flex items-stretch border border-gray-300 rounded-lg overflow-hidden bg-white">
                         {/* Search */}
                         <div className="relative w-56 sm:w-64">

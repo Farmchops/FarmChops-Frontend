@@ -437,11 +437,10 @@ const ProductDetail: React.FC = () => {
 
                             {/* Retail Price */}
                             <div
-                                className={`border-2 rounded-lg p-4 transition-colors ${
-                                    activeDealForProduct
+                                className={`border-2 rounded-lg p-4 transition-colors ${activeDealForProduct
                                         ? "border-gray-200 bg-gray-50"
                                         : "border-gray-200 hover:border-[#1D7B3C]"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -532,19 +531,7 @@ const ProductDetail: React.FC = () => {
                                     </p>
                                 ) : null}
                             </div>
-                        ) : (
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-700">Availability</span>
-                                    <span className={`font-medium ${isOutOfStock ? "text-red-600" : "text-green-600"}`}>
-                                        {isOutOfStock
-                                            ? "Out of Stock"
-                                            : `${product.inventory.availableStock} ${product.inventory.unit} in stock`
-                                        }
-                                    </span>
-                                </div>
-                            </div>
-                        )}
+                        ) : null}
 
                         {/* Tags */}
                         {product.tags.length > 0 && (

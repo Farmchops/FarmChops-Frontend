@@ -1,5 +1,5 @@
 // src/pages/admin/AdminProducts.tsx
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 // import { useGetProductsQuery, useDeleteProductMutation } from "../../store/api/productApi";
 import { Trash2, Pencil, Search, Package, Users, X, AlertTriangle } from "lucide-react";
 import ProductForm from "./ProductForm";
@@ -43,7 +43,15 @@ const AdminProducts = () => {
     checkoutWindowHours: 48,
   });
 
-  const { data, isLoading, refetch, error: productsError } = useGetAdminProductsQuery({ page, limit: 15 }); // 15 products per page
+  // Fetch products from API with all filters
+  const { data, isLoading, refetch, error: productsError } = useGetAdminProductsQuery({
+    page,
+    limit: 15,
+    search: searchTerm.trim() || undefined,
+    status: statusFilter,
+    sortBy: sortBy
+  });
+
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const [configureGroupBuying, { isLoading: isConfiguringGroup }] = useConfigureGroupBuyingMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -51,50 +59,14 @@ const AdminProducts = () => {
   // Log errors for debugging
   if (productsError) console.error('Products API Error:', productsError);
 
+  // Get products and total count from API response (already filtered and sorted by backend)
   const allProducts = useMemo(() => data?.data?.products || [], [data?.data?.products]);
+  const totalResults = data?.data?.pagination?.totalProducts || 0;
 
-  // Client-side filtering and sorting
-  const filteredProducts = useMemo(() => {
-    let filtered = [...allProducts];
-
-    // Search filter
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search) ||
-          p.description.toLowerCase().includes(search) ||
-          p.category?.name.toLowerCase().includes(search) ||
-          p.tags.some((tag) => tag.toLowerCase().includes(search))
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((p) => {
-        const mappedStatus =
-          p.status === "active" ? "in_stock" :
-            p.status === "inactive" ? "out_of_stock" :
-              p.status; // keep as-is if already in_stock/out_of_stock
-        return mappedStatus === statusFilter;
-      });
-    }
-
-    // Sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "price":
-          return (a.pricing?.retail?.price || 0) - (b.pricing?.retail?.price || 0);
-        case "stock":
-          return (b.inventory?.availableStock || 0) - (a.inventory?.availableStock || 0);
-        case "name":
-        default:
-          return a.name.localeCompare(b.name);
-      }
-    });
-
-    return filtered;
-  }, [allProducts, searchTerm, statusFilter, sortBy]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, sortBy]);
 
   // const handleDelete = async (id: string, name: string) => {
   //   if (!window.confirm(`Are you sure you want to delete "${name}"?`)) {
@@ -293,7 +265,7 @@ const AdminProducts = () => {
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Products</h1>
           <p className="text-sm text-gray-700 mt-1">
-            Showing {filteredProducts.length} of {allProducts.length} products
+            Showing {allProducts.length} of {totalResults} products
           </p>
         </div>
         <button
@@ -436,7 +408,7 @@ const AdminProducts = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.length === 0 ? (
+            {allProducts.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-6 text-center">
                   <div className="flex flex-col items-center justify-center py-8">
@@ -460,7 +432,7 @@ const AdminProducts = () => {
                 </td>
               </tr>
             ) : (
-              filteredProducts.map((p, idx) => (
+              allProducts.map((p, idx) => (
                 <tr key={p._id} className={`border-b hover:bg-gray-50 ${p.isLowStock ? "bg-orange-50" : ""}`}>
                   <td className="p-3">{(page - 1) * 15 + idx + 1}</td>
                   <td className="p-3">
@@ -576,7 +548,7 @@ const AdminProducts = () => {
       </div>
 
       {/* Pagination Info */}
-      {filteredProducts.length > 0 && (
+      {allProducts.length > 0 && (
         <div className="flex items-center justify-between text-[#1D7B3C]">
           <div className="flex gap-2 ">
             <button

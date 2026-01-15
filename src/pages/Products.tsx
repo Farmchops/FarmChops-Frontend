@@ -30,80 +30,30 @@ const Products: React.FC = () => {
   const [stockFilter, setStockFilter] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("latest");
 
-  // Fetch products and categories from API
+  // Fetch products and categories from API with all filters
   const { data: productsData, isLoading: productsLoading } = useGetProductsQuery({
     page: currentPage,
-    limit: productsPerPage
+    limit: productsPerPage,
+    category: selectedCategory !== "all" ? selectedCategory : undefined,
+    search: searchTerm.trim() || undefined,
+    minPrice: priceRange[0],
+    maxPrice: priceRange[1],
+    inStock: stockFilter.includes("in-stock") && !stockFilter.includes("out-of-stock") ? true : undefined,
+    sortBy: sortBy
   });
   const { data: categoriesData, isLoading: categoriesLoading } = useGetCategoriesQuery();
 
   const categories = categoriesData?.data?.categories || [];
 
-  // Get pagination metadata from API response
+  // Get pagination metadata and products from API response
   const totalPages = productsData?.data?.pagination?.totalPages || 1;
+  const products = productsData?.data?.products || [];
+  const totalResults = productsData?.data?.pagination?.totalProducts || 0;
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory, priceRange, stockFilter, sortBy]);
-
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    const products = productsData?.data?.products || [];
-    let filtered = [...products];
-
-    // Search filter
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search) ||
-          p.description.toLowerCase().includes(search) ||
-          p.tags.some((tag) => tag.toLowerCase().includes(search))
-      );
-    }
-
-    // Category filter
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((p) => p.category._id === selectedCategory);
-    }
-
-    // Price filter (using retail price)
-    filtered = filtered.filter((p) => {
-      const price = p.pricing.retail.price;
-      return price >= priceRange[0] && price <= priceRange[1];
-    });
-
-    // Stock filter
-    if (stockFilter.length > 0) {
-      filtered = filtered.filter((p) => {
-        if (stockFilter.includes("in-stock") && p.status === "active" && p.inventory.availableStock > 0) {
-          return true;
-        }
-        if (stockFilter.includes("out-of-stock") && (p.status === "out_of_stock" || p.inventory.availableStock === 0)) {
-          return true;
-        }
-        return false;
-      });
-    }
-
-    // Sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "price-low":
-          return a.pricing.retail.price - b.pricing.retail.price;
-        case "price-high":
-          return b.pricing.retail.price - a.pricing.retail.price;
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "latest":
-        default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
-
-    return filtered;
-  }, [productsData, searchTerm, selectedCategory, priceRange, stockFilter, sortBy]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -125,7 +75,7 @@ const Products: React.FC = () => {
     <div>
       <ProductPageHero />
       <SortBar
-        totalResults={filteredProducts.length}
+        totalResults={totalResults}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         sortBy={sortBy}
@@ -148,7 +98,7 @@ const Products: React.FC = () => {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col gap-4 mb-16">
-          {filteredProducts.length === 0 ? (
+          {products.length === 0 ? (
             <div className="bg-white rounded-lg p-12 text-center">
               <div className="text-gray-400 text-5xl mb-4">🔍</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
@@ -156,7 +106,7 @@ const Products: React.FC = () => {
             </div>
           ) : (
             <>
-              <ProductGrid products={filteredProducts} />
+              <ProductGrid products={products} />
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
@@ -166,8 +116,8 @@ const Products: React.FC = () => {
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
                     className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === 1
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-[#1D7B3C] text-white hover:bg-green-700'
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#1D7B3C] text-white hover:bg-green-700'
                       }`}
                   >
                     Previous
@@ -193,8 +143,8 @@ const Products: React.FC = () => {
                           <button
                             onClick={() => setCurrentPage(page)}
                             className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === page
-                                ? 'bg-[#1D7B3C] text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              ? 'bg-[#1D7B3C] text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                               }`}
                           >
                             {page}
@@ -208,8 +158,8 @@ const Products: React.FC = () => {
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
                     className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === totalPages
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-[#1D7B3C] text-white hover:bg-green-700'
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#1D7B3C] text-white hover:bg-green-700'
                       }`}
                   >
                     Next

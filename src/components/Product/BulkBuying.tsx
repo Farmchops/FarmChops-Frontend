@@ -281,34 +281,40 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                                     {/* Bottom row on mobile - Quantity and Select button */}
                                     <div className="flex items-center justify-between sm:justify-end gap-3">
                                         {/* Quantity Selector - shows multiplier */}
-                                        <div className="flex items-center bg-[#E6E6E6] p-1.5 sm:p-2 rounded-full">
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleQuantityChange(tier, "subtract");
-                                                }}
-                                                disabled={multiplier <= 1}
-                                                className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                                aria-label="Decrease quantity"
-                                            >
-                                                <Minus size={14} className="sm:w-4 sm:h-4" />
-                                            </button>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="flex items-center bg-[#E6E6E6] p-1.5 sm:p-2 rounded-full">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleQuantityChange(tier, "subtract");
+                                                    }}
+                                                    disabled={multiplier <= 1}
+                                                    className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    aria-label="Decrease quantity"
+                                                >
+                                                    <Minus size={14} className="sm:w-4 sm:h-4" />
+                                                </button>
 
-                                            <p className="px-2 text-xs sm:text-sm font-medium">{multiplier}</p>
+                                                <p className="px-2 text-xs sm:text-sm font-medium">{multiplier}</p>
 
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleQuantityChange(tier, "add");
-                                                }}
-                                                disabled={multiplier >= maxMultiplier}
-                                                className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                aria-label="Increase quantity"
-                                            >
-                                                <Plus size={14} className="sm:w-4 sm:h-4" />
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleQuantityChange(tier, "add");
+                                                    }}
+                                                    disabled={multiplier >= maxMultiplier}
+                                                    className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    aria-label="Increase quantity"
+                                                >
+                                                    <Plus size={14} className="sm:w-4 sm:h-4" />
+                                                </button>
+                                            </div>
+                                            {/* Show message when at max quantity */}
+                                            {multiplier >= maxMultiplier && maxMultiplier > 1 && (
+                                                <p className="text-[10px] text-orange-600 font-medium">Maximum reached</p>
+                                            )}
                                         </div>
 
                                         <button

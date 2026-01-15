@@ -1,11 +1,14 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGetProductsQuery } from '@/redux/api/productApi'
-import cartImg from "../assets/cart.svg"
+import { BulkBuying } from './Product/BulkBuying'
+import { ShoppingCart, Eye } from 'lucide-react'
 import featuredImg from "../assets/product.jpg"
+import type { Product } from '@/types/product'
 
 const Featured: React.FC = () => {
     const { data: productsData, isLoading } = useGetProductsQuery({ page: 1, limit: 8 });
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     // Get first 4 products to display as featured
     const featuredProducts = productsData?.data?.products?.slice(0, 4) ?? [];
@@ -64,27 +67,57 @@ const Featured: React.FC = () => {
                     const price = product.pricing?.retail?.price ?? 0;
 
                     return (
-                        <Link
-                            to={`/products/${product.slug}`}
+                        <div
                             key={product._id}
-                            className="w-fit m-auto overflow-hidden rounded-xl shadow-md hover:shadow-2xl hover:scale-105 transition-all duration-300 bg-white"
+                            className="w-fit m-auto overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 bg-white"
                         >
-                            <img
-                                src={productImage}
-                                alt={product.name}
-                                className="w-50 h-40 md:w-80 md:h-60 object-cover"
-                            />
+                            <Link to={`/products/${product.slug}`}>
+                                <img
+                                    src={productImage}
+                                    alt={product.name}
+                                    className="w-50 h-40 md:w-80 md:h-60 object-cover hover:scale-105 transition-transform duration-300"
+                                />
+                            </Link>
                             <div className="p-5 text-[#1A1A1A] bg-white">
                                 <h3 className="text-base font-medium line-clamp-1 mb-2">{product.name}</h3>
                                 <p className='text-lg font-semibold text-[#20571E] mb-3'>₦{formatPrice(price)}</p>
-                                <button type="button" className="w-full px-4 py-2.5 rounded-lg bg-[#20571E] text-white text-sm font-medium hover:bg-[#1a4a18] transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
-                                    View Product <img src={cartImg} alt="cart icon" className="w-4 h-4" />
-                                </button>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2">
+                                    {/* Add to Cart Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedProduct(product)}
+                                        className="flex-1 px-3 py-2.5 rounded-lg bg-[#20571E] text-white text-sm font-medium hover:bg-[#1a4a18] transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
+                                        title="Add to cart"
+                                    >
+                                        <ShoppingCart className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Add</span>
+                                    </button>
+
+                                    {/* View Product Button */}
+                                    <Link
+                                        to={`/products/${product.slug}`}
+                                        className="flex-1 px-3 py-2.5 rounded-lg bg-white border-2 border-[#20571E] text-[#20571E] text-sm font-medium hover:bg-green-50 transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
+                                        title="View product details"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span className="hidden sm:inline">View</span>
+                                    </Link>
+                                </div>
                             </div>
-                        </Link>
+                        </div>
                     );
                 })}
             </div>
+
+            {/* BulkBuying Modal */}
+            {selectedProduct && (
+                <BulkBuying
+                    product={selectedProduct}
+                    onClose={() => setSelectedProduct(null)}
+                />
+            )}
         </section>
     )
 }
