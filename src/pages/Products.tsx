@@ -1,5 +1,5 @@
 // src/pages/Products.tsx - Main Product Page with API
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FilterSidebar } from "../components/Product/FilterBar";
 import { SortBar } from "../components/Product/SortBar";
