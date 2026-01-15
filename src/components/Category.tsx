@@ -80,8 +80,8 @@ const Category: React.FC = () => {
     const { data: categoriesData, isLoading } = useGetCategoriesQuery();
     const categories = categoriesData?.data?.categories || [];
 
-    const handleCategoryClick = (categoryId: string) => {
-        navigate(`/products?category=${categoryId}`);
+    const handleCategoryClick = (categorySlug: string) => {
+        navigate(`/products?category=${categorySlug}`);
     };
 
     if (isLoading) {
@@ -113,7 +113,7 @@ const Category: React.FC = () => {
                 {categories.slice(0, 5).map((categ) => (
                     <div
                         key={categ._id}
-                        onClick={() => handleCategoryClick(categ._id)}
+                        onClick={() => handleCategoryClick(categ.slug)}
                         className="group flex flex-col h-full overflow-hidden border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer bg-white"
                     >
                         <div className="w-full aspect-square overflow-hidden">
