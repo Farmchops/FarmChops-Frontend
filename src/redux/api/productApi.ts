@@ -27,10 +27,11 @@ export const productApi = createApi({
                 minPrice?: number;
                 maxPrice?: number;
                 inStock?: boolean;
-                sortBy?: string;
+                sort?: string;
+                order?: string;
             }
         >({
-            query: ({ page = 1, limit = 20, category, search, minPrice, maxPrice, inStock, sortBy }) => {
+            query: ({ page = 1, limit = 20, category, search, minPrice, maxPrice, inStock, sort, order }) => {
                 const params = new URLSearchParams();
                 params.append('page', page.toString());
                 params.append('limit', limit.toString());
@@ -40,7 +41,8 @@ export const productApi = createApi({
                 if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
                 if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
                 if (inStock !== undefined) params.append('inStock', inStock.toString());
-                if (sortBy) params.append('sortBy', sortBy);
+                if (sort) params.append('sort', sort);
+                if (order) params.append('order', order);
                 
                 return `/products?${params.toString()}`;
             },

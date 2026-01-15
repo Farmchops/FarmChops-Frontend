@@ -30,6 +30,24 @@ const Products: React.FC = () => {
   const [stockFilter, setStockFilter] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("latest");
 
+  // Map user-friendly sort values to backend parameters
+  const getSortParams = (sortValue: string): { sort?: string; order?: string } => {
+    switch (sortValue) {
+      case "latest":
+        return { sort: "createdAt", order: "desc" };
+      case "price-low":
+        return { sort: "pricing.retail.price", order: "asc" };
+      case "price-high":
+        return { sort: "pricing.retail.price", order: "desc" };
+      case "name":
+        return { sort: "name", order: "asc" };
+      default:
+        return { sort: "createdAt", order: "desc" };
+    }
+  };
+
+  const sortParams = getSortParams(sortBy);
+
   // Fetch products and categories from API with all filters
   const { data: productsData, isLoading: productsLoading } = useGetProductsQuery({
     page: currentPage,
@@ -39,7 +57,8 @@ const Products: React.FC = () => {
     minPrice: priceRange[0],
     maxPrice: priceRange[1],
     inStock: stockFilter.includes("in-stock") && !stockFilter.includes("out-of-stock") ? true : undefined,
-    sortBy: sortBy
+    sort: sortParams.sort,
+    order: sortParams.order
   });
   const { data: categoriesData, isLoading: categoriesLoading } = useGetCategoriesQuery();
 

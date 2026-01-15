@@ -277,7 +277,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                         <SelectContent>
                             <SelectItem value="all">All Categories</SelectItem>
                             {categories.map((cat) => (
-                                <SelectItem key={cat._id} value={cat._id}>
+                                <SelectItem key={cat._id} value={cat.slug}>
                                     <div className="flex items-center gap-2">
                                         {cat.image && (
                                             <img
@@ -313,8 +313,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     {categories.map((cat) => (
                         <li
                             key={cat._id}
-                            onClick={() => onCategoryChange(cat._id)}
-                            className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === cat._id
+                            onClick={() => onCategoryChange(cat.slug)}
+                            className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === cat.slug
                                 ? "bg-green-50 text-[#1D7B3C] font-medium"
                                 : "text-[#1A1A1A]"
                                 }`}

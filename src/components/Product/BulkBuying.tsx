@@ -148,7 +148,15 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
 
             // Prevent exceeding stock
             const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
-            const maxMultiplier = Math.max(1, Math.floor(product.inventory.availableStock / minQty));
+            const tierUnit = (tier.unit || retailUnit).toLowerCase();
+            const stockUnit = product.inventory.unit.toLowerCase();
+
+            // Only enforce stock limit if units match (e.g., both in 'kg' or both in 'bags')
+            // If units don't match (e.g., stock in 'bags', tier in 'g'), allow up to 99 multiplier
+            let maxMultiplier = 99;
+            if (tierUnit === stockUnit) {
+                maxMultiplier = Math.max(1, Math.floor(product.inventory.availableStock / minQty));
+            }
             if (newMultiplier > maxMultiplier) newMultiplier = maxMultiplier;
 
             return { ...prev, [tier.name]: newMultiplier };
@@ -254,7 +262,14 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                             const multiplier = tierMultipliers[tier.name] ?? 1;
                             const minQty = typeof tier.minQuantity === "number" && tier.minQuantity > 0 ? tier.minQuantity : 1;
                             const tierPrice = typeof tier.price === "number" ? tier.price : 0;
-                            const maxMultiplier = Math.max(1, Math.floor(product.inventory.availableStock / minQty));
+
+                            // Only enforce stock limit if units match
+                            const tierUnit = (tier.unit || retailUnit).toLowerCase();
+                            const stockUnit = product.inventory.unit.toLowerCase();
+                            let maxMultiplier = 99;
+                            if (tierUnit === stockUnit) {
+                                maxMultiplier = Math.max(1, Math.floor(product.inventory.availableStock / minQty));
+                            }
 
                             return (
                                 <div
