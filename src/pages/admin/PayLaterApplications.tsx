@@ -352,7 +352,10 @@ const PayLaterApplications = () => {
                                 {reviewAction === 'approve' ? 'Approve Application' : 'Reject Application'}
                             </h3>
                             <button
-                                onClick={() => setShowReviewModal(false)}
+                                onClick={() => {
+                                    setShowReviewModal(false);
+                                    setSelectedApplication(null);
+                                }}
                                 className="p-2 hover:bg-gray-100 rounded-lg transition"
                             >
                                 <X className="w-5 h-5 text-gray-500" />
@@ -438,12 +441,12 @@ const PayLaterApplications = () => {
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedApplication.verificationResults.bvn.verified
-                                                            ? 'bg-green-100'
-                                                            : 'bg-red-100'
+                                                        ? 'bg-green-100'
+                                                        : 'bg-red-100'
                                                         }`}>
                                                         <span className={`text-2xl ${selectedApplication.verificationResults.bvn.verified
-                                                                ? 'text-green-600'
-                                                                : 'text-red-600'
+                                                            ? 'text-green-600'
+                                                            : 'text-red-600'
                                                             }`}>
                                                             {selectedApplication.verificationResults.bvn.verified ? '✓' : '✕'}
                                                         </span>
@@ -454,8 +457,8 @@ const PayLaterApplications = () => {
                                                     </div>
                                                 </div>
                                                 <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedApplication.verificationResults.bvn.verified
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-600'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {selectedApplication.verificationResults.bvn.verified ? '50' : '0'} pts
                                                 </div>
@@ -481,12 +484,12 @@ const PayLaterApplications = () => {
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedApplication.verificationResults.nin.verified
-                                                            ? 'bg-green-100'
-                                                            : 'bg-red-100'
+                                                        ? 'bg-green-100'
+                                                        : 'bg-red-100'
                                                         }`}>
                                                         <span className={`text-2xl ${selectedApplication.verificationResults.nin.verified
-                                                                ? 'text-green-600'
-                                                                : 'text-red-600'
+                                                            ? 'text-green-600'
+                                                            : 'text-red-600'
                                                             }`}>
                                                             {selectedApplication.verificationResults.nin.verified ? '✓' : '✕'}
                                                         </span>
@@ -497,8 +500,8 @@ const PayLaterApplications = () => {
                                                     </div>
                                                 </div>
                                                 <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedApplication.verificationResults.nin.verified
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-600'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {selectedApplication.verificationResults.nin.verified ? '30' : '0'} pts
                                                 </div>
@@ -531,12 +534,12 @@ const PayLaterApplications = () => {
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedApplication.verificationResults.faceMatch.matched
-                                                            ? 'bg-green-100'
-                                                            : 'bg-red-100'
+                                                        ? 'bg-green-100'
+                                                        : 'bg-red-100'
                                                         }`}>
                                                         <span className={`text-2xl ${selectedApplication.verificationResults.faceMatch.matched
-                                                                ? 'text-green-600'
-                                                                : 'text-red-600'
+                                                            ? 'text-green-600'
+                                                            : 'text-red-600'
                                                             }`}>
                                                             {selectedApplication.verificationResults.faceMatch.matched ? '✓' : '✕'}
                                                         </span>
@@ -547,8 +550,8 @@ const PayLaterApplications = () => {
                                                     </div>
                                                 </div>
                                                 <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedApplication.verificationResults.faceMatch.matched
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-600'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {selectedApplication.verificationResults.faceMatch.matched ? '20' : '0'} pts
                                                 </div>
@@ -642,7 +645,10 @@ const PayLaterApplications = () => {
 
                         <div className="p-5 border-t border-gray-200 flex gap-3">
                             <button
-                                onClick={() => setShowReviewModal(false)}
+                                onClick={() => {
+                                    setShowReviewModal(false);
+                                    setSelectedApplication(null);
+                                }}
                                 className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
                             >
                                 Cancel
