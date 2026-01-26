@@ -21,6 +21,7 @@ import { adminRidersApi } from './api/adminRidersApi';
 import { dealsApi } from './api/dealsApi';
 import { vendorsApi } from './api/vendorsApi';
 import { groupOrdersApi } from './api/groupOrdersApi';
+import { adminGroupOrdersApi } from './api/adminGroupOrdersApi';
 import { adminDashboardApi } from './api/adminDashboardApi';
 import { walletApi } from './api/walletApi';
 import { paylaterApi } from './api/paylaterApi';
@@ -56,6 +57,7 @@ export const store = configureStore({
     [dealsApi.reducerPath]: dealsApi.reducer,
         [vendorsApi.reducerPath]: vendorsApi.reducer,
         [groupOrdersApi.reducerPath]: groupOrdersApi.reducer,
+        [adminGroupOrdersApi.reducerPath]: adminGroupOrdersApi.reducer,
         [adminDashboardApi.reducerPath]: adminDashboardApi.reducer,
         [walletApi.reducerPath]: walletApi.reducer,
         [paylaterApi.reducerPath]: paylaterApi.reducer,
@@ -80,6 +82,7 @@ export const store = configureStore({
             dealsApi.middleware,
             vendorsApi.middleware,
             groupOrdersApi.middleware,
+            adminGroupOrdersApi.middleware,
             adminDashboardApi.middleware,
             walletApi.middleware,
             paylaterApi.middleware,

@@ -209,14 +209,14 @@
 
 
 // src/components/Product/FilterBar.tsx
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
     Select,
     SelectTrigger,
     SelectValue,
     SelectContent,
     SelectItem,
-} from "@/components/ui/select"; // ✅ make sure Shadcn Select is installed
+} from "@/components/ui/select";
 
 interface Category {
     _id: string;
@@ -258,41 +258,89 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         0
     );
 
+    // Drag scrolling logic
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!scrollContainerRef.current) return;
+        setIsDragging(true);
+        setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+        setScrollLeft(scrollContainerRef.current.scrollLeft);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging || !scrollContainerRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - scrollContainerRef.current.offsetLeft;
+        const walk = (x - startX) * 2; // Scroll speed multiplier
+        scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+    };
+
     return (
         <aside className="h-full md:bg-white rounded-xl shadow-sm p-4 flex flex-col gap-6">
             {/* Categories */}
             <div>
-                <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
+                <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9] hidden lg:block">
                     Category
                 </h3>
 
-                {/* ✅ Mobile Dropdown */}
-                <div className="block md:hidden">
-                    <Select
-                        value={selectedCategory}
-                        onValueChange={(value) => onCategoryChange(value)}
+                {/* ✅ Horizontal Slidable Category Bar (Mobile & Tablet) */}
+                <div className="block lg:hidden mb-4">
+                    <div
+                        ref={scrollContainerRef}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseLeave}
+                        className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 cursor-grab active:cursor-grabbing select-none"
+                        style={{
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none',
+                        }}
                     >
-                        <SelectTrigger className="w-full rounded-md text-sm">
-                            <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
-                            {categories.map((cat) => (
-                                <SelectItem key={cat._id} value={cat.slug}>
-                                    <div className="flex items-center gap-2">
-                                        {cat.image && (
-                                            <img
-                                                src={cat.image}
-                                                alt={cat.name}
-                                                className="w-5 h-5 rounded"
-                                            />
-                                        )}
-                                        <span>{cat.name}</span>
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        {/* All Categories Chip */}
+                        <button
+                            onClick={() => onCategoryChange("all")}
+                            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === "all"
+                                    ? "bg-[#1D7B3C] text-white shadow-md"
+                                    : "bg-white text-gray-700 border border-gray-300 hover:border-[#1D7B3C] hover:text-[#1D7B3C]"
+                                }`}
+                        >
+                            All Categories
+                        </button>
+
+                        {/* Category Chips */}
+                        {categories.map((cat) => (
+                            <button
+                                key={cat._id}
+                                onClick={() => onCategoryChange(cat.slug)}
+                                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === cat.slug
+                                        ? "bg-[#1D7B3C] text-white shadow-md"
+                                        : "bg-white text-gray-700 border border-gray-300 hover:border-[#1D7B3C] hover:text-[#1D7B3C]"
+                                    }`}
+                            >
+                                {cat.image && (
+                                    <img
+                                        src={cat.image}
+                                        alt={cat.name}
+                                        className="w-5 h-5 rounded-full object-cover"
+                                    />
+                                )}
+                                <span>{cat.name}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* ✅ Desktop List */}
@@ -300,8 +348,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     <li
                         onClick={() => onCategoryChange("all")}
                         className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === "all"
-                            ? "bg-green-50 text-[#1D7B3C] font-medium"
-                            : "text-[#1A1A1A]"
+                                ? "bg-green-50 text-[#1D7B3C] font-medium"
+                                : "text-[#1A1A1A]"
                             }`}
                     >
                         <span>All Categories</span>
@@ -316,8 +364,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                             key={cat._id}
                             onClick={() => onCategoryChange(cat.slug)}
                             className={`flex items-center justify-between text-sm cursor-pointer hover:bg-green-50 px-2 py-2 rounded-lg ${selectedCategory === cat.slug
-                                ? "bg-green-50 text-[#1D7B3C] font-medium"
-                                : "text-[#1A1A1A]"
+                                    ? "bg-green-50 text-[#1D7B3C] font-medium"
+                                    : "text-[#1A1A1A]"
                                 }`}
                         >
                             <div className="gap-2 flex items-center">
@@ -341,7 +389,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
 
             {/* Hidden for now — you can enable later */}
-
             <div className="hidden">
                 <h3 className="font-semibold mb-4 pb-4 text-[#253D4E] text-xl inline-block border-b-2 border-[#BCE3C9]">
                     Price Range
@@ -391,6 +438,12 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     </label>
                 </div>
             </div>
+
+            <style jsx>{`
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                }
+            `}</style>
         </aside>
     );
 };

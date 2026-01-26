@@ -15,7 +15,7 @@ import {
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { alertService } from "@/lib/alertService";
 import { resolveErrorMessage } from "@/lib/utils";
-import { useGetGroupByIdQuery, useCancelGroupMutation } from "@/redux/api/groupOrdersApi";
+import { useGetAdminGroupByIdQuery, useCancelGroupMutation } from "@/redux/api/adminGroupOrdersApi";
 
 const AdminGroupDetail = () => {
   const { groupId } = useParams<{ groupId: string }>();
@@ -24,7 +24,7 @@ const AdminGroupDetail = () => {
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const { data, isLoading } = useGetGroupByIdQuery(groupId || '', {
+  const { data, isLoading } = useGetAdminGroupByIdQuery(groupId || '', {
     skip: !groupId,
   });
   const [cancelGroup] = useCancelGroupMutation();
@@ -357,13 +357,12 @@ const AdminGroupDetail = () => {
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      participant.status === 'paid'
-                        ? 'bg-green-100 text-green-800'
-                        : participant.status === 'reserved'
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${participant.status === 'paid'
+                      ? 'bg-green-100 text-green-800'
+                      : participant.status === 'reserved'
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-gray-100 text-gray-800'
-                    }`}>
+                      }`}>
                       {participant.status}
                     </span>
                   </td>

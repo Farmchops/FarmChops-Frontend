@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetAdminGroupsQuery } from "@/redux/api/groupOrdersApi";
+import { useGetAdminGroupsQuery } from "@/redux/api/adminGroupOrdersApi";
 import type { GroupOrder } from "@/types/groupOrder";
 
 const AdminGroupOrders = () => {

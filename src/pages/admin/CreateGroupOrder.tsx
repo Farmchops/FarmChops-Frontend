@@ -5,7 +5,7 @@ import { ArrowLeft, Package, Users, AlertCircle } from "lucide-react";
 import { alertService } from "@/lib/alertService";
 import { resolveErrorMessage } from "@/lib/utils";
 import { useGetProductsQuery } from "@/redux/api/productApi";
-import { useCreateGroupMutation } from "@/redux/api/groupOrdersApi";
+import { useCreateGroupMutation } from "@/redux/api/adminGroupOrdersApi";
 
 const CreateGroupOrder = () => {
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ const CreateGroupOrder = () => {
       return;
     }
 
-  if (!selectedProduct.groupConfig?.enabled && !((selectedProduct as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)) {
+    if (!selectedProduct.groupConfig?.enabled && !((selectedProduct as unknown as { groupBuyingEnabled?: boolean }).groupBuyingEnabled)) {
       alertService.show({
         type: "error",
         title: "Invalid Product",
