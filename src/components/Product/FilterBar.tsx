@@ -209,14 +209,7 @@
 
 
 // src/components/Product/FilterBar.tsx
-import React, { useRef, useState, useEffect } from "react";
-import {
-    Select,
-    SelectTrigger,
-    SelectValue,
-    SelectContent,
-    SelectItem,
-} from "@/components/ui/select";
+import React, { useRef, useState } from "react";
 
 interface Category {
     _id: string;
@@ -439,11 +432,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 </div>
             </div>
 
-            <style jsx>{`
-                .scrollbar-hide::-webkit-scrollbar {
-                    display: none;
-                }
-            `}</style>
+
         </aside>
     );
 };
