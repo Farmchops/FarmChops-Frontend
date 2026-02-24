@@ -625,6 +625,7 @@ const AdminProducts = () => {
                         min="2"
                         max="100"
                         value={groupConfig.minParticipants}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         onInput={(e) => {
                           const target = e.target as HTMLInputElement;
                           target.value = target.value.replace(/^0+/, '') || '0';
@@ -645,11 +646,19 @@ const AdminProducts = () => {
                         min="2"
                         max="100"
                         value={groupConfig.maxParticipants}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         onInput={(e) => {
                           const target = e.target as HTMLInputElement;
                           target.value = target.value.replace(/^0+/, '') || '0';
                         }}
-                        onChange={(e) => setGroupConfig({ ...groupConfig, maxParticipants: parseInt(e.target.value) || 0 })}
+                        onChange={(e) => {
+                          const max = parseInt(e.target.value) || 0;
+                          setGroupConfig({
+                            ...groupConfig,
+                            maxParticipants: max,
+                            targetQuantity: parseFloat((groupConfig.quantityPerPerson.min * max).toFixed(2)) || 0,
+                          });
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                         placeholder="10"
                       />
@@ -663,17 +672,26 @@ const AdminProducts = () => {
                     </label>
                     <input
                       type="number"
-                      min="1"
+                      min="0.01"
+                      step="0.01"
                       value={groupConfig.quantityPerPerson.min}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
                       onInput={(e) => {
                         const target = e.target as HTMLInputElement;
-                        target.value = target.value.replace(/^0+/, '') || '0';
+                        if (target.value.includes('.')) {
+                          const parts = target.value.split('.');
+                          parts[0] = parts[0].replace(/^0+/, '') || '0';
+                          target.value = parts.join('.');
+                        } else {
+                          target.value = target.value.replace(/^0+/, '') || '0';
+                        }
                       }}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value) || 0;
+                        const value = parseFloat(e.target.value) || 0;
                         setGroupConfig({
                           ...groupConfig,
-                          quantityPerPerson: { min: value, max: value }
+                          quantityPerPerson: { min: value, max: value },
+                          targetQuantity: parseFloat((value * groupConfig.maxParticipants).toFixed(2)) || 0,
                         });
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
@@ -696,12 +714,13 @@ const AdminProducts = () => {
                         const target = e.target as HTMLInputElement;
                         target.value = target.value.replace(/^0+/, '') || '0';
                       }}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
                       onChange={(e) => setGroupConfig({ ...groupConfig, targetQuantity: parseInt(e.target.value) || 0 })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                       placeholder="100"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Total quantity target for group (e.g., 100{selectedProduct?.inventory?.unit || 'kg'})
+                      Display goal shown to participants as a progress indicator. Auto-calculated from Quantity per Person × Max Participants. Checkout unlocks based on Min Participants, not this value.
                     </p>
                   </div>
 
@@ -714,6 +733,7 @@ const AdminProducts = () => {
                       min="0"
                       step="0.01"
                       value={groupConfig.bulkPricePerUnit / 100}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
                       onInput={(e) => {
                         const target = e.target as HTMLInputElement;
                         // For decimal numbers, only strip leading zeros before the decimal point
@@ -747,6 +767,7 @@ const AdminProducts = () => {
                           const target = e.target as HTMLInputElement;
                           target.value = target.value.replace(/^0+/, '') || '0';
                         }}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         onChange={(e) => setGroupConfig({ ...groupConfig, deadlineHours: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                         placeholder="48"
@@ -766,6 +787,7 @@ const AdminProducts = () => {
                           const target = e.target as HTMLInputElement;
                           target.value = target.value.replace(/^0+/, '') || '0';
                         }}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         onChange={(e) => setGroupConfig({ ...groupConfig, checkoutWindowHours: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                         placeholder="48"
@@ -787,6 +809,7 @@ const AdminProducts = () => {
                         const target = e.target as HTMLInputElement;
                         target.value = target.value.replace(/^0+/, '') || '0';
                       }}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
                       onChange={(e) => setGroupConfig({ ...groupConfig, maxActiveGroups: parseInt(e.target.value) || 0 })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]"
                       placeholder="5"
@@ -799,9 +822,9 @@ const AdminProducts = () => {
                     <h4 className="text-sm font-medium text-gray-900 mb-2">Group Summary</h4>
                     <ul className="text-xs text-gray-700 space-y-1">
                       <li>• Each group needs {groupConfig.minParticipants}-{groupConfig.maxParticipants} participants</li>
-                      <li>• Each member can order {groupConfig.quantityPerPerson.min}-{groupConfig.quantityPerPerson.max}{selectedProduct?.inventory?.unit || 'kg'}</li>
+                      <li>• Each member can order {groupConfig.quantityPerPerson.min}-{groupConfig.quantityPerPerson.max} {selectedProduct?.inventory?.unit || 'units'}</li>
                       <li>• Bulk price: ₦{(groupConfig.bulkPricePerUnit / 100).toLocaleString()} per {selectedProduct?.inventory?.unit || 'unit'}</li>
-                      <li>• Target quantity: {groupConfig.targetQuantity}{selectedProduct?.inventory?.unit || 'kg'}</li>
+                      <li>• Target quantity: {groupConfig.targetQuantity} {selectedProduct?.inventory?.unit || 'units'}</li>
                       <li>• Checkout window: {groupConfig.checkoutWindowHours} hours</li>
                       <li>• Up to {groupConfig.maxActiveGroups} active groups can run simultaneously</li>
                     </ul>
