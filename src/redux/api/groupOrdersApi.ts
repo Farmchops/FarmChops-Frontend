@@ -17,7 +17,7 @@ import type {
 
 export const groupOrdersApi = createApi({
   reducerPath: 'groupOrdersApi',
-  baseQuery: createAuthBaseQuery('https://api.farmchops.com/api'),
+  baseQuery: createAuthBaseQuery(import.meta.env.VITE_API_BASE_URL),
   tagTypes: ['GroupOrders', 'MyGroups'],
   endpoints: (builder) => ({
     // ==================== PUBLIC ENDPOINTS ====================

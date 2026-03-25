@@ -62,7 +62,7 @@ export interface ApiResponseCart {
 
 export const cartApi = createApi({
     reducerPath: 'cartApi',
-    baseQuery: createAuthBaseQuery('https://api.farmchops.com/api'),
+    baseQuery: createAuthBaseQuery(import.meta.env.VITE_API_BASE_URL),
     tagTypes: ['Cart'],
     endpoints: (builder) => ({
         // Get cart items (works for both anonymous and logged-in users)

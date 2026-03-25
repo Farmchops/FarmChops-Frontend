@@ -29,7 +29,7 @@ export interface ConfirmDeliveryArgs {
     proofFiles?: File[];
 }
 
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'https://api.farmchops.com/api';
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL;
 
 const baseQuery = createAdminAuthBaseQuery(API_BASE_URL);
 

@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Edit3, Search } from 'lucide-react';
 
-const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? 'https://api.farmchops.com/api';
+const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_ADDRESS_SEARCH_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/addresses/search`;
 
 interface AddressDetails {

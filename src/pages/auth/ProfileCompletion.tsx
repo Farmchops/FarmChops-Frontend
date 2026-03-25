@@ -33,7 +33,7 @@ const getErrorMessage = (e: unknown, fallback: string): string => {
 };
 
 const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
-const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? 'https://api.farmchops.com/api';
+const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? import.meta.env.VITE_API_BASE_URL;
 const ADDRESS_SEARCH_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/addresses/search`;
 
 

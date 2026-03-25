@@ -92,7 +92,7 @@ const formatName = (order: AdminOrder) => {
 
 const getApiBaseUrl = () => {
 	const envBase = import.meta.env?.VITE_API_BASE_URL as string | undefined;
-	return envBase ?? "https://api.farmchops.com/api";
+	return envBase ?? import.meta.env.VITE_API_BASE_URL;
 };
 
 const wsUrlFromApiBase = (apiBase: string, path = "/ws/admin/orders") => {

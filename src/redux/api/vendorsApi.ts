@@ -12,7 +12,7 @@ type Farmer = {
     [key: string]: unknown;
 };
 
-const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api');
+const baseQuery = createAdminAuthBaseQuery(import.meta.env.VITE_API_BASE_URL);
 
 export const vendorsApi = createApi({
     reducerPath: 'vendorsApi',

@@ -67,7 +67,7 @@ export interface AdminSendInviteResponse {
     expiresIn: string;
 }
 
-const baseQueryWithReauth = createAdminAuthBaseQuery('https://api.farmchops.com/api/admin/auth');
+const baseQueryWithReauth = createAdminAuthBaseQuery(`${import.meta.env.VITE_API_BASE_URL}/admin/auth`);
 
 export const adminAuthApi = createApi({
     reducerPath: 'adminAuthApi',

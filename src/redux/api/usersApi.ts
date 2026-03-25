@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { createAdminAuthBaseQuery } from './baseQuery';
 import type { ApiResponse } from '@/types/api';
 
-const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api/admin/users');
+const baseQuery = createAdminAuthBaseQuery(`${import.meta.env.VITE_API_BASE_URL}/admin/users`);
 
 export interface User {
   _id: string;

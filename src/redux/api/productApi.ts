@@ -13,7 +13,7 @@ import { createAdminAuthBaseQuery } from './baseQuery';
 
 export const productApi = createApi({
     reducerPath: 'productApi',
-    baseQuery: createAdminAuthBaseQuery('https://api.farmchops.com/api'),
+    baseQuery: createAdminAuthBaseQuery(import.meta.env.VITE_API_BASE_URL),
     tagTypes: ['Product', 'Products', 'ProductStats'],
     endpoints: (builder) => ({
         // Get all products with pagination (public endpoint)

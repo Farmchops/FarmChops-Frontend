@@ -59,7 +59,7 @@ const BecomeFarmer: React.FC = () => {
     };
 
     try {
-      const res = await fetch('https://api.farmchops.com/api/farmers', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/farmers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

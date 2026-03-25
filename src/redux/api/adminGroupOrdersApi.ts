@@ -12,7 +12,7 @@ import type {
 
 export const adminGroupOrdersApi = createApi({
   reducerPath: 'adminGroupOrdersApi',
-  baseQuery: createAdminAuthBaseQuery('https://api.farmchops.com/api'),
+  baseQuery: createAdminAuthBaseQuery(import.meta.env.VITE_API_BASE_URL),
   tagTypes: ['AdminGroups'],
   endpoints: (builder) => ({
     // Get all groups (admin view with stats)

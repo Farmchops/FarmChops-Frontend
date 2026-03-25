@@ -21,7 +21,7 @@ export interface UpdateAdminStatusRequest {
     isActive: boolean;
 }
 
-const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api/admin/management');
+const baseQuery = createAdminAuthBaseQuery(`${import.meta.env.VITE_API_BASE_URL}/admin/management`);
 
 export const adminManagementApi = createApi({
     reducerPath: 'adminManagementApi',

@@ -50,7 +50,7 @@ interface DeleteCategoryResponse {
 //     isActive?: boolean;
 // }
 
-const baseQuery = createAdminAuthBaseQuery('https://api.farmchops.com/api');
+const baseQuery = createAdminAuthBaseQuery(import.meta.env.VITE_API_BASE_URL);
 
 export const categoryApi = createApi({
     reducerPath: 'categoryApi',

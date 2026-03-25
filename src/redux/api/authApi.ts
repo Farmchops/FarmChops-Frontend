@@ -17,7 +17,7 @@ import { cartApi } from './cartApi';
 
 export const authApi = createApi({
     reducerPath: 'authApi',
-    baseQuery: createAuthBaseQuery('https://api.farmchops.com/api/auth'),
+    baseQuery: createAuthBaseQuery(`${import.meta.env.VITE_API_BASE_URL}/auth`),
     tagTypes: ['User'],
     endpoints: (builder) => ({
         // Initial signup (email only)

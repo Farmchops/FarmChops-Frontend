@@ -200,8 +200,8 @@ export interface AdminPayLaterUser {
 // ==================== API ====================
 
 // Dynamic base query that chooses based on endpoint
-const userBaseQuery = createAuthBaseQuery("https://api.farmchops.com/api/");
-const adminBaseQuery = createAdminAuthBaseQuery("https://api.farmchops.com/api/");
+const userBaseQuery = createAuthBaseQuery(`${import.meta.env.VITE_API_BASE_URL}/`);
+const adminBaseQuery = createAdminAuthBaseQuery(`${import.meta.env.VITE_API_BASE_URL}/`);
 
 const baseQuery: typeof userBaseQuery = async (args, api, extraOptions) => {
     // Check if this is an admin endpoint
