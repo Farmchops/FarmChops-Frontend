@@ -35,7 +35,7 @@ const Footer: React.FC = () => {
                         <div className="flex gap-3 text-white">
                             <a href="#"><FaTwitter /></a>
                             <a href="#"><FaFacebookF /></a>
-                            <a href="#"><FaInstagram /></a>
+                            <a href="https://www.instagram.com/farmchops_ltd?igsh=MWJkdjZpaGJ2OTZyYg==" target="_blank" rel="noopener noreferrer"><FaInstagram /></a>
                             <a href="#"><FaPinterestP /></a>
                         </div>
                     </div>

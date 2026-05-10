@@ -1,91 +1,92 @@
 // src/routes/routes.tsx
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { lazy } from "react";
 import App from "../App";
+import { ProtectedRoute } from "./ProtectedRoute";
+import AdminRoute from "./AdminRoute";
 
 // Public pages
-import Home from "../pages/Home";
-import About from "../pages/About";
-import Services from "../pages/Services";
-import FAQ from "../pages/FAQ";
-import CustomerSupport from "../pages/CustomerSupport";
-import TermsAndConditions from "../pages/TermsAndConditions";
-import PrivacyPolicy from "../pages/PrivacyPolicy";
-import Products from "../pages/Products";
-import ProductDetail from "@/components/Product/ProductDetail";
-import Contacts from "../pages/Contacts";
-import DealOfTheDay from "../pages/DealOfTheDay";
-import CartPage from "../pages/CartPage";
-import Checkout from "../pages/CheckOut";
-import Thanks from "../pages/ThankYou";
-import VerifyEmail from "../pages/VerifyEmail";
-import EmailVerification from "../pages/auth/EmailVerification";
-import ForgotPassword from "../pages/auth/ForgetPassword";
-import ResetPassword from "../pages/auth/ResetPassword";
-import Register from "../pages/auth/Register";
-import Login from "../pages/auth/Login";
-import { ProtectedRoute } from "./ProtectedRoute";
-import ProfileCompletion from "../pages/auth/ProfileCompletion";
-import BulkBuyingPage from "../pages/BulkBuying";
-import BecomeVendor from "../pages/BecomeVendor";
-import GroupSharing from "../pages/GroupSharing";
-import GroupDetail from "../pages/GroupDetail";
-import GroupPaymentCallback from "../pages/GroupPaymentCallback";
-import MyGroups from "../pages/profile/MyGroups";
+const Home = lazy(() => import("../pages/Home"));
+const About = lazy(() => import("../pages/About"));
+const Services = lazy(() => import("../pages/Services"));
+const FAQ = lazy(() => import("../pages/FAQ"));
+const CustomerSupport = lazy(() => import("../pages/CustomerSupport"));
+const TermsAndConditions = lazy(() => import("../pages/TermsAndConditions"));
+const PrivacyPolicy = lazy(() => import("../pages/PrivacyPolicy"));
+const Products = lazy(() => import("../pages/Products"));
+const ProductDetail = lazy(() => import("@/components/Product/ProductDetail"));
+const Contacts = lazy(() => import("../pages/Contacts"));
+const DealOfTheDay = lazy(() => import("../pages/DealOfTheDay"));
+const CartPage = lazy(() => import("../pages/CartPage"));
+const Checkout = lazy(() => import("../pages/CheckOut"));
+const Thanks = lazy(() => import("../pages/ThankYou"));
+const VerifyEmail = lazy(() => import("../pages/VerifyEmail"));
+const EmailVerification = lazy(() => import("../pages/auth/EmailVerification"));
+const ForgotPassword = lazy(() => import("../pages/auth/ForgetPassword"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
+const Register = lazy(() => import("../pages/auth/Register"));
+const Login = lazy(() => import("../pages/auth/Login"));
+const ProfileCompletion = lazy(() => import("../pages/auth/ProfileCompletion"));
+const BulkBuyingPage = lazy(() => import("../pages/BulkBuying"));
+const BecomeVendor = lazy(() => import("../pages/BecomeVendor"));
+const GroupSharing = lazy(() => import("../pages/GroupSharing"));
+const GroupDetail = lazy(() => import("../pages/GroupDetail"));
+const GroupPaymentCallback = lazy(() => import("../pages/GroupPaymentCallback"));
+const MyGroups = lazy(() => import("../pages/profile/MyGroups"));
 
 // Profile Pages
-import ProfileLayout from "../pages/profile/ProfileLayout";
-import PersonalInfo from "../pages/profile/PersonalInfo";
-import OrderHistory from "../pages/profile/OrderHistory";
-import Notifications from "../pages/profile/Notifications";
-import ProfileSettings from "../pages/profile/ProfileSettings";
-import PaymentMethods from "../pages/profile/PaymentMethods";
-import Wallet from "../pages/profile/Wallet";
-import WalletTransactions from "../pages/profile/WalletTransactions";
-import FundWallet from "../pages/profile/FundWallet";
-import PaymentLinks from "../pages/profile/PaymentLinks";
-import CreatePaymentLink from "../pages/profile/CreatePaymentLink";
+const ProfileLayout = lazy(() => import("../pages/profile/ProfileLayout"));
+const PersonalInfo = lazy(() => import("../pages/profile/PersonalInfo"));
+const OrderHistory = lazy(() => import("../pages/profile/OrderHistory"));
+const Notifications = lazy(() => import("../pages/profile/Notifications"));
+const ProfileSettings = lazy(() => import("../pages/profile/ProfileSettings"));
+const PaymentMethods = lazy(() => import("../pages/profile/PaymentMethods"));
+const Wallet = lazy(() => import("../pages/profile/Wallet"));
+const WalletTransactions = lazy(() => import("../pages/profile/WalletTransactions"));
+const FundWallet = lazy(() => import("../pages/profile/FundWallet"));
+const PaymentLinks = lazy(() => import("../pages/profile/PaymentLinks"));
+const CreatePaymentLink = lazy(() => import("../pages/profile/CreatePaymentLink"));
 
 // Public Payment Page
-import PayForMe from "../pages/PayForMe";
+const PayForMe = lazy(() => import("../pages/PayForMe"));
 
 // Admin Pages
-import AdminRoute from "./AdminRoute";
-import AdminLayout from "../pages/admin/adminLayout";
-import AdminLogin from "../pages/admin/AdminLogin";
-import Overview from "../pages/admin/Overview";
-import Categories from "../pages/admin/Categories";
-import AdminProducts from "../pages/admin/AdminProducts";
-import AdminOrders from "../pages/admin/AdminOrders";
-import Sales from "../pages/admin/Sales";
-import AdminSettings from "../pages/admin/AdminSettings";
-import Help from "../pages/admin/Help";
-import Users from "../pages/admin/Users";
-import AdminSignup from "@/pages/admin/AdminSignUp";
-import AdminForgotPassword from "@/pages/admin/AdminForgotPassword";
-import AdminResetPassword from "@/pages/admin/AdminResetPassword";
-import AdminManagement from "@/pages/admin/AdminManagement";
-import OrderSuccess from "@/components/Checkout/OrderSuccess";
-import GroupOrderSuccess from "@/components/Checkout/GroupOrderSuccess";
-import RiderDashboard from "@/pages/admin/RiderDashboard";
-import Deals from "@/pages/admin/Deals";
-import VendorsList from "../pages/admin/VendorsList";
-import VendorDetail from "../pages/admin/VendorDetail";
-import AdminGroupOrders from "../pages/admin/AdminGroupOrders";
-import AdminGroupDetail from "../pages/admin/AdminGroupDetail";
-import CreateGroupOrder from "../pages/admin/CreateGroupOrder";
+const AdminLayout = lazy(() => import("../pages/admin/adminLayout"));
+const AdminLogin = lazy(() => import("../pages/admin/AdminLogin"));
+const Overview = lazy(() => import("../pages/admin/Overview"));
+const Categories = lazy(() => import("../pages/admin/Categories"));
+const AdminProducts = lazy(() => import("../pages/admin/AdminProducts"));
+const AdminOrders = lazy(() => import("../pages/admin/AdminOrders"));
+const Sales = lazy(() => import("../pages/admin/Sales"));
+const AdminSettings = lazy(() => import("../pages/admin/AdminSettings"));
+const Help = lazy(() => import("../pages/admin/Help"));
+const Users = lazy(() => import("../pages/admin/Users"));
+const AdminSignup = lazy(() => import("@/pages/admin/AdminSignUp"));
+const AdminForgotPassword = lazy(() => import("@/pages/admin/AdminForgotPassword"));
+const AdminResetPassword = lazy(() => import("@/pages/admin/AdminResetPassword"));
+const AdminManagement = lazy(() => import("@/pages/admin/AdminManagement"));
+const OrderSuccess = lazy(() => import("@/components/Checkout/OrderSuccess"));
+const GroupOrderSuccess = lazy(() => import("@/components/Checkout/GroupOrderSuccess"));
+const RiderDashboard = lazy(() => import("@/pages/admin/RiderDashboard"));
+const Deals = lazy(() => import("@/pages/admin/Deals"));
+const VendorsList = lazy(() => import("../pages/admin/VendorsList"));
+const VendorDetail = lazy(() => import("../pages/admin/VendorDetail"));
+const AdminGroupOrders = lazy(() => import("../pages/admin/AdminGroupOrders"));
+const AdminGroupDetail = lazy(() => import("../pages/admin/AdminGroupDetail"));
+const CreateGroupOrder = lazy(() => import("../pages/admin/CreateGroupOrder"));
 
 // Marketing Pages
-import MarketersListPage from "../pages/admin/MarketersListPage";
-import MarketerDetailsPage from "../pages/admin/MarketerDetailsPage";
-import CouponsListPage from "../pages/admin/CouponsListPage";
-import CouponDetailsPage from "../pages/admin/CouponDetailsPage";
+const MarketersListPage = lazy(() => import("../pages/admin/MarketersListPage"));
+const MarketerDetailsPage = lazy(() => import("../pages/admin/MarketerDetailsPage"));
+const CouponsListPage = lazy(() => import("../pages/admin/CouponsListPage"));
+const CouponDetailsPage = lazy(() => import("../pages/admin/CouponDetailsPage"));
 
 // PayLater Pages
-import PayLaterPage from "../pages/PayLater";
-import PayLaterCart from "../pages/PayLater/PayLaterCart";
-import PayLaterCheckout from "../pages/PayLater/PayLaterCheckout";
-import PayLaterApplications from "../pages/admin/PayLaterApplications";
-import PayLaterUsers from "../pages/admin/PayLaterUsers";
+const PayLaterPage = lazy(() => import("../pages/PayLater"));
+const PayLaterCart = lazy(() => import("../pages/PayLater/PayLaterCart"));
+const PayLaterCheckout = lazy(() => import("../pages/PayLater/PayLaterCheckout"));
+const PayLaterApplications = lazy(() => import("../pages/admin/PayLaterApplications"));
+const PayLaterUsers = lazy(() => import("../pages/admin/PayLaterUsers"));
 
 const router = createBrowserRouter([
     {

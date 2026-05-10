@@ -2,7 +2,7 @@ import './App.css'
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Navbar from './components/Navbar';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 
 import { AuthSessionHandler } from './lib/authSessionHandler';
 import { checkAppVersion } from './lib/versionCheck';
@@ -62,7 +62,14 @@ function App() {
       <Navbar />
 
       <main>
-        <Outlet />
+        <Suspense fallback={
+          <div className="flex flex-col items-center justify-center min-h-screen bg-green-50">
+            <div className="w-12 h-12 border-4 border-green-200 border-t-[#1D7B3C] rounded-full animate-spin will-change-transform" />
+            <p className="mt-4 text-[#1D7B3C] text-sm font-medium">Loading...</p>
+          </div>
+        }>
+          <Outlet />
+        </Suspense>
       </main>
     </GoogleReCaptchaProvider>
   )

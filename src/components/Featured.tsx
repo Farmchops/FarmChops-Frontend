@@ -10,8 +10,10 @@ const Featured: React.FC = () => {
     const { data: productsData, isLoading } = useGetProductsQuery({ page: 1, limit: 8 });
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-    // Get first 4 products to display as featured
-    const featuredProducts = productsData?.data?.products?.slice(0, 4) ?? [];
+    // Get first 4 in-stock products to display as featured
+    const featuredProducts = productsData?.data?.products
+        ?.filter((p) => p.status !== 'out_of_stock')
+        ?.slice(0, 4) ?? [];
 
     // Format currency
     const formatPrice = (price: number) => {
