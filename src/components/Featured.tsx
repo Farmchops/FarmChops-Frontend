@@ -71,30 +71,22 @@ const Featured: React.FC = () => {
                     return (
                         <div
                             key={product._id}
-                            className="overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 bg-white"
+                            className="overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-shadow duration-300 bg-white"
                         >
-                            <Link to={`/products/${product.slug}`}>
-                                <div className="w-full h-40 md:h-60 bg-gray-200 animate-pulse overflow-hidden">
-                                    <img
-                                        src={productImage}
-                                        alt={product.name}
-                                        loading="lazy"
-                                        onLoad={(e) => {
-                                            const parent = e.currentTarget.parentElement;
-                                            if (parent) {
-                                                parent.classList.remove('animate-pulse', 'bg-gray-200');
-                                            }
-                                        }}
-                                        onError={(e) => {
-                                            e.currentTarget.src = featuredImg;
-                                            const parent = e.currentTarget.parentElement;
-                                            if (parent) {
-                                                parent.classList.remove('animate-pulse', 'bg-gray-200');
-                                            }
-                                        }}
-                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                                    />
-                                </div>
+                            <Link to={`/products/${product.slug}`} className="block w-full h-40 md:h-60 bg-gray-200 animate-pulse">
+                                <img
+                                    src={productImage}
+                                    alt={product.name}
+                                    loading="lazy"
+                                    onLoad={(e) => {
+                                        e.currentTarget.parentElement?.classList.remove('animate-pulse', 'bg-gray-200');
+                                    }}
+                                    onError={(e) => {
+                                        e.currentTarget.src = featuredImg;
+                                        e.currentTarget.parentElement?.classList.remove('animate-pulse', 'bg-gray-200');
+                                    }}
+                                    className="w-full h-full object-cover"
+                                />
                             </Link>
                             <div className="p-5 text-[#1A1A1A] bg-white">
                                 <h3 className="text-base font-medium line-clamp-1 mb-2">{product.name}</h3>
