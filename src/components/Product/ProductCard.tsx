@@ -133,12 +133,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </div>
 
                 {/* Product Image */}
-                <div onClick={handleProductClick} className="cursor-pointer">
+                <div
+                    onClick={handleProductClick}
+                    className={`cursor-pointer w-full h-48 md:h-60 bg-gray-200 animate-pulse overflow-hidden ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+                >
                     <img
                         src={product.images[0]}
                         alt={product.name}
-                        className={`w-full h-48 md:h-60 object-cover ${isOutOfStock ? "opacity-50 grayscale" : ""
-                            }`}
+                        loading="lazy"
+                        onLoad={(e) => {
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) parent.classList.remove('animate-pulse', 'bg-gray-200');
+                        }}
+                        onError={(e) => {
+                            e.currentTarget.src = '';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) parent.classList.remove('animate-pulse', 'bg-gray-200');
+                        }}
+                        className="w-full h-full object-cover"
                     />
                 </div>
 

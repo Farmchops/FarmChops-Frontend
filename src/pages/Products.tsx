@@ -67,8 +67,12 @@ const Products: React.FC = () => {
 
   // Get pagination metadata and products from API response
   const totalPages = productsData?.data?.pagination?.totalPages || 1;
-  const products = productsData?.data?.products || [];
   const totalResults = productsData?.data?.pagination?.totalProducts || 0;
+  const products = [...(productsData?.data?.products || [])].sort((a, b) => {
+    const aOut = a.status === 'out_of_stock' ? 1 : 0;
+    const bOut = b.status === 'out_of_stock' ? 1 : 0;
+    return aOut - bOut;
+  });
 
   // Reset to page 1 when filters change
   useEffect(() => {
