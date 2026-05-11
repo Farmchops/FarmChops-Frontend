@@ -71,10 +71,10 @@ const Featured: React.FC = () => {
                     return (
                         <div
                             key={product._id}
-                            className="w-fit m-auto overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 bg-white"
+                            className="overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 bg-white"
                         >
                             <Link to={`/products/${product.slug}`}>
-                                <div className="relative w-50 h-40 md:w-80 md:h-60 bg-gray-200 animate-pulse overflow-hidden">
+                                <div className="w-full h-40 md:h-60 bg-gray-200 animate-pulse overflow-hidden">
                                     <img
                                         src={productImage}
                                         alt={product.name}
