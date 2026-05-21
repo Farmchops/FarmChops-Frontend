@@ -88,7 +88,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
 
     const [images, setImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-    const [newImages, setNewImages] = useState<File[]>([]);
+
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState("");
 
@@ -204,7 +204,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const handleAddNewImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!product || !e.target.files) return;
         const files = Array.from(e.target.files);
-        setNewImages(files);
         const formData = new FormData();
         files.forEach(file => formData.append("images", file));
         try {
@@ -212,10 +211,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
             if (result.success && result.data?.images) {
                 setImagePreviews(result.data.images);
             }
-            setNewImages([]);
         } catch {
             setServerError("Failed to upload images. Please try again.");
-            setNewImages([]);
         }
     };
 
