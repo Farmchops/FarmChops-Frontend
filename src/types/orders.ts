@@ -65,6 +65,8 @@ export interface DeliveryInfo {
     city: string;
     state?: string;
     phoneNumber: string;
+    country?: string;
+    postalCode?: string;
 }
 
 // Delivery Details (from checkout response)
@@ -193,6 +195,8 @@ export interface CheckoutRequest {
     phone: string;
     address: string;
     notes?: string;
+    country?: string;
+    postalCode?: string;
 }
 
 // Checkout Response

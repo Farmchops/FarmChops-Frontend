@@ -13,6 +13,8 @@ interface AddressDetails {
     landmark?: string;
     latitude?: number;
     longitude?: number;
+    country?: string;
+    postalCode?: string;
 }
 
 interface AddressSuggestion {
@@ -146,8 +148,7 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
             service.getPlacePredictions(
                 {
                     input: query,
-                    componentRestrictions: { country: 'ng' },
-                    types: ['geocode', 'establishment'], // More flexible than just 'address'
+                    types: ['geocode', 'establishment'],
                 },
                 (predictions, status) => {
                     if (status !== windowWithGoogle.google?.maps?.places?.PlacesServiceStatus.OK || !predictions) {
@@ -217,19 +218,50 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
         }, 300);
     };
 
+    const fetchGooglePlaceDetails = (placeId: string): Promise<{ country?: string; postalCode?: string; city?: string; state?: string }> => {
+        const googleWindow = window as typeof window & { google?: { maps?: { places?: { PlacesService: new (el: Element) => { getDetails: (req: { placeId: string; fields: string[] }, cb: (place: { address_components?: Array<{ long_name: string; types: string[] }> } | null, status: string) => void ) => void }; PlacesServiceStatus: { OK: string } } } } };
+        const places = googleWindow.google?.maps?.places;
+        if (!places) return Promise.resolve({});
+
+        return new Promise((resolve) => {
+            const service = new places.PlacesService(document.createElement('div'));
+            service.getDetails({ placeId, fields: ['address_components'] }, (place, status) => {
+                if (status !== places.PlacesServiceStatus.OK || !place?.address_components) {
+                    resolve({});
+                    return;
+                }
+                const result: { country?: string; postalCode?: string; city?: string; state?: string } = {};
+                for (const c of place.address_components) {
+                    if (c.types.includes('country')) result.country = c.long_name;
+                    if (c.types.includes('postal_code')) result.postalCode = c.long_name;
+                    if (c.types.includes('locality')) result.city = c.long_name;
+                    if (c.types.includes('administrative_area_level_1')) result.state = c.long_name;
+                }
+                resolve(result);
+            });
+        });
+    };
+
     // Handle suggestion selection
-    const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+    const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
         onAddressChange(suggestion.fullAddress);
         setShowSuggestions(false);
+
+        let extra: { country?: string; postalCode?: string; city?: string; state?: string } = {};
+        if (suggestion.source === 'google') {
+            extra = await fetchGooglePlaceDetails(suggestion.id);
+        }
 
         onAddressSelect({
             fullAddress: suggestion.fullAddress,
             area: suggestion.area,
-            city: suggestion.city,
-            state: suggestion.state,
+            city: extra.city || suggestion.city,
+            state: extra.state || suggestion.state,
             landmark: suggestion.landmark,
             latitude: suggestion.coordinates?.lat,
             longitude: suggestion.coordinates?.lng,
+            country: extra.country,
+            postalCode: extra.postalCode,
         });
     };
 

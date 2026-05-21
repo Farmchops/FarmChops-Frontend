@@ -9,7 +9,7 @@ import {
 import { useGetWalletBalanceQuery, useCreatePaymentLinkMutation } from "@/redux/api/walletApi";
 import type { CheckoutResponse } from "@/types/orders";
 import type { CreatePaymentLinkResponse } from "@/types/wallet";
-import { Wallet, AlertCircle, Link2, Copy, Check, Share2, X, Loader2 } from "lucide-react";
+import { Wallet, AlertCircle, Link2, Copy, Check, Share2, X, Loader2, Globe } from "lucide-react";
 import { useDiscountCalculation } from "@/hooks/useDiscountCalculation";
 import { CouponInput } from "@/components/CouponInput";
 import { DiscountDisplay } from "@/components/DiscountDisplay";
@@ -136,6 +136,8 @@ const Checkout: React.FC = () => {
         address: "",
         city: "",
         state: "",
+        country: "",
+        postalCode: "",
         notes: "",
     });
 
@@ -221,8 +223,7 @@ const Checkout: React.FC = () => {
                 };
 
                 autocompleteRef.current = new googleWindow.google.maps.places.Autocomplete(addressRef.current, {
-                    types: ["geocode"], // More flexible than "address"
-                    componentRestrictions: { country: 'ng' },
+                    types: ["geocode"],
                     fields: ['formatted_address', 'address_components', 'geometry', 'place_id']
                 });
 
@@ -323,6 +324,8 @@ const Checkout: React.FC = () => {
                     phone: formData.phone,
                     address: formData.address,
                     notes: formData.notes,
+                    country: formData.country || undefined,
+                    postalCode: formData.postalCode || undefined,
                 }).unwrap();
 
                 if (!checkoutResponse.success || !checkoutResponse.data) {
@@ -402,6 +405,8 @@ const Checkout: React.FC = () => {
                 city,
                 state,
                 phoneNumber: formData.phone,
+                country: formData.country || undefined,
+                postalCode: formData.postalCode || undefined,
             },
             paymentMethod,
             deliveryFee: deliveryData.delivery.fee ?? 0,
@@ -548,12 +553,22 @@ const Checkout: React.FC = () => {
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleInputChange}
-                                        placeholder="+234 812 345 6789"
+                                        placeholder="+234 812 345 6789 or +44 7700 900000"
                                         autoComplete="tel"
                                         className="w-full px-4 py-3 md:py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
                                         required
                                     />
                                 </div>
+
+                                {/* International shipping notice */}
+                                {formData.country && formData.country !== "Nigeria" && (
+                                    <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                                        <Globe className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+                                        <span>
+                                            <strong>International delivery</strong> — your order will be shipped to {formData.country}. Shipping cost will be calculated and confirmed at checkout.
+                                        </span>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label htmlFor="checkout-address" className="block text-sm font-medium mb-2">Delivery Address *</label>
@@ -564,30 +579,29 @@ const Checkout: React.FC = () => {
                                             setCheckoutData(null); // Reset delivery calculation
                                         }}
                                         onAddressSelect={async (addressDetails) => {
-                                            // Update form with selected address details
-                                            setFormData(prev => ({
-                                                ...prev,
+                                            const updated = {
                                                 address: addressDetails.fullAddress,
-                                                city: addressDetails.city || prev.city,
-                                                state: addressDetails.state || prev.state,
-                                            }));
+                                                city: addressDetails.city || formData.city,
+                                                state: addressDetails.state || formData.state,
+                                                country: addressDetails.country || formData.country,
+                                                postalCode: addressDetails.postalCode || formData.postalCode,
+                                            };
+                                            setFormData(prev => ({ ...prev, ...updated }));
 
-                                            // Auto-calculate delivery if all required fields are filled
                                             if (formData.name && formData.phone && addressDetails.fullAddress) {
-                                                console.log("🔄 Auto-calculating delivery fee...");
                                                 setIsCalculatingDelivery(true);
-
                                                 try {
                                                     const checkoutResponse = await checkout({
                                                         name: formData.name,
                                                         phone: formData.phone,
                                                         address: addressDetails.fullAddress,
                                                         notes: formData.notes,
+                                                        country: updated.country || undefined,
+                                                        postalCode: updated.postalCode || undefined,
                                                     }).unwrap();
 
                                                     if (checkoutResponse.success && checkoutResponse.data) {
                                                         setCheckoutData(checkoutResponse.data);
-                                                        console.log("✅ Delivery fee calculated:", checkoutResponse.data.delivery.fee);
                                                     }
                                                 } catch (error) {
                                                     console.error("❌ Auto-delivery calculation failed:", error);
