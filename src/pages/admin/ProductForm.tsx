@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Upload, X } from "lucide-react";
 import { useGetCategoriesQuery } from "@/redux/api/categoryApi";
-import { useCreateProductMutation, useUpdateProductMutation } from "@/redux/api/productApi";
+import { useCreateProductMutation, useUpdateProductMutation, useRemoveProductImageMutation, useAddProductImagesMutation } from "@/redux/api/productApi";
 import type { BulkTier, ProductStatus } from "@/types/product";
 import { alertService } from "@/lib/alertService";
 
@@ -61,6 +61,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
 
     const [createProduct, { isLoading: creating }] = useCreateProductMutation();
     const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
+    const [removeProductImage, { isLoading: removingImage }] = useRemoveProductImageMutation();
+    const [addProductImages, { isLoading: addingImages }] = useAddProductImagesMutation();
 
     const [bulkTiers, setBulkTiers] = useState<BulkTierForm[]>([
         { id: '', name: '', price: '', unit: '', minQuantity: '1' }
@@ -86,6 +88,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
 
     const [images, setImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [newImages, setNewImages] = useState<File[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [serverError, setServerError] = useState("");
 
@@ -186,6 +189,34 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
     const removeImage = (index: number) => {
         setImages(prev => prev.filter((_, i) => i !== index));
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleRemoveExistingImage = async (imageUrl: string) => {
+        if (!product) return;
+        try {
+            await removeProductImage({ id: product._id, imageUrl }).unwrap();
+            setImagePreviews(prev => prev.filter(url => url !== imageUrl));
+        } catch {
+            setServerError("Failed to remove image. Please try again.");
+        }
+    };
+
+    const handleAddNewImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!product || !e.target.files) return;
+        const files = Array.from(e.target.files);
+        setNewImages(files);
+        const formData = new FormData();
+        files.forEach(file => formData.append("images", file));
+        try {
+            const result = await addProductImages({ id: product._id, formData }).unwrap();
+            if (result.success && result.data?.images) {
+                setImagePreviews(result.data.images);
+            }
+            setNewImages([]);
+        } catch {
+            setServerError("Failed to upload images. Please try again.");
+            setNewImages([]);
+        }
     };
 
     const addBulkTier = () => {
@@ -755,20 +786,26 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
 
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                                 <div className="text-center">
-                                    <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                                    <label className="cursor-pointer">
-                                        <span className="text-sm text-[#1D7B3C] font-medium">Drop images here</span>
-                                        <span className="text-sm text-gray-500"> or click to browse</span>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            multiple
-                                            onChange={handleImageChange}
-                                            disabled={isLoading}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                    <p className="text-xs text-gray-500 mt-2">JPG, PNG (Max 5 images, 2MB each)</p>
+                                    {(addingImages) ? (
+                                        <p className="text-sm text-gray-500">Uploading...</p>
+                                    ) : (
+                                        <>
+                                            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                                            <label className="cursor-pointer">
+                                                <span className="text-sm text-[#1D7B3C] font-medium">Drop images here</span>
+                                                <span className="text-sm text-gray-500"> or click to browse</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={product ? handleAddNewImages : handleImageChange}
+                                                    disabled={isLoading}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                            <p className="text-xs text-gray-500 mt-2">JPG, PNG (Max 5 images, 2MB each)</p>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                             {errors.images && <p className="text-red-500 text-xs mt-2">{errors.images}</p>}
@@ -783,15 +820,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                                 alt={`Preview ${index + 1}`}
                                                 className="w-full h-24 object-cover rounded-md border"
                                             />
-                                            {!product && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeImage(index)}
-                                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => product
+                                                    ? handleRemoveExistingImage(preview)
+                                                    : removeImage(index)
+                                                }
+                                                disabled={removingImage}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                                            >
+                                                <X size={14} />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -819,6 +858,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                         Cancel
                     </button>
                     <button
+                        type="button"
                         onClick={handleSubmit}
                         disabled={isLoading}
                         className="bg-[#1D7B3C] text-white py-2 px-4 rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed"

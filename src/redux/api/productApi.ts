@@ -144,6 +144,33 @@ export const productApi = createApi({
             ],
         }),
 
+        // Remove a single image from a product (Admin only)
+        removeProductImage: builder.mutation<ApiResponse<Product>, { id: string; imageUrl: string }>({
+            query: ({ id, imageUrl }) => ({
+                url: `/products/admin/products/${id}/images`,
+                method: 'DELETE',
+                body: { imageUrl },
+                headers: { 'Content-Type': 'application/json' },
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: 'Product', id },
+                { type: 'Products', id: 'LIST' },
+            ],
+        }),
+
+        // Add images to an existing product (Admin only)
+        addProductImages: builder.mutation<ApiResponse<Product>, { id: string; formData: FormData }>({
+            query: ({ id, formData }) => ({
+                url: `/products/admin/products/${id}/images`,
+                method: 'POST',
+                body: formData,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: 'Product', id },
+                { type: 'Products', id: 'LIST' },
+            ],
+        }),
+
         // Delete product (Admin only)
         deleteProduct: builder.mutation<ApiResponse<void>, string>({
             query: (id) => ({
@@ -187,5 +214,7 @@ export const {
     useCreateProductMutation,
     useUpdateProductMutation,
     useDeleteProductMutation,
+    useRemoveProductImageMutation,
+    useAddProductImagesMutation,
     useConfigureGroupBuyingMutation,
 } = productApi;
