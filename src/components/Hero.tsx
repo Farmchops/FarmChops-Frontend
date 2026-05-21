@@ -78,7 +78,7 @@ const Hero: React.FC = () => {
     }, [currentSlide, slides.length]);
 
     return (
-        <section className="relative w-full h-[100dvh] overflow-hidden">
+        <section className={`relative w-full h-[100dvh] overflow-hidden ${(slides[currentSlide] as any).isPromo ? "bg-[#f5eed8]" : ""}`}>
             {/* Image Carousel */}
             <div className="absolute inset-0">
                 {slides.map((slide, index) => (
