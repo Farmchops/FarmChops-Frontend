@@ -256,9 +256,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
             newErrors.retailPrice = "Valid retail price is required";
         }
 
-        // Only validate bulk tiers if ANY field in that tier has a value
+        // Only validate bulk tiers if the user has started filling in meaningful fields
         bulkTiers.forEach((tier, index) => {
-            const hasAnyValue = tier.name.trim() || tier.price || tier.unit.trim();
+            const hasAnyValue = tier.name.trim() || (tier.price && parseFloat(tier.price) > 0);
 
             // Only validate if user started filling this tier
             if (hasAnyValue) {
@@ -824,7 +824,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess 
                                                     : removeImage(index)
                                                 }
                                                 disabled={removingImage}
-                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 transition-opacity disabled:opacity-50"
                                             >
                                                 <X size={14} />
                                             </button>
