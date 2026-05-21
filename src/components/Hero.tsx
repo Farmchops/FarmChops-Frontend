@@ -5,7 +5,6 @@ import heroProduce from "../assets/hero-produce.png";
 import heroDelivery from "../assets/hero-delivery.png";
 import heroCooking from "../assets/hero-cooking.png";
 import overlayimg from "../assets/overlay.png";
-import heroInternational from "../assets/hero-international.png";
 import promoBanner from "../assets/promo-banner.png";
 
 const PROMO_EXPIRY = new Date("2026-06-09");
@@ -34,7 +33,7 @@ const Hero: React.FC = () => {
             ctaLink: "/products",
         },
         {
-            image: heroInternational,
+            image: heroDelivery,
             alt: "FarmChops international shipping worldwide",
             headline: "Now Shipping\nWorldwide 🌍",
             subtext: "Order fresh Nigerian produce from anywhere in the world. Pay securely with your international card and we'll deliver straight to your door.",
