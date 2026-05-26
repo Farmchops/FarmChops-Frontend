@@ -37,6 +37,33 @@ const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
 const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? import.meta.env.VITE_API_BASE_URL;
 const ADDRESS_SEARCH_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/addresses/search`;
 
+const DELIVERY_ZONES = [
+    {
+        label: "Zone 1 — ₦2,500",
+        areas: ["Utako", "Wuse 2", "Mabushi", "Kado", "Life Camp", "Gwarinpa", "Katampe"],
+    },
+    {
+        label: "Zone 2 — ₦3,500",
+        areas: ["Maitama", "Garki", "CBD", "Wuse 1", "Asokoro", "Gudu", "Apo"],
+    },
+    {
+        label: "Zone 3 — ₦6,000",
+        areas: ["Kubwa", "Lugbe", "Karu", "Nyanya", "Gwagwalada", "Zuba"],
+    },
+    {
+        label: "Bwari — ₦8,500",
+        areas: ["Bwari"],
+    },
+    {
+        label: "Kuje — ₦10,000",
+        areas: ["Kuje"],
+    },
+    {
+        label: "Kwali — ₦11,500",
+        areas: ["Kwali"],
+    },
+];
+
 const loadGoogleMapsScript = (apiKey?: string): Promise<void> => {
     return new Promise((resolve, reject) => {
         if (!apiKey) {
@@ -149,6 +176,7 @@ const Checkout: React.FC = () => {
 
     // Wallet data
     const walletBalance = walletData?.data?.balance ?? 0;
+    const [selectedArea, setSelectedArea] = useState("");
     const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
@@ -281,6 +309,7 @@ const Checkout: React.FC = () => {
                                 name: updatedFormData.name,
                                 phone: updatedFormData.phone,
                                 address: updatedFormData.address,
+                                area: selectedArea || undefined,
                                 notes: updatedFormData.notes,
                             }).unwrap();
 
@@ -340,6 +369,7 @@ const Checkout: React.FC = () => {
                     name: formData.name,
                     phone: formData.phone,
                     address: formData.address,
+                    area: selectedArea || undefined,
                     notes: formData.notes,
                     country: formData.country || undefined,
                     postalCode: formData.postalCode || undefined,
@@ -592,6 +622,7 @@ const Checkout: React.FC = () => {
                                             setFormData(prev => ({ ...prev, address }));
                                             setCheckoutData(null);
                                             setDeliveryError(null);
+                                            setSelectedArea("");
                                         }}
                                         onAddressSelect={async (addressDetails) => {
                                             const updated = {
@@ -611,6 +642,7 @@ const Checkout: React.FC = () => {
                                                         name: formData.name,
                                                         phone: formData.phone,
                                                         address: addressDetails.fullAddress,
+                                                        area: selectedArea || undefined,
                                                         notes: formData.notes,
                                                         country: updated.country || undefined,
                                                         postalCode: updated.postalCode || undefined,
@@ -642,6 +674,60 @@ const Checkout: React.FC = () => {
                                             {deliveryError}
                                         </p>
                                     )}
+                                </div>
+
+                                {/* Area dropdown */}
+                                <div>
+                                    <label htmlFor="checkout-area" className="block text-sm font-medium mb-2">
+                                        Delivery Area <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        id="checkout-area"
+                                        value={selectedArea}
+                                        onChange={async (e) => {
+                                            const area = e.target.value;
+                                            setSelectedArea(area);
+                                            setCheckoutData(null);
+                                            setDeliveryError(null);
+                                            if (formData.name && formData.phone && formData.address && area) {
+                                                setIsCalculatingDelivery(true);
+                                                try {
+                                                    const res = await checkout({
+                                                        name: formData.name,
+                                                        phone: formData.phone,
+                                                        address: formData.address,
+                                                        area,
+                                                        notes: formData.notes,
+                                                    }).unwrap();
+                                                    if (res.success && res.data) setCheckoutData(res.data);
+                                                } catch (error: unknown) {
+                                                    const msg =
+                                                        error && typeof error === 'object' && 'data' in error
+                                                            ? (error as { data?: { message?: string } }).data?.message
+                                                            : null;
+                                                    setDeliveryError(msg ?? "Could not calculate fee for this area.");
+                                                } finally {
+                                                    setIsCalculatingDelivery(false);
+                                                }
+                                            }
+                                        }}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white text-sm"
+                                    >
+                                        <option value="">Select your area</option>
+                                        {DELIVERY_ZONES.map((zone) =>
+                                            zone.areas.length === 1 ? (
+                                                <option key={zone.areas[0]} value={zone.areas[0]}>
+                                                    {zone.areas[0]} ({zone.label.split("—")[1]?.trim()})
+                                                </option>
+                                            ) : (
+                                                <optgroup key={zone.label} label={zone.label}>
+                                                    {zone.areas.map((area) => (
+                                                        <option key={area} value={area}>{area}</option>
+                                                    ))}
+                                                </optgroup>
+                                            )
+                                        )}
+                                    </select>
                                 </div>
 
                                 {/* Optional: Separate city/state fields */}

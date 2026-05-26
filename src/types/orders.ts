@@ -196,6 +196,7 @@ export interface CheckoutRequest {
     name: string;
     phone: string;
     address: string;
+    area?: string;
     notes?: string;
     country?: string;
     postalCode?: string;
