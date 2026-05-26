@@ -34,33 +34,36 @@ import type { RootState } from "@/redux/store";
 import { HybridAddressInput } from "@/components/Checkout/HybridAddressInput";
 
 const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
+
+const resolveDeliveryError = (error: unknown): string | null => {
+    const data = error && typeof error === 'object' && 'data' in error
+        ? (error as { data?: { needsAreaSelection?: boolean; message?: string } }).data
+        : null;
+    if (data?.needsAreaSelection) return null; // handled by neutral UI prompt
+    return data?.message
+        ?? (error && typeof error === 'object' && 'message' in error
+            ? (error as { message?: string }).message ?? null
+            : null);
+};
 const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? import.meta.env.VITE_API_BASE_URL;
 const ADDRESS_SEARCH_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/addresses/search`;
 
 const DELIVERY_ZONES = [
     {
-        label: "Zone 1 — ₦2,500",
+        label: "Zone 1",
         areas: ["Utako", "Wuse 2", "Mabushi", "Kado", "Life Camp", "Gwarinpa", "Katampe"],
     },
     {
-        label: "Zone 2 — ₦3,500",
+        label: "Zone 2",
         areas: ["Maitama", "Garki", "CBD", "Wuse 1", "Asokoro", "Gudu", "Apo"],
     },
     {
-        label: "Zone 3 — ₦6,000",
+        label: "Zone 3",
         areas: ["Kubwa", "Lugbe", "Karu", "Nyanya", "Gwagwalada", "Zuba"],
     },
     {
-        label: "Bwari — ₦8,500",
-        areas: ["Bwari"],
-    },
-    {
-        label: "Kuje — ₦10,000",
-        areas: ["Kuje"],
-    },
-    {
-        label: "Kwali — ₦11,500",
-        areas: ["Kwali"],
+        label: "Outskirts",
+        areas: ["Bwari", "Kuje", "Kwali"],
     },
 ];
 
@@ -318,7 +321,8 @@ const Checkout: React.FC = () => {
                                 console.log("✅ Delivery fee calculated:", checkoutResponse.data.delivery.fee);
                             }
                         } catch (error) {
-                            console.error("❌ Auto-delivery calculation failed:", error);
+                            const msg = resolveDeliveryError(error);
+                            if (msg) setDeliveryError(msg);
                         } finally {
                             setIsCalculatingDelivery(false);
                         }
@@ -652,12 +656,7 @@ const Checkout: React.FC = () => {
                                                         setCheckoutData(checkoutResponse.data);
                                                     }
                                                 } catch (error: unknown) {
-                                                    const msg =
-                                                        error && typeof error === 'object' && 'data' in error
-                                                            ? (error as { data?: { message?: string } }).data?.message
-                                                            : error && typeof error === 'object' && 'message' in error
-                                                            ? (error as { message?: string }).message
-                                                            : null;
+                                                    const msg = resolveDeliveryError(error);
                                                     setDeliveryError(msg ?? "We don't deliver to this area yet.");
                                                 } finally {
                                                     setIsCalculatingDelivery(false);
@@ -668,12 +667,16 @@ const Checkout: React.FC = () => {
                                         customApiEndpoint={ADDRESS_SEARCH_ENDPOINT}
                                         placeholder="Search: Wuse 2, Gwarinpa, Jabi, etc..."
                                     />
-                                    {deliveryError && (
+                                    {deliveryError ? (
                                         <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
                                             <AlertCircle className="h-4 w-4 flex-shrink-0" />
                                             {deliveryError}
                                         </p>
-                                    )}
+                                    ) : formData.address && !checkoutData && !isCalculatingDelivery && !selectedArea ? (
+                                        <p className="mt-2 text-sm text-gray-500">
+                                            Please select your delivery area below to see the delivery fee.
+                                        </p>
+                                    ) : null}
                                 </div>
 
                                 {/* Area dropdown */}
@@ -701,11 +704,8 @@ const Checkout: React.FC = () => {
                                                     }).unwrap();
                                                     if (res.success && res.data) setCheckoutData(res.data);
                                                 } catch (error: unknown) {
-                                                    const msg =
-                                                        error && typeof error === 'object' && 'data' in error
-                                                            ? (error as { data?: { message?: string } }).data?.message
-                                                            : null;
-                                                    setDeliveryError(msg ?? "Could not calculate fee for this area.");
+                                                    const msg = resolveDeliveryError(error);
+                                                    if (msg) setDeliveryError(msg);
                                                 } finally {
                                                     setIsCalculatingDelivery(false);
                                                 }
@@ -714,19 +714,13 @@ const Checkout: React.FC = () => {
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white text-sm"
                                     >
                                         <option value="">Select your area</option>
-                                        {DELIVERY_ZONES.map((zone) =>
-                                            zone.areas.length === 1 ? (
-                                                <option key={zone.areas[0]} value={zone.areas[0]}>
-                                                    {zone.areas[0]} ({zone.label.split("—")[1]?.trim()})
-                                                </option>
-                                            ) : (
-                                                <optgroup key={zone.label} label={zone.label}>
-                                                    {zone.areas.map((area) => (
-                                                        <option key={area} value={area}>{area}</option>
-                                                    ))}
-                                                </optgroup>
-                                            )
-                                        )}
+                                        {DELIVERY_ZONES.map((zone) => (
+                                            <optgroup key={zone.label} label={zone.label}>
+                                                {zone.areas.map((area) => (
+                                                    <option key={area} value={area}>{area}</option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
                                     </select>
                                 </div>
 
