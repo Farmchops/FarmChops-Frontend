@@ -194,8 +194,6 @@ const Navbar: React.FC = () => {
                 </div>
             </div>
 
-            {/* International shipping announcement */}
-            <AnnouncementBar />
             {/* Green pay bar */}
             <DealBanner />
 
