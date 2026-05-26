@@ -72,10 +72,10 @@ export interface DeliveryInfo {
 // Delivery Details (from checkout response)
 export interface DeliveryDetails {
     address: string;
-    distanceKm: number;
-    durationSeconds: number;
-    distanceText: string;
-    durationText: string;
+    distanceKm?: number;
+    durationSeconds?: number;
+    distanceText?: string;
+    durationText?: string;
     fee: number;
     zone?: number;
     zoneName?: string;

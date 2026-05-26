@@ -88,11 +88,11 @@ const Hero: React.FC = () => {
                             }`}
                     >
                         {(slide as any).isPromo ? (
-                            <Link to={slide.ctaLink} className="relative block w-full h-full bg-white flex items-center justify-center cursor-pointer group">
+                            <Link to={slide.ctaLink} className="relative block w-full h-full bg-[#f5f0e8] flex items-center justify-center cursor-pointer group">
                                 <img
                                     src={slide.image}
                                     alt={slide.alt}
-                                    className="w-full h-full object-cover object-center"
+                                    className="w-full h-full object-contain"
                                 />
                                 <span className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#e07b00] hover:bg-[#c96d00] text-white font-bold text-sm md:text-base px-8 py-3 rounded-lg shadow-lg transition-transform group-hover:scale-105">
                                     Shop Now →

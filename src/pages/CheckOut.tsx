@@ -760,17 +760,10 @@ const Checkout: React.FC = () => {
                                         )}
                                     </span>
                                 </div>
-                                {checkoutData && !isCalculatingDelivery && (
-                                    <div className="text-xs text-gray-500 animate-fade-in">
-                                        {checkoutData.delivery.zoneName === "Pickup" ? (
-                                            <p>You'll collect your order at our Jabi pickup point.</p>
-                                        ) : (
-                                            <>
-                                                <p>📍 Distance: {checkoutData.delivery.distanceText}</p>
-                                                <p>🕒 Duration: {checkoutData.delivery.durationText}</p>
-                                            </>
-                                        )}
-                                    </div>
+                                {checkoutData && !isCalculatingDelivery && checkoutData.delivery.zoneName === "Pickup" && (
+                                    <p className="text-xs text-gray-500 animate-fade-in">
+                                        You'll collect your order at our Jabi pickup point.
+                                    </p>
                                 )}
                                 <div className="flex justify-between font-bold text-lg border-t border-[#9FA5A3]/30 pt-3 mt-3">
                                     <span>Total:</span>
