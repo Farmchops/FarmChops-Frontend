@@ -148,6 +148,7 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
             service.getPlacePredictions(
                 {
                     input: query,
+                    componentRestrictions: { country: 'ng' },
                     types: ['geocode', 'establishment'],
                 },
                 (predictions, status) => {

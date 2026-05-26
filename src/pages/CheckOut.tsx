@@ -35,11 +35,14 @@ import { HybridAddressInput } from "@/components/Checkout/HybridAddressInput";
 
 const GOOGLE_API_KEY = 'AIzaSyA8z6nFDQAVB7blbyRiKXU8ooksT72-cu4';
 
-const resolveDeliveryError = (error: unknown): string | null => {
-    const data = error && typeof error === 'object' && 'data' in error
+const getErrorData = (error: unknown) =>
+    error && typeof error === 'object' && 'data' in error
         ? (error as { data?: { needsAreaSelection?: boolean; message?: string } }).data
         : null;
-    if (data?.needsAreaSelection) return null; // handled by neutral UI prompt
+
+const resolveDeliveryError = (error: unknown): string | null => {
+    const data = getErrorData(error);
+    if (data?.needsAreaSelection) return null;
     return data?.message
         ?? (error && typeof error === 'object' && 'message' in error
             ? (error as { message?: string }).message ?? null
@@ -656,8 +659,9 @@ const Checkout: React.FC = () => {
                                                         setCheckoutData(checkoutResponse.data);
                                                     }
                                                 } catch (error: unknown) {
-                                                    const msg = resolveDeliveryError(error);
-                                                    setDeliveryError(msg ?? "We don't deliver to this area yet.");
+                                                    if (!getErrorData(error)?.needsAreaSelection) {
+                                                        setDeliveryError(resolveDeliveryError(error) ?? "We don't deliver to this area yet.");
+                                                    }
                                                 } finally {
                                                     setIsCalculatingDelivery(false);
                                                 }
