@@ -245,14 +245,18 @@ const Checkout: React.FC = () => {
                     // parse components to city/state
                     const parsed = parseAddressComponents(place);
 
-                    // Ensure sublocality/neighborhood is in the address string for zone detection
+                    // Build a clean address from components to avoid Google injecting
+                    // "Abuja Municipal Area Council" or other LGA noise into the string
+                    const placeName = place.formatted_address.split(",")[0].trim();
                     const areaHint = parsed.sublocality;
-                    let addressStr = place.formatted_address;
-                    if (areaHint && !addressStr.toLowerCase().includes(areaHint.toLowerCase())) {
-                        const parts = addressStr.split(",");
-                        parts.splice(1, 0, ` ${areaHint}`);
-                        addressStr = parts.join(",");
+                    const addressParts = [placeName];
+                    if (areaHint && !placeName.toLowerCase().includes(areaHint.toLowerCase())) {
+                        addressParts.push(areaHint);
                     }
+                    if (parsed.locality) addressParts.push(parsed.locality);
+                    if (parsed.administrative_area_level_1) addressParts.push(parsed.administrative_area_level_1);
+                    if (parsed.country) addressParts.push(parsed.country);
+                    const addressStr = addressParts.join(", ");
 
                     const updatedFormData = {
                         name: formData.name,

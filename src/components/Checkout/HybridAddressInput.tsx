@@ -253,13 +253,20 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
             extra = await fetchGooglePlaceDetails(suggestion.id);
         }
 
-        // Ensure sublocality/district is in the address string for backend zone detection
-        let fullAddress = suggestion.fullAddress;
-        const areaHint = extra.sublocality || suggestion.area;
-        if (areaHint && !fullAddress.toLowerCase().includes(areaHint.toLowerCase())) {
-            const parts = fullAddress.split(',');
-            parts.splice(1, 0, ` ${areaHint}`);
-            fullAddress = parts.join(',');
+        // For Google suggestions, build a clean address from components to avoid
+        // Google injecting "Abuja Municipal Area Council" into the description string.
+        // Custom suggestions are already well-formed so use them as-is.
+        let fullAddress: string;
+        if (suggestion.source === 'google') {
+            const areaHint = extra.sublocality;
+            const parts = [suggestion.name];
+            if (areaHint) parts.push(areaHint);
+            if (extra.city) parts.push(extra.city);
+            if (extra.state) parts.push(extra.state);
+            if (extra.country) parts.push(extra.country);
+            fullAddress = parts.filter(Boolean).join(', ');
+        } else {
+            fullAddress = suggestion.fullAddress;
         }
 
         onAddressChange(fullAddress);
