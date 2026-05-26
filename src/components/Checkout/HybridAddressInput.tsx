@@ -124,7 +124,7 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
                     places?: {
                         AutocompleteService: new () => {
                             getPlacePredictions: (
-                                request: { input: string; componentRestrictions: { country: string }; types: string[] },
+                                request: { input: string; componentRestrictions?: { country: string }; types: string[] },
                                 callback: (predictions: Array<{
                                     place_id: string;
                                     description: string;

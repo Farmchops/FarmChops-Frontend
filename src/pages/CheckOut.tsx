@@ -250,6 +250,8 @@ const Checkout: React.FC = () => {
                         address: place.formatted_address,
                         city: parsed.locality || parsed.sublocality || formData.city,
                         state: parsed.administrative_area_level_1 || formData.state,
+                        country: parsed.country || formData.country,
+                        postalCode: parsed.postal_code || formData.postalCode,
                         notes: formData.notes,
                     };
 
