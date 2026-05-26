@@ -9,7 +9,6 @@ import { useLogoutMutation } from "../redux/api/authApi"; // <-- adjust if path 
 import { logout as logoutAction } from "../redux/features/auth/authSlice"; // <-- adjust if path differs
 import { useGetCartQuery } from "@/redux/api/cartApi";
 import DealBanner from "./DealBanner";
-import AnnouncementBar from "./AnnouncementBar";
 
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
