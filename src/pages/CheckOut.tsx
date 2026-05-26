@@ -94,7 +94,6 @@ const parseAddressComponents = (place: GooglePlace) => {
         locality: "", // city
         sublocality: "",
         administrative_area_level_1: "", // state
-        administrative_area_level_2: "", // district / LGA
         country: "",
         postal_code: "",
     };
@@ -106,9 +105,9 @@ const parseAddressComponents = (place: GooglePlace) => {
         if (types.includes("street_number")) components.street_number = c.long_name;
         if (types.includes("route")) components.route = c.long_name;
         if (types.includes("locality")) components.locality = c.long_name;
-        if (types.includes("sublocality") || types.includes("sublocality_level_1")) components.sublocality = c.long_name;
+        if (types.includes("sublocality_level_1") && !components.sublocality) components.sublocality = c.long_name;
+        if (types.includes("neighborhood") && !components.sublocality) components.sublocality = c.long_name;
         if (types.includes("administrative_area_level_1")) components.administrative_area_level_1 = c.long_name;
-        if (types.includes("administrative_area_level_2")) components.administrative_area_level_2 = c.long_name;
         if (types.includes("country")) components.country = c.long_name;
         if (types.includes("postal_code")) components.postal_code = c.long_name;
     });
@@ -246,8 +245,8 @@ const Checkout: React.FC = () => {
                     // parse components to city/state
                     const parsed = parseAddressComponents(place);
 
-                    // Ensure sublocality/district is in the address string for zone detection
-                    const areaHint = parsed.sublocality || parsed.administrative_area_level_2;
+                    // Ensure sublocality/neighborhood is in the address string for zone detection
+                    const areaHint = parsed.sublocality;
                     let addressStr = place.formatted_address;
                     if (areaHint && !addressStr.toLowerCase().includes(areaHint.toLowerCase())) {
                         const parts = addressStr.split(",");

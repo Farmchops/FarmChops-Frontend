@@ -236,9 +236,8 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
                     if (c.types.includes('postal_code')) result.postalCode = c.long_name;
                     if (c.types.includes('locality')) result.city = c.long_name;
                     if (c.types.includes('administrative_area_level_1')) result.state = c.long_name;
-                    if (c.types.includes('sublocality') || c.types.includes('sublocality_level_1') || c.types.includes('administrative_area_level_2')) {
-                        result.sublocality = c.long_name;
-                    }
+                    if (c.types.includes('sublocality_level_1') && !result.sublocality) result.sublocality = c.long_name;
+                    if (c.types.includes('neighborhood') && !result.sublocality) result.sublocality = c.long_name;
                 }
                 resolve(result);
             });
