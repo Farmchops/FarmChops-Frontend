@@ -12,17 +12,21 @@ export const authErrorMiddleware: Middleware = (storeApi) => (next) => (action) 
   if (isRejectedWithValue(action)) {
     const payload = action.payload as any;
 
-    // Check for 401 status or token-related error messages
-    const isAuthError =
-      payload?.status === 401 ||
-      payload?.status === 'PARSING_ERROR' ||
-      (payload?.data?.message && (
+    // Only treat as an auth error when the message indicates a token/session problem.
+    // A bare 401 on a login endpoint means wrong credentials — not an expired session —
+    // so we must not redirect in that case.
+    const tokenErrorMessage =
+      payload?.status === 401 &&
+      payload?.data?.message &&
+      (
         payload.data.message.includes('Invalid or expired token') ||
         payload.data.message.includes('TOKEN_EXPIRED') ||
         payload.data.message.includes('jwt expired') ||
         payload.data.message.includes('Unauthorized') ||
         payload.data.message.includes('Authentication failed')
-      ));
+      );
+
+    const isAuthError = tokenErrorMessage || payload?.status === 'PARSING_ERROR';
 
     if (isAuthError) {
       console.log('Authentication error detected, logging out user...');

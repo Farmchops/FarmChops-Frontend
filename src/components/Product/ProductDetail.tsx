@@ -255,7 +255,7 @@ const ProductDetail: React.FC = () => {
 
             setRecentlyAdded(true);
             refetchActiveDeal();
-            setTimeout(() => setRecentlyAdded(false), 1500);
+            setTimeout(() => setRecentlyAdded(false), 3000);
             setShowCartSidebar(true);
         } catch (cartError: unknown) {
             console.error("Failed to add item to cart", cartError);
