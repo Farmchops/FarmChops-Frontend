@@ -1,5 +1,6 @@
 // src/components/Product/BulkBuying.tsx
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Minus, Plus } from "lucide-react";
 import type { Product, BulkTier } from "../../types/product";
 import cartImg from "../../assets/cart.svg";
@@ -200,12 +201,11 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                 tierName: selectedTier.name,
             }).unwrap();
 
-            // Show success toast and then cart sidebar
+            // Visually close the modal then show toast + cart sidebar
+            setBackdropVisible(false);
+            setTimeout(() => setOpen(false), 150);
             setShowToast(true);
-            handleClose();
-            setTimeout(() => {
-                setShowCartSidebar(true);
-            }, 2000); // Delay to allow toast to be visible before cart sidebar opens
+            setTimeout(() => setShowCartSidebar(true), 1500);
         } catch (error) {
             console.error("Failed to add to cart:", error);
             alert("Failed to add item to cart. Please try again.");
@@ -409,13 +409,14 @@ export const BulkBuying: React.FC<BulkBuyingDrawerProps> = ({ product, onClose }
                 onClose={() => setShowCartSidebar(false)}
             />
 
-            {/* Success Toast */}
-            {showToast && (
+            {/* Success Toast — portaled to body so it outlives the modal */}
+            {showToast && createPortal(
                 <Toast
                     message={`${product.name} added to cart successfully!`}
-                    onClose={() => setShowToast(false)}
-                    duration={5000} // Increased from 4000ms to 5000ms (5 seconds)
-                />
+                    onClose={() => { setShowToast(false); onClose(); }}
+                    duration={3000}
+                />,
+                document.body
             )}
         </div>
     );

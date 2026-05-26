@@ -94,6 +94,7 @@ const parseAddressComponents = (place: GooglePlace) => {
         locality: "", // city
         sublocality: "",
         administrative_area_level_1: "", // state
+        administrative_area_level_2: "", // district / LGA
         country: "",
         postal_code: "",
     };
@@ -107,6 +108,7 @@ const parseAddressComponents = (place: GooglePlace) => {
         if (types.includes("locality")) components.locality = c.long_name;
         if (types.includes("sublocality") || types.includes("sublocality_level_1")) components.sublocality = c.long_name;
         if (types.includes("administrative_area_level_1")) components.administrative_area_level_1 = c.long_name;
+        if (types.includes("administrative_area_level_2")) components.administrative_area_level_2 = c.long_name;
         if (types.includes("country")) components.country = c.long_name;
         if (types.includes("postal_code")) components.postal_code = c.long_name;
     });
@@ -244,10 +246,19 @@ const Checkout: React.FC = () => {
                     // parse components to city/state
                     const parsed = parseAddressComponents(place);
 
+                    // Ensure sublocality/district is in the address string for zone detection
+                    const areaHint = parsed.sublocality || parsed.administrative_area_level_2;
+                    let addressStr = place.formatted_address;
+                    if (areaHint && !addressStr.toLowerCase().includes(areaHint.toLowerCase())) {
+                        const parts = addressStr.split(",");
+                        parts.splice(1, 0, ` ${areaHint}`);
+                        addressStr = parts.join(",");
+                    }
+
                     const updatedFormData = {
                         name: formData.name,
                         phone: formData.phone,
-                        address: place.formatted_address,
+                        address: addressStr,
                         city: parsed.locality || parsed.sublocality || formData.city,
                         state: parsed.administrative_area_level_1 || formData.state,
                         country: parsed.country || formData.country,

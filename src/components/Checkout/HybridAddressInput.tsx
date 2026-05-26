@@ -218,7 +218,7 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
         }, 300);
     };
 
-    const fetchGooglePlaceDetails = (placeId: string): Promise<{ country?: string; postalCode?: string; city?: string; state?: string }> => {
+    const fetchGooglePlaceDetails = (placeId: string): Promise<{ country?: string; postalCode?: string; city?: string; state?: string; sublocality?: string }> => {
         const googleWindow = window as typeof window & { google?: { maps?: { places?: { PlacesService: new (el: Element) => { getDetails: (req: { placeId: string; fields: string[] }, cb: (place: { address_components?: Array<{ long_name: string; types: string[] }> } | null, status: string) => void ) => void }; PlacesServiceStatus: { OK: string } } } } };
         const places = googleWindow.google?.maps?.places;
         if (!places) return Promise.resolve({});
@@ -230,12 +230,15 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
                     resolve({});
                     return;
                 }
-                const result: { country?: string; postalCode?: string; city?: string; state?: string } = {};
+                const result: { country?: string; postalCode?: string; city?: string; state?: string; sublocality?: string } = {};
                 for (const c of place.address_components) {
                     if (c.types.includes('country')) result.country = c.long_name;
                     if (c.types.includes('postal_code')) result.postalCode = c.long_name;
                     if (c.types.includes('locality')) result.city = c.long_name;
                     if (c.types.includes('administrative_area_level_1')) result.state = c.long_name;
+                    if (c.types.includes('sublocality') || c.types.includes('sublocality_level_1') || c.types.includes('administrative_area_level_2')) {
+                        result.sublocality = c.long_name;
+                    }
                 }
                 resolve(result);
             });
@@ -244,17 +247,27 @@ export const HybridAddressInput: React.FC<HybridAddressInputProps> = ({
 
     // Handle suggestion selection
     const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
-        onAddressChange(suggestion.fullAddress);
         setShowSuggestions(false);
 
-        let extra: { country?: string; postalCode?: string; city?: string; state?: string } = {};
+        let extra: { country?: string; postalCode?: string; city?: string; state?: string; sublocality?: string } = {};
         if (suggestion.source === 'google') {
             extra = await fetchGooglePlaceDetails(suggestion.id);
         }
 
+        // Ensure sublocality/district is in the address string for backend zone detection
+        let fullAddress = suggestion.fullAddress;
+        const areaHint = extra.sublocality || suggestion.area;
+        if (areaHint && !fullAddress.toLowerCase().includes(areaHint.toLowerCase())) {
+            const parts = fullAddress.split(',');
+            parts.splice(1, 0, ` ${areaHint}`);
+            fullAddress = parts.join(',');
+        }
+
+        onAddressChange(fullAddress);
+
         onAddressSelect({
-            fullAddress: suggestion.fullAddress,
-            area: suggestion.area,
+            fullAddress,
+            area: suggestion.area || extra.sublocality,
             city: extra.city || suggestion.city,
             state: extra.state || suggestion.state,
             landmark: suggestion.landmark,
