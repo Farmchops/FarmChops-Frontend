@@ -658,10 +658,9 @@ const Checkout: React.FC = () => {
                                                     if (checkoutResponse.success && checkoutResponse.data) {
                                                         setCheckoutData(checkoutResponse.data);
                                                     }
-                                                } catch (error: unknown) {
-                                                    if (!getErrorData(error)?.needsAreaSelection) {
-                                                        setDeliveryError(resolveDeliveryError(error) ?? "We don't deliver to this area yet.");
-                                                    }
+                                                } catch {
+                                                    // Suppress errors here — user hasn't selected an area yet.
+                                                    // Real delivery validation runs in the area dropdown onChange.
                                                 } finally {
                                                     setIsCalculatingDelivery(false);
                                                 }
