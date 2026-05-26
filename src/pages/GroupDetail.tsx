@@ -561,11 +561,9 @@ const GroupDetail = () => {
   // Calculate total price for checkout (in naira)
   const calculateTotal = () => {
     if (!myParticipation) return 0;
-    // Backend stores prices in kobo, so divide by 100 to get naira
     const priceInNaira = group.bulkPricePerUnit / 100;
     const productTotal = myParticipation.quantity * priceInNaira;
-    const tax = checkoutData ? checkoutData.totals.tax : 0;
-    return productTotal + deliveryFee + tax; // All in naira/kobo
+    return productTotal + deliveryFee;
   };
 
   // Calculate product subtotal for display (in naira)
@@ -1101,12 +1099,6 @@ const GroupDetail = () => {
                     <span className="text-gray-400">Enter address</span>
                   )}
                 </div>
-                {checkoutData && checkoutData.totals.tax !== undefined && (
-                  <div className="flex justify-between text-sm">
-                    <span>Tax (7.5%):</span>
-                    <span className="font-semibold">{formatCurrency(checkoutData.totals.tax)}</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total:</span>
                   <span className="text-[#1D7B3C]">{formatCurrency(calculateTotal())}</span>

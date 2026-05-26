@@ -270,7 +270,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, showQ
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span>Shipping:</span>
-                                    <span className="text-green-600 font-medium">Free</span>
+                                    <span className="text-gray-400 font-medium text-xs">Calculated at checkout</span>
                                 </div>
                                 <div className="flex justify-between font-bold text-base sm:text-lg border-t border-gray-200 pt-2 mt-2">
                                     <span>Total:</span>

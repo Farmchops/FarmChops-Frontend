@@ -77,6 +77,8 @@ export interface DeliveryDetails {
     distanceText: string;
     durationText: string;
     fee: number;
+    zone?: number;
+    zoneName?: string;
 }
 
 // Customer Info
@@ -149,7 +151,7 @@ export interface Order {
     items: OrderItem[];
     subtotal: number;
     deliveryFee: number;
-    tax?: number; // 7.5% tax (optional for backward compatibility with old orders)
+    tax?: number; // always 0 on new orders — VAT removed
     totalAmount: number;
     paymentMethod: PaymentMethod;
     paymentStatus: PaymentStatus;
@@ -222,7 +224,7 @@ export interface CheckoutResponse {
     totals: {
         subtotal: number;
         deliveryFee: number;
-        tax: number; // 7.5% tax on subtotal
+        tax: number; // always 0 — VAT removed
         grandTotal: number;
     };
 }

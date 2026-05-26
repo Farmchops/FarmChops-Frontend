@@ -320,12 +320,6 @@ const OrderHistory = () => {
                     <span>Delivery Fee:</span>
                     <span>₦{formatMoney(order.deliveryFee)}</span>
                   </div>
-                  {order.tax && (
-                    <div className="flex justify-between text-gray-600">
-                      <span>Tax (7.5%):</span>
-                      <span>₦{formatMoney(order.tax)}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between font-semibold text-[#1D7B3C] pt-2 border-t">
                     <span>Total:</span>
                     <span>₦{formatMoney(order.totalAmount)}</span>

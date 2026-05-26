@@ -151,6 +151,7 @@ const Checkout: React.FC = () => {
     const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
+    const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
     const cart = cartData?.cart;
     const totalItems = cartData?.cart?.totalItems || 0;
@@ -314,11 +315,11 @@ const Checkout: React.FC = () => {
         }
 
         setIsProcessing(true);
+        setDeliveryError(null);
 
         try {
             // If delivery not calculated yet, calculate it now
             if (!checkoutData) {
-                console.log("🔄 Calculating delivery fee before order placement...");
                 const checkoutResponse = await checkout({
                     name: formData.name,
                     phone: formData.phone,
@@ -333,11 +334,8 @@ const Checkout: React.FC = () => {
                 }
 
                 setCheckoutData(checkoutResponse.data);
-
-                // Continue with the calculated data
                 await createOrderWithDeliveryFee(checkoutResponse.data);
             } else {
-                // Use existing delivery calculation
                 await createOrderWithDeliveryFee(checkoutData);
             }
         } catch (error: unknown) {
@@ -347,7 +345,7 @@ const Checkout: React.FC = () => {
                 : error && typeof error === 'object' && 'message' in error
                 ? (error as { message?: string }).message
                 : "Order placement failed. Please try again.";
-            alert(errorMessage);
+            setDeliveryError(errorMessage ?? "Order placement failed. Please try again.");
         } finally {
             setIsProcessing(false);
         }
@@ -576,7 +574,8 @@ const Checkout: React.FC = () => {
                                         value={formData.address}
                                         onAddressChange={(address) => {
                                             setFormData(prev => ({ ...prev, address }));
-                                            setCheckoutData(null); // Reset delivery calculation
+                                            setCheckoutData(null);
+                                            setDeliveryError(null);
                                         }}
                                         onAddressSelect={async (addressDetails) => {
                                             const updated = {
@@ -587,6 +586,7 @@ const Checkout: React.FC = () => {
                                                 postalCode: addressDetails.postalCode || formData.postalCode,
                                             };
                                             setFormData(prev => ({ ...prev, ...updated }));
+                                            setDeliveryError(null);
 
                                             if (formData.name && formData.phone && addressDetails.fullAddress) {
                                                 setIsCalculatingDelivery(true);
@@ -603,8 +603,14 @@ const Checkout: React.FC = () => {
                                                     if (checkoutResponse.success && checkoutResponse.data) {
                                                         setCheckoutData(checkoutResponse.data);
                                                     }
-                                                } catch (error) {
-                                                    console.error("❌ Auto-delivery calculation failed:", error);
+                                                } catch (error: unknown) {
+                                                    const msg =
+                                                        error && typeof error === 'object' && 'data' in error
+                                                            ? (error as { data?: { message?: string } }).data?.message
+                                                            : error && typeof error === 'object' && 'message' in error
+                                                            ? (error as { message?: string }).message
+                                                            : null;
+                                                    setDeliveryError(msg ?? "We don't deliver to this area yet.");
                                                 } finally {
                                                     setIsCalculatingDelivery(false);
                                                 }
@@ -614,6 +620,12 @@ const Checkout: React.FC = () => {
                                         customApiEndpoint={ADDRESS_SEARCH_ENDPOINT}
                                         placeholder="Search: Wuse 2, Gwarinpa, Jabi, etc..."
                                     />
+                                    {deliveryError && (
+                                        <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                            {deliveryError}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Optional: Separate city/state fields */}
@@ -734,7 +746,9 @@ const Checkout: React.FC = () => {
                                         {isCalculatingDelivery ? (
                                             <span className="text-gray-400">Calculating...</span>
                                         ) : checkoutData ? (
-                                            discountData?.hasFreeDelivery ? (
+                                            checkoutData.delivery.zoneName === "Pickup" ? (
+                                                <span className="text-green-600">FREE — Self Pickup</span>
+                                            ) : discountData?.hasFreeDelivery ? (
                                                 <span className="text-green-600">FREE</span>
                                             ) : (
                                                 <span className="text-green-600">₦{checkoutData.delivery.fee.toLocaleString()}</span>
@@ -746,16 +760,14 @@ const Checkout: React.FC = () => {
                                 </div>
                                 {checkoutData && !isCalculatingDelivery && (
                                     <div className="text-xs text-gray-500 animate-fade-in">
-                                        <p>📍 Distance: {checkoutData.delivery.distanceText}</p>
-                                        <p>🕒 Duration: {checkoutData.delivery.durationText}</p>
-                                    </div>
-                                )}
-                                {checkoutData && (
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Tax (7.5%):</span>
-                                        <span className="font-medium">
-                                            ₦{Math.round((finalAmountInKobo / 100) * 0.075).toLocaleString()}
-                                        </span>
+                                        {checkoutData.delivery.zoneName === "Pickup" ? (
+                                            <p>You'll collect your order at our Jabi pickup point.</p>
+                                        ) : (
+                                            <>
+                                                <p>📍 Distance: {checkoutData.delivery.distanceText}</p>
+                                                <p>🕒 Duration: {checkoutData.delivery.durationText}</p>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                                 <div className="flex justify-between font-bold text-lg border-t border-[#9FA5A3]/30 pt-3 mt-3">
@@ -763,12 +775,9 @@ const Checkout: React.FC = () => {
                                     <span className="text-[#1D7B3C]">
                                         {checkoutData ? (
                                             (() => {
-                                                // Calculate correct total considering free delivery
-                                                const actualDeliveryFee = discountData?.hasFreeDelivery ? 0 : checkoutData.delivery.fee;
-                                                const subtotalAfterDiscount = finalAmountInKobo / 100; // Already in Naira
-                                                const tax = Math.round(subtotalAfterDiscount * 0.075);
-                                                const total = subtotalAfterDiscount + actualDeliveryFee + tax;
-                                                return `₦${total.toLocaleString()}`;
+                                                const actualDeliveryFee = discountData?.hasFreeDelivery || checkoutData.delivery.zoneName === "Pickup" ? 0 : checkoutData.delivery.fee;
+                                                const subtotalAfterDiscount = finalAmountInKobo / 100;
+                                                return `₦${(subtotalAfterDiscount + actualDeliveryFee).toLocaleString()}`;
                                             })()
                                         ) : (
                                             `₦${totalAmount.toLocaleString()}`
