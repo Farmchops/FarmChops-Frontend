@@ -51,12 +51,6 @@ export const createAuthBaseQuery = (baseUrl: string): BaseQueryFn<string | Fetch
         // Make the request
         const result = await baseQuery(args, api, extraOptions);
 
-        // Handle 401 errors from the server
-        if (result.error?.status === 401) {
-            console.log('Received 401 error from server, logging out...');
-            api.dispatch(logout());
-        }
-
         return result;
     };
 };

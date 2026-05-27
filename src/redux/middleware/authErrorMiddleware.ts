@@ -22,7 +22,6 @@ export const authErrorMiddleware: Middleware = (storeApi) => (next) => (action) 
         payload.data.message.includes('Invalid or expired token') ||
         payload.data.message.includes('TOKEN_EXPIRED') ||
         payload.data.message.includes('jwt expired') ||
-        payload.data.message.includes('Unauthorized') ||
         payload.data.message.includes('Authentication failed')
       );
 

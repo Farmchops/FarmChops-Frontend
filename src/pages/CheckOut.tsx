@@ -58,15 +58,27 @@ const DELIVERY_ZONES = [
     },
     {
         label: "Zone 2",
-        areas: ["Maitama", "Garki", "CBD", "Wuse 1", "Asokoro", "Gudu", "Apo"],
+        areas: ["Maitama", "Garki", "CBD", "Wuse", "Wuse 1", "Asokoro", "Gudu", "Apo"],
     },
     {
         label: "Zone 3",
         areas: ["Kubwa", "Lugbe", "Karu", "Nyanya", "Gwagwalada", "Zuba"],
     },
     {
-        label: "Outskirts",
-        areas: ["Bwari", "Kuje", "Kwali"],
+        label: "Zone 4",
+        areas: ["Bwari"],
+    },
+    {
+        label: "Zone 5",
+        areas: ["Kuje"],
+    },
+    {
+        label: "Zone 6",
+        areas: ["Kwali"],
+    },
+    {
+        label: "Pickup",
+        areas: ["Jabi", "Pickup", "Self Pickup"],
     },
 ];
 
