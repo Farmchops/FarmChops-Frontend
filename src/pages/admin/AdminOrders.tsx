@@ -23,9 +23,12 @@ import {
 	useGetOrdersQuery,
 	useGetOrderActionsQuery,
 	useTriggerOrderActionMutation,
+	downloadOrderInvoice,
 	type AdminOrder,
 	type GetOrdersQueryArgs,
 } from "@/redux/api/adminOrdersApi";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 import { useGetAdminRidersQuery, type RiderDirectoryEntry } from "@/redux/api/adminRidersApi";
 import { useGetAdminPayLaterOrdersQuery, type PayLaterOrder } from "@/redux/api/paylaterApi";
 import {
@@ -420,6 +423,21 @@ interface OrderDetailPanelProps {
 const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLoading, actionError, actionSuccess }: OrderDetailPanelProps) => {
 	const statusConfig = getStatusConfig(order.orderStatus);
 	const { displayTotal: totalNaira, normalizeAmount } = getOrderCurrencyMeta(order);
+	const adminToken = useSelector((state: RootState) => state.adminAuth.token ?? '');
+	const [isDownloading, setIsDownloading] = useState(false);
+	const [downloadError, setDownloadError] = useState<string | null>(null);
+
+	const handleDownloadInvoice = async () => {
+		setIsDownloading(true);
+		setDownloadError(null);
+		try {
+			await downloadOrderInvoice(order._id, order.orderNumber, adminToken);
+		} catch {
+			setDownloadError('Failed to download invoice. Please try again.');
+		} finally {
+			setIsDownloading(false);
+		}
+	};
 
 	const legacyNotes = order as AdminOrder & LegacyOrderNotes;
 	const buyerNote = legacyNotes.notes ?? legacyNotes.note ?? legacyNotes.orderNote ?? legacyNotes.customerNote ?? "-";
@@ -444,10 +462,24 @@ const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLo
 							</span>
 						</div>
 					</div>
-					<button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100" aria-label="Close details">
-						<X className="h-5 w-5" />
-					</button>
+					<div className="flex items-center gap-2">
+						<button
+							type="button"
+							onClick={handleDownloadInvoice}
+							disabled={isDownloading}
+							className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+						>
+							{isDownloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="h-3.5 w-3.5" />}
+							{isDownloading ? 'Downloading…' : 'Download Invoice'}
+						</button>
+						<button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100" aria-label="Close details">
+							<X className="h-5 w-5" />
+						</button>
+					</div>
 				</div>
+				{downloadError && (
+					<p className="border-b bg-red-50 px-6 py-2 text-xs text-red-600">{downloadError}</p>
+				)}
 
 				<div className="flex flex-1 flex-col overflow-y-auto">
 					<div className="grid grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-3">

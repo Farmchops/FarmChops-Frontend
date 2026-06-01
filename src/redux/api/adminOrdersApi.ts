@@ -107,3 +107,22 @@ export const {
   useGetOrderActionsQuery,
   useTriggerOrderActionMutation,
 } = adminOrdersApi;
+
+export const downloadOrderInvoice = async (
+  orderId: string,
+  orderNumber: string,
+  token: string,
+): Promise<void> => {
+  const baseUrl = (import.meta.env?.VITE_API_BASE_URL as string ?? '').replace(/\/$/, '');
+  const response = await fetch(`${baseUrl}/admin/orders/${orderId}/invoice`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(`Failed to download invoice (${response.status})`);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `invoice-${orderNumber}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
