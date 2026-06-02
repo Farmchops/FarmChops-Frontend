@@ -160,6 +160,24 @@ const parseAddressComponents = (place: GooglePlace) => {
     return components;
 };
 
+const CopyField: React.FC<{ value: string; display: string }> = ({ value, display }) => {
+    const [copied, setCopied] = React.useState(false);
+    const handleCopy = () => {
+        navigator.clipboard.writeText(value).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
+    return (
+        <button type="button" onClick={handleCopy} className="flex items-center gap-1.5 group">
+            <span className="font-semibold text-gray-900 tracking-widest">{display}</span>
+            <span className={`text-xs px-1.5 py-0.5 rounded transition ${copied ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'}`}>
+                {copied ? 'Copied!' : 'Copy'}
+            </span>
+        </button>
+    );
+};
+
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useSelector((state: RootState) => state.auth);
@@ -595,23 +613,23 @@ const Checkout: React.FC = () => {
                     <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-5">
                         <p className="text-xs font-semibold uppercase tracking-wide text-[#1D7B3C] mb-3">Bank Transfer Details</p>
                         <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
+                            <div className="flex justify-between items-center">
                                 <span className="text-gray-500">Bank</span>
                                 <span className="font-semibold text-gray-900">Wema Bank</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between items-center">
                                 <span className="text-gray-500">Account Number</span>
-                                <span className="font-semibold text-gray-900 tracking-widest">0127214908</span>
+                                <CopyField value="0127214908" display="0127214908" />
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between items-center">
                                 <span className="text-gray-500">Account Name</span>
                                 <span className="font-semibold text-gray-900">Farmchops Ltd</span>
                             </div>
-                            <div className="border-t border-green-200 pt-2 mt-2 flex justify-between">
+                            <div className="border-t border-green-200 pt-2 mt-2 flex justify-between items-center">
                                 <span className="text-gray-500">Amount</span>
                                 <span className="font-bold text-lg text-[#1D7B3C]">₦{bankTransferOrder.grandTotal.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between items-center">
                                 <span className="text-gray-500">Narration</span>
                                 <span className="font-semibold text-gray-900">{bankTransferOrder.orderNumber}</span>
                             </div>
@@ -619,7 +637,8 @@ const Checkout: React.FC = () => {
                     </div>
 
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
-                        Your order is awaiting payment confirmation. We'll notify you once your transfer is received.
+                        <p className="font-semibold mb-1">Awaiting payment confirmation</p>
+                        <p>Once we receive your transfer, your order will move to processing and you'll get a confirmation email. You can also check the status anytime in <span className="font-semibold">My Orders</span>.</p>
                     </div>
 
                     <button

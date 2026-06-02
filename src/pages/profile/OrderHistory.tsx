@@ -13,7 +13,29 @@ import {
 	CreditCard,
 	Search,
 	Filter,
+	Copy,
+	Check,
 } from "lucide-react";
+
+const CopyButton: React.FC<{ value: string }> = ({ value }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="ml-2 p-1 rounded hover:bg-amber-200 transition text-amber-700"
+      title="Copy account number"
+    >
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+    </button>
+  );
+};
 import { useGetOrderHistoryQuery } from "@/redux/api/orderApi";
 import type { OrderStatus, PaymentStatus } from "@/types/orders";
 
@@ -325,6 +347,47 @@ const OrderHistory = () => {
                     <span>₦{formatMoney(order.totalAmount)}</span>
                   </div>
                 </div>
+
+                {/* Bank Transfer Payment Details */}
+                {order.paymentMethod === 'bank_transfer' && order.paymentStatus !== 'paid' && (
+                  <div className="border-t pt-4 mb-4">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-3">
+                        Complete Your Payment
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Bank</span>
+                          <span className="font-medium text-gray-900">Wema Bank</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-amber-700">Account Number</span>
+                          <span className="flex items-center font-semibold text-gray-900 tracking-widest">
+                            0127214908
+                            <CopyButton value="0127214908" />
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Account Name</span>
+                          <span className="font-medium text-gray-900">Farmchops Ltd</span>
+                        </div>
+                        <div className="flex justify-between border-t border-amber-200 pt-2 mt-1">
+                          <span className="text-amber-700">Amount</span>
+                          <span className="font-bold text-[#1D7B3C]">
+                            ₦{formatMoney(order.totalAmount ?? order.summary?.totalAmountInNaira ?? 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Narration</span>
+                          <span className="font-medium text-gray-900">{order.orderNumber}</span>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-xs text-amber-600">
+                        Use your order number as narration. We'll confirm your payment and notify you by email.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Delivery Info */}
                                 <div className="flex items-start justify-between border-t pt-4">
