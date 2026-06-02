@@ -238,12 +238,12 @@ const Checkout: React.FC = () => {
         totalDiscount: totalDiscountInKobo,
     } = useDiscountCalculation(totalAmountInKobo, deliveryFeeInKobo);
 
-    // Redirect if cart is empty
+    // Redirect if cart is empty — but not when showing post-order screens
     useEffect(() => {
-        if (!cart || cart.items.length === 0) {
+        if (!bankTransferOrder && (!cart || cart.items.length === 0)) {
             navigate("/cart");
         }
-    }, [cart, navigate]);
+    }, [cart, navigate, bankTransferOrder]);
 
 
     // Initialize Google Autocomplete
