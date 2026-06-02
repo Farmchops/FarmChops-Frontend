@@ -190,7 +190,8 @@ const Checkout: React.FC = () => {
     const addressRef = useRef<HTMLInputElement | null>(null);
     const autocompleteRef = useRef<GoogleMapsAutocomplete | null>(null);
 
-    const [paymentMethod, setPaymentMethod] = useState<"paystack" | "wallet" | "pay_later">("paystack");
+    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later">("bank_transfer");
+    const [bankTransferOrder, setBankTransferOrder] = useState<{ orderId: string; orderNumber: string; grandTotal: number } | null>(null);
 
     // Wallet data
     const walletBalance = walletData?.data?.balance ?? 0;
@@ -481,15 +482,17 @@ const Checkout: React.FC = () => {
         if (orderResponse.success && orderResponse.data) {
             const { order, payment } = orderResponse.data;
 
-            if (paymentMethod === "paystack" && payment) {
-                // Redirect to Paystack
+            if (paymentMethod === ("paystack" as string) && payment) {
                 window.location.href = payment.authorizationUrl;
             } else if (paymentMethod === "wallet") {
-                // Wallet payment - backend debits wallet and marks order as paid immediately
-                // Show success page with order details
                 navigate(`/order/success/wallet?orderId=${order._id}&orderNumber=${order.orderNumber}`);
+            } else if (paymentMethod === "bank_transfer") {
+                setBankTransferOrder({
+                    orderId: order._id,
+                    orderNumber: order.orderNumber,
+                    grandTotal: orderResponse.data.order.totalAmount,
+                });
             } else if (paymentMethod === "pay_later") {
-                // Redirect to order details page
                 navigate(`/orders/${order._id}`);
             }
         }
@@ -571,6 +574,62 @@ const Checkout: React.FC = () => {
                     </div>
                 </section>
                 <Footer />
+            </div>
+        );
+    }
+
+    if (bankTransferOrder) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full">
+                    <div className="text-center mb-6">
+                        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-[#1D7B3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900">Order Placed!</h2>
+                        <p className="text-gray-500 text-sm mt-1">Complete your payment to confirm your order</p>
+                    </div>
+
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-5">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[#1D7B3C] mb-3">Bank Transfer Details</p>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Bank</span>
+                                <span className="font-semibold text-gray-900">Wema Bank</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Account Number</span>
+                                <span className="font-semibold text-gray-900 tracking-widest">0127214908</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Account Name</span>
+                                <span className="font-semibold text-gray-900">Farmchops Ltd</span>
+                            </div>
+                            <div className="border-t border-green-200 pt-2 mt-2 flex justify-between">
+                                <span className="text-gray-500">Amount</span>
+                                <span className="font-bold text-lg text-[#1D7B3C]">₦{bankTransferOrder.grandTotal.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Narration</span>
+                                <span className="font-semibold text-gray-900">{bankTransferOrder.orderNumber}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+                        Your order is awaiting payment confirmation. We'll notify you once your transfer is received.
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => navigate("/profile/orders")}
+                        className="w-full bg-[#1D7B3C] text-white py-3 rounded-xl font-medium hover:bg-green-700 transition"
+                    >
+                        View My Orders
+                    </button>
+                </div>
             </div>
         );
     }
@@ -921,19 +980,19 @@ const Checkout: React.FC = () => {
                                         </div>
                                     </label>
 
-                                    {/* Card/Transfer Payment */}
-                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "paystack" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                    {/* Bank Transfer */}
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "bank_transfer" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
                                         <input
                                             type="radio"
                                             name="paymentMethod"
-                                            value="paystack"
-                                            checked={paymentMethod === "paystack"}
-                                            onChange={(e) => setPaymentMethod(e.target.value as "paystack")}
+                                            value="bank_transfer"
+                                            checked={paymentMethod === "bank_transfer"}
+                                            onChange={(e) => setPaymentMethod(e.target.value as "bank_transfer")}
                                             className="mr-3 accent-[#1D7B3C]"
                                         />
                                         <div className="flex-1">
-                                            <span className="font-medium">Pay with Card/Transfer</span>
-                                            <p className="text-xs text-gray-500">Secure payment via Paystack</p>
+                                            <span className="font-medium">Bank Transfer</span>
+                                            <p className="text-xs text-gray-500">Transfer directly to our Wema Bank account</p>
                                         </div>
                                     </label>
 

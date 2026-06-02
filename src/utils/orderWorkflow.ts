@@ -9,7 +9,8 @@ export type OrderWorkflowAction =
 	| "fail-delivery"
 	| "return-to-dispatch"
 	| "cancel"
-	| "close";
+	| "close"
+	| "confirm-bank-payment";
 
 /**
  * Maps admin role (from user.adminRole) to workflow stage owner role.
@@ -249,6 +250,13 @@ export const ORDER_ACTION_CONFIG: Record<OrderWorkflowAction, OrderActionConfig>
     ownerRoles: ["support", "supervisor", "customer_support"],
     requires: { note: true },
     notePlaceholder: "Confirm successful fulfilment details",
+  },
+  "confirm-bank-payment": {
+    action: "confirm-bank-payment",
+    label: "Confirm Payment",
+    targetStatus: "ready_for_processing",
+    permission: "orders.override.change",
+    ownerRoles: ["operations", "finance", "supervisor"],
   },
 };
 

@@ -642,6 +642,21 @@ const OrderDetailPanel = ({ order, onClose, onAction, allowedActions, isActionLo
 								) : null}
 							</section>
 
+							{order.paymentMethod === 'bank_transfer' && order.paymentStatus !== 'paid' && (
+								<section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+									<h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700 mb-3">Payment Confirmation</h3>
+									<p className="text-xs text-amber-700 mb-3">This order is awaiting bank transfer confirmation.</p>
+									<button
+										type="button"
+										onClick={() => onAction('confirm-bank-payment')}
+										disabled={isActionLoading}
+										className="w-full rounded-lg bg-[#1D7B3C] px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 transition"
+									>
+										{isActionLoading ? 'Processing…' : 'Confirm Payment Received'}
+									</button>
+								</section>
+							)}
+
 							<section className="rounded-2xl border border-gray-200 bg-white p-5">
 								<h3 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Action bar</h3>
 								{actionSuccess ? (
