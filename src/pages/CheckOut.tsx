@@ -1,7 +1,7 @@
 // src/pages/Checkout.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetCartQuery } from "@/redux/api/cartApi";
+import { useGetCartQuery, useClearCartMutation } from "@/redux/api/cartApi";
 import {
     useCheckoutMutation,
     useCreateOrderMutation,
@@ -169,11 +169,12 @@ const CopyField: React.FC<{ value: string; display: string }> = ({ value, displa
         });
     };
     return (
-        <button type="button" onClick={handleCopy} className="flex items-center gap-1.5 group">
+        <button type="button" onClick={handleCopy} className="flex items-center gap-1.5 group" title="Copy">
             <span className="font-semibold text-gray-900 tracking-widest">{display}</span>
-            <span className={`text-xs px-1.5 py-0.5 rounded transition ${copied ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'}`}>
-                {copied ? 'Copied!' : 'Copy'}
-            </span>
+            {copied
+                ? <Check size={14} className="text-green-600" />
+                : <Copy size={14} className="text-gray-400 group-hover:text-gray-600 transition" />
+            }
         </button>
     );
 };
@@ -185,6 +186,7 @@ const Checkout: React.FC = () => {
 
     const [checkout] = useCheckoutMutation();
     const [createOrder] = useCreateOrderMutation();
+    const [clearCart] = useClearCartMutation();
     const { data: walletData, isLoading: walletLoading } = useGetWalletBalanceQuery();
     const [createPaymentLink, { isLoading: creatingPaymentLink }] = useCreatePaymentLinkMutation();
 
@@ -499,6 +501,8 @@ const Checkout: React.FC = () => {
 
         if (orderResponse.success && orderResponse.data) {
             const { order, payment } = orderResponse.data;
+
+            clearCart().catch(() => {});
 
             if (paymentMethod === ("paystack" as string) && payment) {
                 window.location.href = payment.authorizationUrl;
