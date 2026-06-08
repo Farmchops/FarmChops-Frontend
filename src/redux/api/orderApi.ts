@@ -7,6 +7,7 @@ import type {
     CreateOrderRequest,
     CreateOrderResponse,
     PaymentVerificationResponse,
+    AlatVerifyResponse,
     OrderListResponse,
     Order,
 } from '@/types/orders';
@@ -90,6 +91,19 @@ export const orderApi = createApi({
                     : [],
         }),
 
+        // Verify ALAT Pay transaction
+        verifyAlatPayment: builder.mutation<
+            ApiResponse<AlatVerifyResponse>,
+            { transactionId: string; orderNumber: string }
+        >({
+            query: (body) => ({
+                url: '/orders/alat/verify',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['Orders', 'Order'],
+        }),
+
         // Cancel Order
         cancelOrder: builder.mutation<ApiResponse<{ order: Order }>, string>({
             query: (orderId) => ({
@@ -108,6 +122,7 @@ export const {
     useCheckoutMutation,
     useCreateOrderMutation,
     useVerifyPaymentMutation,
+    useVerifyAlatPaymentMutation,
     useGetOrderHistoryQuery,
     useGetOrderByIdQuery,
     useCancelOrderMutation,

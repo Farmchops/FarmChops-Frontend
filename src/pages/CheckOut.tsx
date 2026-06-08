@@ -5,6 +5,7 @@ import { useGetCartQuery, useClearCartMutation } from "@/redux/api/cartApi";
 import {
     useCheckoutMutation,
     useCreateOrderMutation,
+    useVerifyAlatPaymentMutation,
 } from "@/redux/api/orderApi";
 import { useGetWalletBalanceQuery, useCreatePaymentLinkMutation } from "@/redux/api/walletApi";
 import type { CheckoutResponse } from "@/types/orders";
@@ -47,6 +48,18 @@ const resolveDeliveryError = (error: unknown): string | null => {
         ?? (error && typeof error === 'object' && 'message' in error
             ? (error as { message?: string }).message ?? null
             : null);
+};
+
+const loadAlatPayScript = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((window as any).Alatpay) { resolve(); return; }
+        const script = document.createElement('script');
+        script.src = 'https://dashboard.alatpay.ng/alatpay.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load AlatPay SDK'));
+        document.head.appendChild(script);
+    });
 };
 const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL as string | undefined) ?? import.meta.env.VITE_API_BASE_URL;
 const ADDRESS_SEARCH_ENDPOINT = `${API_BASE_URL.replace(/\/$/, '')}/addresses/search`;
@@ -186,6 +199,7 @@ const Checkout: React.FC = () => {
 
     const [checkout] = useCheckoutMutation();
     const [createOrder] = useCreateOrderMutation();
+    const [verifyAlatPayment] = useVerifyAlatPaymentMutation();
     const [clearCart] = useClearCartMutation();
     const { data: walletData, isLoading: walletLoading } = useGetWalletBalanceQuery();
     const [createPaymentLink, { isLoading: creatingPaymentLink }] = useCreatePaymentLinkMutation();
@@ -210,7 +224,7 @@ const Checkout: React.FC = () => {
     const addressRef = useRef<HTMLInputElement | null>(null);
     const autocompleteRef = useRef<GoogleMapsAutocomplete | null>(null);
 
-    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later">("bank_transfer");
+    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later" | "alat">("alat");
     const [bankTransferOrder, setBankTransferOrder] = useState<{ orderId: string; orderNumber: string; grandTotal: number } | null>(null);
 
     // Wallet data
@@ -516,6 +530,38 @@ const Checkout: React.FC = () => {
                 });
             } else if (paymentMethod === "pay_later") {
                 navigate(`/orders/${order._id}`);
+            } else if (paymentMethod === "alat" && orderResponse.data.payment) {
+                const cfg = orderResponse.data.payment;
+                await loadAlatPayScript();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (window as any).Alatpay.setup({
+                    apiKey: cfg.apiKey,
+                    businessId: cfg.businessId,
+                    amount: cfg.amount,
+                    currency: cfg.currency,
+                    metadata: cfg.metadata,
+                    customer: {
+                        name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : formData.name,
+                        email: user?.email || '',
+                        phone: user?.phone || formData.phone,
+                    },
+                    onTransaction: async (response: { status: string; transactionId?: string }) => {
+                        if (response.status === 'completed' && response.transactionId && cfg.metadata) {
+                            try {
+                                await verifyAlatPayment({
+                                    transactionId: response.transactionId,
+                                    orderNumber: cfg.metadata,
+                                }).unwrap();
+                                navigate(`/order/success/wallet?orderId=${order._id}&orderNumber=${order.orderNumber}`);
+                            } catch {
+                                navigate(`/orders/${order._id}`);
+                            }
+                        }
+                    },
+                    onClose: () => {
+                        navigate(`/orders/${order._id}`);
+                    },
+                });
             }
         }
     };
@@ -976,6 +1022,22 @@ const Checkout: React.FC = () => {
                             <div className="mt-6">
                                 <h4 className="font-semibold mb-3">Payment Method</h4>
                                 <div className="space-y-2">
+                                    {/* ALAT Pay */}
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "alat" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            value="alat"
+                                            checked={paymentMethod === "alat"}
+                                            onChange={(e) => setPaymentMethod(e.target.value as "alat")}
+                                            className="mr-3 accent-[#1D7B3C]"
+                                        />
+                                        <div className="flex-1">
+                                            <span className="font-medium">Pay with ALAT</span>
+                                            <p className="text-xs text-gray-500">Secure payment via ALAT by Wema Bank</p>
+                                        </div>
+                                    </label>
+
                                     {/* Wallet Payment Option */}
                                     <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "wallet" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
                                         <input
@@ -1069,7 +1131,7 @@ const Checkout: React.FC = () => {
                                 }
                                 className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : "Place Order"}
+                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : paymentMethod === "alat" ? "Pay with ALAT" : "Place Order"}
                             </button>
 
 

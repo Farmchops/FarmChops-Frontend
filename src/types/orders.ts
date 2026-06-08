@@ -18,7 +18,7 @@ export type OrderStatus =
     | 'failed_delivery';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-export type PaymentMethod = 'paystack' | 'pay_later' | 'wallet' | 'bank_transfer';
+export type PaymentMethod = 'paystack' | 'pay_later' | 'wallet' | 'bank_transfer' | 'alat';
 
 // Order Item
 export interface OrderItem {
@@ -257,10 +257,23 @@ export interface CreateOrderRequest {
 export interface CreateOrderResponse {
     order: Order;
     payment?: {
-        authorizationUrl: string;
-        accessCode: string;
-        reference: string;
+        // Paystack fields
+        authorizationUrl?: string;
+        accessCode?: string;
+        // ALAT Pay fields
+        apiKey?: string;
+        businessId?: string;
+        amount?: number;
+        currency?: string;
+        metadata?: string;  // orderNumber
+        // Shared
+        reference?: string;
     };
+}
+
+// ALAT Pay Verification Response
+export interface AlatVerifyResponse {
+    order: Order;
 }
 
 // Payment Verification Response
