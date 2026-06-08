@@ -55,7 +55,7 @@ const loadAlatPayScript = (): Promise<void> => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((window as any).Alatpay) { resolve(); return; }
         const script = document.createElement('script');
-        script.src = 'https://dashboard.alatpay.ng/alatpay.js';
+        script.src = 'https://web.alatpay.ng/js/alatpay.js';
         script.onload = () => resolve();
         script.onerror = () => reject(new Error('Failed to load AlatPay SDK'));
         document.head.appendChild(script);
@@ -226,6 +226,7 @@ const Checkout: React.FC = () => {
 
     const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later" | "alat">("alat");
     const [bankTransferOrder, setBankTransferOrder] = useState<{ orderId: string; orderNumber: string; grandTotal: number } | null>(null);
+    const [alatOrderId, setAlatOrderId] = useState<string | null>(null);
 
     // Wallet data
     const walletBalance = walletData?.data?.balance ?? 0;
@@ -254,10 +255,10 @@ const Checkout: React.FC = () => {
 
     // Redirect if cart is empty — but not when showing post-order screens
     useEffect(() => {
-        if (!bankTransferOrder && (!cart || cart.items.length === 0)) {
+        if (!bankTransferOrder && !alatOrderId && (!cart || cart.items.length === 0)) {
             navigate("/cart");
         }
-    }, [cart, navigate, bankTransferOrder]);
+    }, [cart, navigate, bankTransferOrder, alatOrderId]);
 
 
     // Initialize Google Autocomplete
@@ -516,22 +517,26 @@ const Checkout: React.FC = () => {
         if (orderResponse.success && orderResponse.data) {
             const { order, payment } = orderResponse.data;
 
-            clearCart().catch(() => {});
-
             if (paymentMethod === ("paystack" as string) && payment?.authorizationUrl) {
+                clearCart().catch(() => {});
                 window.location.href = payment.authorizationUrl;
             } else if (paymentMethod === "wallet") {
+                clearCart().catch(() => {});
                 navigate(`/order/success/wallet?orderId=${order._id}&orderNumber=${order.orderNumber}`);
             } else if (paymentMethod === "bank_transfer") {
+                clearCart().catch(() => {});
                 setBankTransferOrder({
                     orderId: order._id,
                     orderNumber: order.orderNumber,
                     grandTotal: orderResponse.data.order.totalAmount,
                 });
             } else if (paymentMethod === "pay_later") {
+                clearCart().catch(() => {});
                 navigate(`/orders/${order._id}`);
-            } else if (paymentMethod === "alat" && orderResponse.data.payment) {
-                const cfg = orderResponse.data.payment;
+            } else if (paymentMethod === "alat" && payment) {
+                // Don't clear cart yet — wait until popup is interacted with
+                setAlatOrderId(order._id);
+                const cfg = payment;
                 await loadAlatPayScript();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (window as any).Alatpay.setup({
@@ -547,6 +552,7 @@ const Checkout: React.FC = () => {
                     },
                     onTransaction: async (response: { status: string; transactionId?: string }) => {
                         if (response.status === 'completed' && response.transactionId && cfg.metadata) {
+                            clearCart().catch(() => {});
                             try {
                                 await verifyAlatPayment({
                                     transactionId: response.transactionId,
@@ -559,6 +565,7 @@ const Checkout: React.FC = () => {
                         }
                     },
                     onClose: () => {
+                        clearCart().catch(() => {});
                         navigate(`/orders/${order._id}`);
                     },
                 });
