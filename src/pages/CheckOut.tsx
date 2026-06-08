@@ -539,7 +539,7 @@ const Checkout: React.FC = () => {
                 const cfg = payment;
                 await loadAlatPayScript();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (window as any).Alatpay.setup({
+                const popup = (window as any).Alatpay.setup({
                     apiKey: cfg.apiKey,
                     businessId: cfg.businessId,
                     amount: cfg.amount,
@@ -569,6 +569,7 @@ const Checkout: React.FC = () => {
                         navigate(`/orders/${order._id}`);
                     },
                 });
+                popup.show();
             }
         }
     };
