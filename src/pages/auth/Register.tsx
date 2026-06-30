@@ -202,7 +202,15 @@ export default function Register() {
                             disabled={isLoading}
                             className="mr-2 text-[#666666]"
                         />
-                        <label className="text-sm text-[#666666]">Accept all Terms & Conditions</label>
+                        <label className="text-sm text-[#666666]">
+                            Accept all{" "}
+                            <span
+                                onClick={() => window.open("/terms", "_blank")}
+                                className="text-[#1D7B3C] font-semibold cursor-pointer hover:underline"
+                            >
+                                Terms & Conditions
+                            </span>
+                        </label>
                     </div>
                     {errors.acceptTerms && (
                         <p className="text-red-500 text-sm mb-3">{errors.acceptTerms}</p>
