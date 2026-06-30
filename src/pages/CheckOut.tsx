@@ -224,7 +224,7 @@ const Checkout: React.FC = () => {
     const addressRef = useRef<HTMLInputElement | null>(null);
     const autocompleteRef = useRef<GoogleMapsAutocomplete | null>(null);
 
-    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later" | "alat" | "paystack">("alat");
+    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later" | "alat" | "paystack" | "">("");
     const [bankTransferOrder, setBankTransferOrder] = useState<{ orderId: string; orderNumber: string; grandTotal: number } | null>(null);
     const [alatOrderId, setAlatOrderId] = useState<string | null>(null);
 
@@ -1149,6 +1149,7 @@ const Checkout: React.FC = () => {
                                 type="button"
                                 onClick={handlePlaceOrder}
                                 disabled={
+                                    !paymentMethod ||
                                     isProcessing ||
                                     isCalculatingDelivery ||
                                     !!alatOrderId ||
@@ -1156,7 +1157,7 @@ const Checkout: React.FC = () => {
                                 }
                                 className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : paymentMethod === "alat" ? "Pay with ALAT" : paymentMethod === "paystack" ? "Pay with Paystack" : "Place Order"}
+                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : paymentMethod === "alat" ? "Pay with ALAT" : paymentMethod === "paystack" ? "Pay with Paystack" : !paymentMethod ? "Select a Payment Method" : "Place Order"}
                             </button>
 
 
