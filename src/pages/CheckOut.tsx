@@ -507,7 +507,7 @@ const Checkout: React.FC = () => {
                 country: formData.country || undefined,
                 postalCode: formData.postalCode || undefined,
             },
-            paymentMethod,
+            paymentMethod: paymentMethod as import('@/types/orders').PaymentMethod,
             deliveryFee: deliveryData.delivery.fee ?? 0,
             notes: formData.notes || undefined,
             couponCode: couponCode.trim() || undefined, // Include coupon code if applied
