@@ -32,7 +32,7 @@ export const discountsApi = createApi({
       { subtotal: number; couponCode?: string; deliveryFee?: number }
     >({
       query: (body) => ({
-        url: '/orders/calculate-discount',
+        url: '/coupons/calculate-discount',
         method: 'POST',
         body,
       }),
