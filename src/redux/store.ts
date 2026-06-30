@@ -29,6 +29,7 @@ import { marketersApi } from './api/marketersApi';
 import { couponsApi } from './api/couponsApi';
 import { discountsApi } from './api/discountsApi';
 import { usersApi } from './api/usersApi';
+import { reviewsApi } from './api/reviewsApi';
 
 // Middleware
 import { authErrorMiddleware } from './middleware/authErrorMiddleware';
@@ -65,6 +66,7 @@ export const store = configureStore({
         [couponsApi.reducerPath]: couponsApi.reducer,
         [discountsApi.reducerPath]: discountsApi.reducer,
         [usersApi.reducerPath]: usersApi.reducer,
+        [reviewsApi.reducerPath]: reviewsApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
@@ -90,6 +92,7 @@ export const store = configureStore({
             couponsApi.middleware,
             discountsApi.middleware,
             usersApi.middleware,
+            reviewsApi.middleware,
         ),
 });
 

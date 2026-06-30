@@ -28,6 +28,7 @@ const Register = lazy(() => import("../pages/auth/Register"));
 const Login = lazy(() => import("../pages/auth/Login"));
 const ProfileCompletion = lazy(() => import("../pages/auth/ProfileCompletion"));
 const BulkBuyingPage = lazy(() => import("../pages/BulkBuying"));
+const Review = lazy(() => import("../pages/Review"));
 const BecomeVendor = lazy(() => import("../pages/BecomeVendor"));
 const GroupSharing = lazy(() => import("../pages/GroupSharing"));
 const GroupDetail = lazy(() => import("../pages/GroupDetail"));
@@ -176,6 +177,7 @@ const router = createBrowserRouter([
                     { path: "payment-methods", element: <PaymentMethods /> },
                 ],
             },
+            { path: "/review", element: <Review /> },
             { path: "/bulk-buying", element: <BulkBuyingPage /> },
             { path: "/become-farmer", element: <BecomeVendor /> },
             { path: "/become-vendor", element: <Navigate to="/become-farmer" replace /> },
