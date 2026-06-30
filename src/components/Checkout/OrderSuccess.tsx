@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, Package, AlertCircle } from "lucide-react";
 import { useVerifyPaymentMutation } from "@/redux/api/orderApi";
+import { useClearCartMutation } from "@/redux/api/cartApi";
 import { dealsApi } from "@/redux/api/dealsApi";
 import { useDispatch } from "react-redux";
 
@@ -11,6 +12,7 @@ const OrderSuccess: React.FC = () => {
     const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
     const [verifyPayment, { isLoading }] = useVerifyPaymentMutation();
+    const [clearCart] = useClearCartMutation();
 
     const [verificationState, setVerificationState] = useState<"verifying" | "success" | "error">("verifying");
     const [orderNumber, setOrderNumber] = useState<string>("");
@@ -24,7 +26,7 @@ const OrderSuccess: React.FC = () => {
             if (response.success && response.data) {
                 setVerificationState("success");
                 setOrderNumber(response.data.order.orderNumber);
-                // Invalidate deals cache to refresh stock after purchase
+                clearCart().catch(() => {});
                 dispatch(dealsApi.util.invalidateTags([{ type: 'ActiveDeal', id: 'CURRENT' }]));
             } else {
                 setVerificationState("error");

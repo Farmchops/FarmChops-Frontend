@@ -518,7 +518,6 @@ const Checkout: React.FC = () => {
             const { order, payment } = orderResponse.data;
 
             if (paymentMethod === "paystack" && payment?.authorizationUrl) {
-                clearCart().catch(() => {});
                 window.location.href = payment.authorizationUrl;
             } else if (paymentMethod === "wallet") {
                 clearCart().catch(() => {});
