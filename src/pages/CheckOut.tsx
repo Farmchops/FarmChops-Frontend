@@ -196,6 +196,7 @@ const Checkout: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useSelector((state: RootState) => state.auth);
     const { data: cartData, isLoading: cartLoading } = useGetCartQuery();
+    const externalRedirectRef = useRef(false);
 
     const [checkout] = useCheckoutMutation();
     const [createOrder] = useCreateOrderMutation();
@@ -253,9 +254,10 @@ const Checkout: React.FC = () => {
         totalDiscount: totalDiscountInKobo,
     } = useDiscountCalculation(totalAmountInKobo, deliveryFeeInKobo);
 
-    // Redirect if cart is empty — but not when showing post-order screens
+    // Redirect if cart is empty — but not when showing post-order screens or redirecting externally
     useEffect(() => {
-        if (!bankTransferOrder && !alatOrderId && (!cart || cart.items.length === 0)) {
+        if (externalRedirectRef.current || bankTransferOrder || alatOrderId) return;
+        if (!cart || cart.items.length === 0) {
             navigate("/cart");
         }
     }, [cart, navigate, bankTransferOrder, alatOrderId]);
@@ -518,6 +520,7 @@ const Checkout: React.FC = () => {
             const { order, payment } = orderResponse.data;
 
             if (paymentMethod === "paystack" && payment?.authorizationUrl) {
+                externalRedirectRef.current = true;
                 window.location.href = payment.authorizationUrl;
             } else if (paymentMethod === "wallet") {
                 clearCart().catch(() => {});
