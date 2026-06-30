@@ -184,7 +184,8 @@ import {
     Tag,
     CreditCard,
     Megaphone,
-    Ticket
+    Ticket,
+    MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -329,6 +330,12 @@ const AdminLayout = () => {
                 label: "Coupons",
                 icon: Ticket,
                 permission: "manage_marketing",
+            },
+            {
+                path: "reviews",
+                label: "Reviews",
+                icon: MessageSquare,
+                permission: null,
             },
             {
                 path: "admins",

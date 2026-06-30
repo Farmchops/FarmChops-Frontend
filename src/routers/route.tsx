@@ -88,6 +88,7 @@ const PayLaterCart = lazy(() => import("../pages/PayLater/PayLaterCart"));
 const PayLaterCheckout = lazy(() => import("../pages/PayLater/PayLaterCheckout"));
 const PayLaterApplications = lazy(() => import("../pages/admin/PayLaterApplications"));
 const PayLaterUsers = lazy(() => import("../pages/admin/PayLaterUsers"));
+const AdminReviews = lazy(() => import("../pages/admin/AdminReviews"));
 
 const router = createBrowserRouter([
     {
@@ -410,6 +411,9 @@ const router = createBrowserRouter([
                     </AdminRoute>
                 ),
             },
+
+            // Reviews
+            { path: "reviews", element: <AdminReviews /> },
 
             // Settings - accessible to all authenticated admins
             { path: "settings", element: <AdminSettings /> },

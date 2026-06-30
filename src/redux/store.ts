@@ -30,6 +30,7 @@ import { couponsApi } from './api/couponsApi';
 import { discountsApi } from './api/discountsApi';
 import { usersApi } from './api/usersApi';
 import { reviewsApi } from './api/reviewsApi';
+import { adminReviewsApi } from './api/adminReviewsApi';
 
 // Middleware
 import { authErrorMiddleware } from './middleware/authErrorMiddleware';
@@ -67,6 +68,7 @@ export const store = configureStore({
         [discountsApi.reducerPath]: discountsApi.reducer,
         [usersApi.reducerPath]: usersApi.reducer,
         [reviewsApi.reducerPath]: reviewsApi.reducer,
+        [adminReviewsApi.reducerPath]: adminReviewsApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(
@@ -93,6 +95,7 @@ export const store = configureStore({
             discountsApi.middleware,
             usersApi.middleware,
             reviewsApi.middleware,
+            adminReviewsApi.middleware,
         ),
 });
 
