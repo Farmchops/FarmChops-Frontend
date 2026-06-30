@@ -224,7 +224,7 @@ const Checkout: React.FC = () => {
     const addressRef = useRef<HTMLInputElement | null>(null);
     const autocompleteRef = useRef<GoogleMapsAutocomplete | null>(null);
 
-    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later" | "alat">("alat");
+    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later" | "alat" | "paystack">("alat");
     const [bankTransferOrder, setBankTransferOrder] = useState<{ orderId: string; orderNumber: string; grandTotal: number } | null>(null);
     const [alatOrderId, setAlatOrderId] = useState<string | null>(null);
 
@@ -517,7 +517,7 @@ const Checkout: React.FC = () => {
         if (orderResponse.success && orderResponse.data) {
             const { order, payment } = orderResponse.data;
 
-            if (paymentMethod === ("paystack" as string) && payment?.authorizationUrl) {
+            if (paymentMethod === "paystack" && payment?.authorizationUrl) {
                 clearCart().catch(() => {});
                 window.location.href = payment.authorizationUrl;
             } else if (paymentMethod === "wallet") {
@@ -1046,6 +1046,22 @@ const Checkout: React.FC = () => {
                                         </div>
                                     </label>
 
+                                    {/* Paystack */}
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "paystack" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            value="paystack"
+                                            checked={paymentMethod === "paystack"}
+                                            onChange={(e) => setPaymentMethod(e.target.value as "paystack")}
+                                            className="mr-3 accent-[#1D7B3C]"
+                                        />
+                                        <div className="flex-1">
+                                            <span className="font-medium">Pay with Paystack</span>
+                                            <p className="text-xs text-gray-500">Card, bank transfer & more via Paystack</p>
+                                        </div>
+                                    </label>
+
                                     {/* Wallet Payment Option */}
                                     <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "wallet" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
                                         <input
@@ -1140,7 +1156,7 @@ const Checkout: React.FC = () => {
                                 }
                                 className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : paymentMethod === "alat" ? "Pay with ALAT" : "Place Order"}
+                                {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : paymentMethod === "alat" ? "Pay with ALAT" : paymentMethod === "paystack" ? "Pay with Paystack" : "Place Order"}
                             </button>
 
 
