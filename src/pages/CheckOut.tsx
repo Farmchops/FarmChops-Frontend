@@ -532,7 +532,7 @@ const Checkout: React.FC = () => {
                 });
             } else if (paymentMethod === "pay_later") {
                 clearCart().catch(() => {});
-                navigate(`/orders/${order._id}`);
+                navigate('/profile/orders');
             } else if (paymentMethod === "alat" && payment) {
                 // Don't clear cart yet — wait until popup is interacted with
                 setAlatOrderId(order._id);
@@ -560,13 +560,13 @@ const Checkout: React.FC = () => {
                                 }).unwrap();
                                 navigate(`/order/success/wallet?orderId=${order._id}&orderNumber=${order.orderNumber}`);
                             } catch {
-                                navigate(`/orders/${order._id}`);
+                                navigate('/profile/orders');
                             }
                         }
                     },
                     onClose: () => {
                         clearCart().catch(() => {});
-                        navigate(`/orders/${order._id}`);
+                        navigate('/profile/orders');
                     },
                 });
                 popup.show();
