@@ -8,7 +8,7 @@ import {
     useVerifyAlatPaymentMutation,
 } from "@/redux/api/orderApi";
 import { useGetWalletBalanceQuery, useCreatePaymentLinkMutation } from "@/redux/api/walletApi";
-import type { CheckoutResponse } from "@/types/orders";
+import type { CheckoutResponse, PaymentMethod } from "@/types/orders";
 import type { CreatePaymentLinkResponse } from "@/types/wallet";
 import { Wallet, AlertCircle, Link2, Copy, Check, Share2, X, Loader2, Globe } from "lucide-react";
 import { useDiscountCalculation } from "@/hooks/useDiscountCalculation";
@@ -224,7 +224,7 @@ const Checkout: React.FC = () => {
     const addressRef = useRef<HTMLInputElement | null>(null);
     const autocompleteRef = useRef<GoogleMapsAutocomplete | null>(null);
 
-    const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "wallet" | "pay_later" | "alat" | "paystack" | "">("");
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
     const [bankTransferOrder, setBankTransferOrder] = useState<{ orderId: string; orderNumber: string; grandTotal: number } | null>(null);
     const [alatOrderId, setAlatOrderId] = useState<string | null>(null);
 
@@ -507,7 +507,7 @@ const Checkout: React.FC = () => {
                 country: formData.country || undefined,
                 postalCode: formData.postalCode || undefined,
             },
-            paymentMethod: paymentMethod as import('@/types/orders').PaymentMethod,
+            paymentMethod: paymentMethod!,
             deliveryFee: deliveryData.delivery.fee ?? 0,
             notes: formData.notes || undefined,
             couponCode: couponCode.trim() || undefined, // Include coupon code if applied
