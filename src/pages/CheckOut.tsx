@@ -565,8 +565,7 @@ const Checkout: React.FC = () => {
                         }
                     },
                     onClose: () => {
-                        clearCart().catch(() => {});
-                        navigate('/profile/orders');
+                        setAlatOrderId(null);
                     },
                 });
                 popup.show();
