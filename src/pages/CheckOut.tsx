@@ -1031,22 +1031,6 @@ const Checkout: React.FC = () => {
                             <div className="mt-6">
                                 <h4 className="font-semibold mb-3">Payment Method</h4>
                                 <div className="space-y-2">
-                                    {/* ALAT Pay */}
-                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "alat" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
-                                        <input
-                                            type="radio"
-                                            name="paymentMethod"
-                                            value="alat"
-                                            checked={paymentMethod === "alat"}
-                                            onChange={(e) => setPaymentMethod(e.target.value as "alat")}
-                                            className="mr-3 accent-[#1D7B3C]"
-                                        />
-                                        <div className="flex-1">
-                                            <span className="font-medium">Pay with ALAT</span>
-                                            <p className="text-xs text-gray-500">Secure payment via ALAT by Wema Bank</p>
-                                        </div>
-                                    </label>
-
                                     {/* Paystack */}
                                     <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "paystack" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
                                         <input
@@ -1060,6 +1044,22 @@ const Checkout: React.FC = () => {
                                         <div className="flex-1">
                                             <span className="font-medium">Pay with Paystack</span>
                                             <p className="text-xs text-gray-500">Card, bank transfer & more via Paystack</p>
+                                        </div>
+                                    </label>
+
+                                    {/* ALAT Pay */}
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "alat" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            value="alat"
+                                            checked={paymentMethod === "alat"}
+                                            onChange={(e) => setPaymentMethod(e.target.value as "alat")}
+                                            className="mr-3 accent-[#1D7B3C]"
+                                        />
+                                        <div className="flex-1">
+                                            <span className="font-medium">Pay with ALAT</span>
+                                            <p className="text-xs text-gray-500">Secure payment via ALAT by Wema Bank</p>
                                         </div>
                                     </label>
 
