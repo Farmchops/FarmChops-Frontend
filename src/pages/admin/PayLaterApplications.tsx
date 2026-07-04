@@ -346,8 +346,8 @@ const PayLaterApplications = () => {
             {/* Review Modal */}
             {showReviewModal && selectedApplication && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-                        <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="p-5 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                             <h3 className="text-lg font-bold text-gray-900">
                                 {reviewAction === 'approve' ? 'Approve Application' : 'Reject Application'}
                             </h3>
@@ -362,7 +362,7 @@ const PayLaterApplications = () => {
                             </button>
                         </div>
 
-                        <div className="p-6 max-h-[80vh] overflow-y-auto">
+                        <div className="p-6 flex-1 overflow-y-auto">
                             {/* Verification Summary - Redesigned */}
                             {selectedApplication.verificationScore !== undefined && (
                                 <div className="relative overflow-hidden bg-white border-2 border-gray-100 rounded-xl p-6 mb-6 shadow-sm">
@@ -643,7 +643,7 @@ const PayLaterApplications = () => {
                             )}
                         </div>
 
-                        <div className="p-5 border-t border-gray-200 flex gap-3">
+                        <div className="p-5 border-t border-gray-200 flex gap-3 flex-shrink-0">
                             <button
                                 onClick={() => {
                                     setShowReviewModal(false);
