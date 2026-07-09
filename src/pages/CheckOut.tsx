@@ -1090,21 +1090,6 @@ const Checkout: React.FC = () => {
                                         </div>
                                     </label>
 
-                                    {/* Bank Transfer */}
-                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "bank_transfer" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
-                                        <input
-                                            type="radio"
-                                            name="paymentMethod"
-                                            value="bank_transfer"
-                                            checked={paymentMethod === "bank_transfer"}
-                                            onChange={(e) => setPaymentMethod(e.target.value as "bank_transfer")}
-                                            className="mr-3 accent-[#1D7B3C]"
-                                        />
-                                        <div className="flex-1">
-                                            <span className="font-medium">Bank Transfer</span>
-                                            <p className="text-xs text-gray-500">Transfer directly to our Wema Bank account</p>
-                                        </div>
-                                    </label>
 
                                     {/* Pay-for-Me Link */}
                                     <button
