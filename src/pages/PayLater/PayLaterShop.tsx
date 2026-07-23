@@ -1,5 +1,5 @@
 // src/pages/PayLater/PayLaterShop.tsx
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ShoppingCart, CreditCard, Plus, Check } from 'lucide-react';
 import {
@@ -20,13 +20,21 @@ const formatCurrency = (amount: number) => {
 
 const PayLaterShop = () => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
     const [addingToCart, setAddingToCart] = useState<string | null>(null);
     const [addedToCart, setAddedToCart] = useState<string | null>(null);
 
     const { data: statusData } = useGetPayLaterStatusQuery();
-    const { data: productsData, isLoading } = useGetPayLaterProductsQuery({ search: searchQuery || undefined });
+    const { data: productsData, isLoading } = useGetPayLaterProductsQuery({ search: searchQuery || undefined, page });
     const { data: cartData } = useGetPayLaterCartQuery();
     const [addToCart] = useAddToPayLaterCartMutation();
+
+    const pagination = productsData?.data?.pagination;
+
+    const handleSearchChange = (value: string) => {
+        setSearchQuery(value);
+        setPage(1);
+    };
 
     const availableCredit = statusData?.data?.account?.availableCredit ?? 0;
     const cartTotal = cartData?.data?.cart?.totalAmount ?? 0;
@@ -91,7 +99,7 @@ const PayLaterShop = () => {
                     <input
                         type="text"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                         placeholder="Search products..."
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D7B3C]/20 focus:border-[#1D7B3C]"
                     />
@@ -191,6 +199,57 @@ const PayLaterShop = () => {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {pagination && pagination.pages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-8 bg-white rounded-lg p-4 shadow">
+                        <button
+                            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                            disabled={page === 1}
+                            className={`px-4 py-2 rounded-lg font-medium transition ${
+                                page === 1
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-[#1D7B3C] text-white hover:bg-green-700'
+                            }`}
+                        >
+                            Previous
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                            {Array.from({ length: pagination.pages }, (_, i) => i + 1)
+                                .filter((p) => p === 1 || p === pagination.pages || Math.abs(p - page) <= 1)
+                                .map((p, idx, arr) => (
+                                    <Fragment key={p}>
+                                        {idx > 0 && arr[idx - 1] !== p - 1 && (
+                                            <span className="px-2 text-gray-400">...</span>
+                                        )}
+                                        <button
+                                            onClick={() => setPage(p)}
+                                            className={`px-4 py-2 rounded-lg font-medium transition ${
+                                                p === page
+                                                    ? 'bg-[#1D7B3C] text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    </Fragment>
+                                ))}
+                        </div>
+
+                        <button
+                            onClick={() => setPage((prev) => Math.min(pagination.pages, prev + 1))}
+                            disabled={page === pagination.pages}
+                            className={`px-4 py-2 rounded-lg font-medium transition ${
+                                page === pagination.pages
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-[#1D7B3C] text-white hover:bg-green-700'
+                            }`}
+                        >
+                            Next
+                        </button>
                     </div>
                 )}
             </div>
