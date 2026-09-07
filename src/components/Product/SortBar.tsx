@@ -100,9 +100,9 @@ export const SortBar: React.FC<SortBarProps> = ({
                 {/* Search and Sort - full width */}
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                     {/* Search and Sort */}
-                    <div className="flex items-stretch border border-gray-300 rounded-lg overflow-hidden bg-white">
+                    <div className="flex w-full items-stretch overflow-hidden rounded-lg border border-gray-300 bg-white sm:w-auto">
                         {/* Search */}
-                        <div className="relative w-56 sm:w-64">
+                        <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
                             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                             <input
                                 type="text"
@@ -117,9 +117,9 @@ export const SortBar: React.FC<SortBarProps> = ({
                         <div className="w-px bg-gray-300"></div>
 
                         {/* Sort Dropdown with shadcn Select */}
-                        <div className="flex items-center">
+                        <div className="flex shrink-0 items-center">
                             <Select value={sortBy} onValueChange={onSortChange}>
-                                <SelectTrigger className="w-[140px] sm:w-[180px] bg-white border-none h-full rounded-none focus:ring-0">
+                                <SelectTrigger className="h-full w-[116px] rounded-none border-none bg-white focus:ring-0 sm:w-[180px]">
                                     <SelectValue placeholder="Latest" />
                                 </SelectTrigger>
                                 <SelectContent>

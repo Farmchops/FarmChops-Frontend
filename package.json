@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "build:staging": "tsc -b && vite build --mode staging",
     "lint": "eslint .",
+    "lint:design": "node scripts/check-design-tokens.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

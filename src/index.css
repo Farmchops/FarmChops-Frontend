@@ -3,68 +3,101 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: 'NeueMontreal';
-  src: url('./fonts/NeueMontreal/NeueMontreal-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
+/* ---------------------------------------------------------------------------
+   FarmChops design tokens — single source of truth.
+   Add tokens here; components consume them as Tailwind utilities
+   (bg-brand, text-ink-muted, text-body, shadow-e2 …). Raw hex in a
+   component is a bug. See docs/DESIGN_SYSTEM_PLAN.md.
+   --------------------------------------------------------------------------- */
+
+@theme {
+  /* Typography — one family (system UI stack, 0 bytes over the wire) */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-display: var(--font-sans);
+
+  /* Type scale — base 16px, ratio 1.2 (minor third). Each step carries its line-height. */
+  --text-caption: 0.75rem;      /* 12 */ --text-caption--line-height: 1rem;
+  --text-fine: 0.8125rem;       /* 13 */ --text-fine--line-height: 1.125rem;
+  --text-meta: 0.875rem;        /* 14 */ --text-meta--line-height: 1.25rem;
+  --text-body: 1rem;            /* 16 */ --text-body--line-height: 1.5rem;
+  --text-lead: 1.1875rem;       /* 19 */ --text-lead--line-height: 1.625rem;
+  --text-title: 1.4375rem;      /* 23 */ --text-title--line-height: 1.875rem;
+  --text-heading: 1.75rem;      /* 28 */ --text-heading--line-height: 2.125rem;
+  --text-display: 2.0625rem;    /* 33 */ --text-display--line-height: 2.375rem;
+  --text-hero: 2.5rem;          /* 40 */ --text-hero--line-height: 2.75rem;
+
+  /* Colour — warm neutral ramp. All text pairings verified ≥ WCAG AA (4.5:1). */
+  --color-canvas: #f6f4ef;          /* app background */
+  --color-surface: #ffffff;         /* cards, sheets, inputs */
+  --color-surface-sunken: #edeae2;  /* wells, table headers, disabled fills */
+
+  --color-line: #e7e3d8;            /* hairlines between rows */
+  --color-line-strong: #d6d1c4;     /* card & control outlines */
+  --color-line-input: #8a8474;      /* input borders / focus base — non-text 3:1 */
+
+  --color-ink: #1d1b16;             /* headings, prices, primary copy — 17.2:1 on surface */
+  --color-ink-secondary: #4c4a42;   /* body copy — 8.9:1 on surface */
+  --color-ink-muted: #6b685d;       /* meta, captions, placeholders — 5.6:1 / 5.1:1 */
+
+  /* Brand — green means brand / primary action / go. Never used for prices. */
+  --color-brand: #1c6b3a;           /* primary buttons, active nav — 6.5:1 under white */
+  --color-brand-hover: #17572f;     /* hover / active — 8.6:1 */
+  --color-brand-ink: #14532b;       /* brand-coloured text on light — 7.9:1 on tint */
+  --color-brand-tint: #e8f1ea;      /* selected fill, subtle badge bg */
+  --color-brand-fg: #ffffff;
+
+  /* Deal / savings — deliberately not brand green, not danger red. */
+  --color-deal: #b44708;            /* deal badges, compare-at chips — 5.5:1 both ways */
+  --color-deal-hover: #973b06;
+  --color-deal-ink: #7c2d12;        /* 8.0:1 on deal-tint */
+  --color-deal-tint: #fbead9;
+  --color-deal-fg: #ffffff;
+
+  /* Status */
+  --color-success: #15803d;         /* 5.0:1 under white */
+  --color-success-ink: #14532b;
+  --color-success-tint: #e6f1e9;
+
+  --color-warning: #b45309;
+  --color-warning-ink: #7a4a0b;     /* 6.6:1 on warning-tint */
+  --color-warning-tint: #fbf0da;
+
+  --color-danger: #b42318;          /* 6.6:1 under white */
+  --color-danger-hover: #99190f;
+  --color-danger-ink: #7a271a;      /* 8.4:1 on danger-tint */
+  --color-danger-tint: #fbe9e7;
+  --color-danger-fg: #ffffff;
+
+  /* Radius — 4 rungs. Opt-in utilities (rounded-control, rounded-card …). */
+  --radius-control: 6px;    /* inputs, small controls, inline badges */
+  --radius-card: 10px;      /* buttons, product cards, mobile modals */
+  --radius-panel: 16px;     /* desktop modals, drawers, feature panels */
+  --radius-pill: 9999px;    /* pills, chips, avatars, icon buttons */
+
+  /* Elevation — distance from the page + how transient the surface is. */
+  --shadow-e1: 0 1px 2px rgb(20 18 12 / 0.06), 0 1px 3px rgb(20 18 12 / 0.04);
+  --shadow-e2: 0 4px 12px rgb(20 18 12 / 0.10);
+  --shadow-e3: 0 16px 40px rgb(20 18 12 / 0.16);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
-@font-face {
-  font-family: 'NeueMontreal';
-  src: url('./fonts/NeueMontreal/NeueMontreal-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
+:root {
+  /* Motion durations — for custom CSS / inline transitions where a utility doesn't fit */
+  --duration-fast: 120ms;   /* hover / press feedback, colour transitions */
+  --duration-base: 200ms;   /* dropdowns, accordions, tab changes */
+  --duration-slow: 320ms;   /* drawers, sheets, full-screen overlays */
 }
 
-@font-face {
-  font-family: 'NeueMontreal';
-  src: url('./fonts/NeueMontreal/NeueMontreal-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'NeueMontreal';
-  src: url('./fonts/NeueMontreal/NeueMontreal-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-}
-
-/* body {
-  font-family: "NeueMontreal";
-} */
-
-/* index.css or App.css */
-body {
-  font-family: "Nunito Sans", sans-serif;
-}
-
-/* h1 {
-  font-family: "Plus Jakarta Sans", sans-serif;
-} */
-
-p {
-  font-family: "DM Sans", sans-serif;
-}
-
-/* Toast animation */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
-}
-
-/* Add the rest of your styles here... */
+/* ---------------------------------------------------------------------------
+   shadcn/ui compatibility layer. The 4 generated primitives (card,
+   dropdown-menu, select, toast) reference these; they are retargeted onto
+   the tokens above so the primitives share the system.
+   --------------------------------------------------------------------------- */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -106,24 +139,24 @@ p {
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: #f6f4ef;
+  --foreground: #1d1b16;
+  --card: #ffffff;
+  --card-foreground: #1d1b16;
+  --popover: #ffffff;
+  --popover-foreground: #1d1b16;
+  --primary: #1c6b3a;
+  --primary-foreground: #ffffff;
+  --secondary: #edeae2;
+  --secondary-foreground: #1d1b16;
+  --muted: #edeae2;
+  --muted-foreground: #6b685d;
+  --accent: #e8f1ea;
+  --accent-foreground: #14532b;
+  --destructive: #b42318;
+  --border: #d6d1c4;
+  --input: #8a8474;
+  --ring: #1c6b3a;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -139,6 +172,8 @@ p {
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Dark mode is not wired up in the app (no toggle). Kept for the shadcn
+   primitives' internal `dark:` variants only; not a supported theme yet. */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -182,3 +217,30 @@ p {
   }
 }
 
+/* Toast animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* Respect the OS "reduce motion" setting everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

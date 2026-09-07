@@ -1,56 +1,50 @@
 import React from 'react'
+import { Check } from 'lucide-react'
 import smilingWoman from "../assets/smilingfarmer.png";
-import frame from "../assets/Frame.png"
 
-const WhyChooseUs: React.FC = () => {
-    return (
-        <section className="bg-[#FFF9ED] flex flex-col md:flex-row items-center md:items-start sm:gap-8 md:gap-16 lg:gap-24 py-16 md:pt-32 md:px-16 lg:px-32 justify-center">
-            {/* Left Image */}
-            <div className="relative md:w-1/2 flex justify-center h-full">
-                {/* Frame - background layer */}
-                <img
-                    src={frame}
-                    alt="frame"
-                    className="absolute -top-5 -left-5 z-0 " // adjust size to taste
-                />
+const reasons = [
+    "Pocket-friendly prices",
+    "100% secure payments",
+    "On-time delivery",
+    "We act on your feedback",
+    "Verified products",
+];
 
-                {/* Main image - front layer */}
-                <div className='w-full h-full'>
-                    <img
-                        src={smilingWoman}
-                        alt="Smiling woman holding fresh vegetables"
-                        className="relative z-10 w-full h-full"
-                    />
-                </div>
+const WhyChooseUs: React.FC = () => (
+    <section className="mx-auto grid max-w-[1440px] items-center gap-8 px-4 py-12 md:grid-cols-2 md:py-16 lg:gap-16 sm:px-5">
+        <div className="relative overflow-hidden rounded-panel">
+            <img
+                src={smilingWoman}
+                alt="A farmer holding a basket of fresh vegetables"
+                className="w-full object-cover"
+                loading="lazy"
+            />
+            <p className="absolute bottom-4 left-4 rounded-card bg-surface px-3 py-2 text-fine font-medium text-ink shadow-e2">
+                Cheapest rates in the market, without cutting quality.
+            </p>
+        </div>
 
-                <div className="absolute z-20 bottom-4 left-8 bg-white text-sm px-3 py-2 shadow-md text-center">
-                    Cheapest rates in the market <br /> without compromising on quality.
-                </div>
+        <div>
+            <p className="text-caption font-semibold uppercase tracking-wide text-brand-ink">
+                Why choose us
+            </p>
+            <h2 className="mt-1 text-heading font-semibold text-ink">
+                Benefits of shopping with us
+            </h2>
+            <p className="mt-3 text-meta text-ink-muted">
+                Your fresh food and grocery destination — sourced direct, priced fair.
+            </p>
 
-            </div>
-
-
-            {/* Right Text */}
-            <div className="max-w-md md:w-1/2 text-[#0A0A0A] md:my-8 m-4 ">
-                <p className="uppercase text-xs  ">
-                    Why Choose Us
-                </p>
-                <h2 className="text-xl md:text-2xl font-medium mt-3 ">
-                    Benefits of shopping with us
-                </h2>
-                <p className=" mt-3 text-sm">
-                    Discover why we are your ultimate online fresh food and grocery destination                </p>
-
-                <ul className="mt-6 space-y-4  max-w-fit md:pr-6">
-                    <li className="border-b border-[#D9D9D9] pb-2 font-medium">Pocket-friendly</li>
-                    <li className="border-b border-[#D9D9D9] pb-2 font-medium">100% security on payments</li>
-                    <li className="border-b border-[#D9D9D9] pb-2 font-medium">On-time delivery</li>
-                    <li className="border-b border-[#D9D9D9] pb-2 font-medium">We value your feedback</li>
-                    <li className="font-medium">Verified products</li>
-                </ul>
-            </div>
-        </section>
-    )
-}
+            <ul className="mt-6 space-y-3">
+                {reasons.map((r) => (
+                    <li key={r} className="flex items-center gap-2 text-body text-ink">
+                        <Check size={18} className="shrink-0 text-brand" aria-hidden="true" />
+                        {r}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    </section>
+)
 
 export default WhyChooseUs;

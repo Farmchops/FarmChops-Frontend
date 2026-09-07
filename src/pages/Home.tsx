@@ -7,14 +7,37 @@ import Features from '../components/Features'
 import WhyChooseUs from '../components/WhyChooseUs'
 import Footer from '../components/Footer'
 import ExploreStore from '../components/ExploreStore'
+import { CategoryProductRail } from '../components/home/CategoryProductRail'
+import { useGetCategoriesQuery } from '@/redux/api/categoryApi'
 
 const Home: React.FC = () => {
+    const { data: categoriesData } = useGetCategoriesQuery();
+    const categories = categoriesData?.data?.categories ?? [];
+
     return (
         <div>
             <Hero />
-            <Category />
             <Featured />
+            <Category />
+
+            {categories[0] && (
+                <CategoryProductRail
+                    categorySlug={categories[0].slug}
+                    categoryName={categories[0].name}
+                    subtitle={`Stock up on ${categories[0].name.toLowerCase()}.`}
+                />
+            )}
+
             <HowItWork />
+
+            {categories[1] && (
+                <CategoryProductRail
+                    categorySlug={categories[1].slug}
+                    categoryName={categories[1].name}
+                    subtitle={`Fresh ${categories[1].name.toLowerCase()} for your kitchen.`}
+                />
+            )}
+
             <Features />
             <WhyChooseUs />
             <ExploreStore />

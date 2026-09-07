@@ -2,9 +2,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Product, BulkTier } from "../../types/product";
-import cartImg from "../../assets/cart.svg";
 import { BulkBuying } from "./BulkBuying";
-import { ChevronDown, CheckCircle, Users } from "lucide-react";
+import { ChevronDown, CheckCircle, Users, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductCardProps {
     product: Product;
@@ -30,6 +30,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         !isOutOfStock;
 
     const bulkSavings = product.bulkSavings?.percentage || 0;
+    const isGroupBuy =
+        product.groupConfig?.enabled || (product as { groupBuyingEnabled?: boolean }).groupBuyingEnabled;
 
     // Create retail tier for non-bulk products
     const retailMinQuantity = product.pricing.retail.minQuantity || 1;
@@ -104,132 +106,133 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         return tier.name;
     };
 
+    // Badges: fixed set, highest-priority two only (see DESIGN_SYSTEM_PLAN.md §3.6)
+    const badges: React.ReactNode[] = [];
+    if (isOutOfStock) {
+        badges.push(<Badge key="oos" variant="danger">Out of stock</Badge>);
+    }
+    if (isGroupBuy) {
+        badges.push(
+            <Badge key="group" variant="brandSoft">
+                <Users aria-hidden="true" />
+                Group buy
+            </Badge>
+        );
+    }
+    if (canBuyBulk && bulkSavings > 0) {
+        badges.push(<Badge key="bulk" variant="brand">Bulk −{bulkSavings}%</Badge>);
+    }
+    if (product.isLowStock && !isOutOfStock) {
+        badges.push(<Badge key="low" variant="warning">Low stock</Badge>);
+    }
+
     return (
         <>
-            <div className="max-w-72 bg-white rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden relative p-1 md:p-3 flex flex-col h-full">
-                {/* Badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                    {(product.groupConfig?.enabled || (product as any).groupBuyingEnabled) && (
-                        <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-md shadow font-medium flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            GROUP SHARING
-                        </span>
-                    )}
-                    {canBuyBulk && bulkSavings > 0 && (
-                        <span className="bg-[#1D7B3C] text-white text-xs px-2 py-1 rounded-md shadow font-medium">
-                            SAVE {bulkSavings}%
-                        </span>
-                    )}
-                    {isOutOfStock && (
-                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-md shadow">
-                            OUT OF STOCK
-                        </span>
-                    )}
-                    {product.isLowStock && !isOutOfStock && (
-                        <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-md shadow">
-                            LOW STOCK
-                        </span>
-                    )}
-                </div>
-
-                {/* Product Image */}
-                <div
-                    onClick={handleProductClick}
-                    className={`cursor-pointer w-full h-48 md:h-60 bg-gray-200 animate-pulse overflow-hidden ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
-                >
-                    <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        loading="lazy"
-                        onLoad={(e) => {
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) parent.classList.remove('animate-pulse', 'bg-gray-200');
-                        }}
-                        onError={(e) => {
-                            e.currentTarget.src = '';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) parent.classList.remove('animate-pulse', 'bg-gray-200');
-                        }}
-                        className="w-full h-full object-cover"
-                    />
-                </div>
-
-                {/* Info Section */}
-                <div className="p-2 flex-grow border-t border-[#E6E6E6]">
-                    <h3
-                        onClick={handleProductClick}
-                        className="text-base md:text-xl font-medium text-[#1A1A1A] line-clamp-2 cursor-pointer hover:text-[#1D7B3C] min-h-[48px]"
-                    >
-                        {product.name}
-                    </h3>
-                </div>
-
-                {/* Price & Buttons */}
-                <div className="px-3 pb-3 space-y-2 mt-auto relative" ref={dropdownRef}>
-                    {/* Price Display with unit in parentheses - PricePally style */}
-                    <div className="flex items-baseline gap-1.5">
-                        <p className="text-lg md:text-xl font-bold text-[#1D7B3C]">
-                            ₦{product.pricing.retail.price.toLocaleString()}
-                        </p>
-                        <span className="text-sm md:text-base text-gray-500 font-medium">
-                            ({product.pricing.retail.unit})
-                        </span>
-                    </div>
-
-                    {/* Options button - shows dropdown preview first */}
-                    <button
-                        type="button"
-                        onClick={handleOptionsClick}
-                        className="flex items-center justify-center gap-2 text-sm font-medium text-gray-700 hover:text-[#1D7B3C] hover:bg-gray-50 rounded-lg transition-all w-full py-2.5 border border-gray-200"
-                    >
-                        <span className="font-semibold">{allTiers.length}</span> Options
-                        <ChevronDown size={16} className={`text-gray-600 transition-transform ${showOptionsDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {/* Options Dropdown Preview - PricePally style */}
-                    {showOptionsDropdown && (
-                        <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
-                            <div className="p-2 space-y-1">
-                                {allTiers.map((tier) => (
-                                    <button
-                                        key={tier.name}
-                                        type="button"
-                                        onClick={handleTierSelect}
-                                        className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition text-left"
-                                    >
-                                        <img
-                                            src={product.images[0]}
-                                            alt={tier.name}
-                                            className="w-10 h-10 object-cover rounded"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 truncate">
-                                                {formatTierName(tier)}
-                                            </p>
-                                            <p className="text-xs text-gray-600">
-                                                ₦{tier.price.toLocaleString()}
-                                            </p>
-                                        </div>
-                                        <CheckCircle size={16} className="text-green-600 flex-shrink-0" />
-                                    </button>
-                                ))}
-                            </div>
+            <div className="relative flex h-full flex-col overflow-hidden rounded-card border border-line-strong bg-surface transition-colors md:hover:border-line-input">
+                {/* Image (navigates to detail) with a floating add button */}
+                <div className="relative">
+                    {badges.length > 0 && (
+                        <div className="absolute left-1.5 top-1.5 z-10 flex flex-col items-start gap-1">
+                            {badges.slice(0, 2)}
                         </div>
                     )}
 
-                    {/* Add to Cart Button - opens sidebar directly */}
+                    <button
+                        type="button"
+                        onClick={handleProductClick}
+                        aria-label={`View ${product.name}`}
+                        className="block aspect-square w-full overflow-hidden bg-surface-sunken outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset"
+                    >
+                        <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            loading="lazy"
+                            onError={(e) => { e.currentTarget.src = ''; }}
+                            className={`h-full w-full object-cover ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+                        />
+                    </button>
+
                     <button
                         type="button"
                         onClick={() => setShowBulkModal(true)}
                         disabled={isOutOfStock}
-                        className={`w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg ${isOutOfStock
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-[#1D7B3C] hover:bg-green-700"
-                            }`}
+                        aria-label={isOutOfStock ? "Out of stock" : `Add ${product.name} to cart`}
+                        className={`absolute bottom-1.5 right-1.5 flex h-11 w-11 items-center justify-center rounded-pill shadow-e2 outline-none ring-2 ring-surface transition-colors focus-visible:ring-brand ${
+                            isOutOfStock
+                                ? "cursor-not-allowed bg-surface-sunken text-ink-muted"
+                                : "bg-brand text-brand-fg hover:bg-brand-hover"
+                        }`}
                     >
-                        {isOutOfStock ? "Out of Stock" : "Add to cart"}
-                        {!isOutOfStock && <img src={cartImg} alt="cart" className="w-4 h-4" />}
+                        <Plus size={20} aria-hidden="true" />
                     </button>
+                </div>
+
+                {/* Body */}
+                <div className="flex flex-1 flex-col gap-0.5 p-2 sm:gap-1 sm:p-2.5">
+                    <button
+                        type="button"
+                        onClick={handleProductClick}
+                        className="line-clamp-2 text-left text-fine font-medium text-ink outline-none hover:text-brand-ink focus-visible:underline sm:text-meta"
+                    >
+                        {product.name}
+                    </button>
+
+                    <div className="mt-auto flex items-baseline gap-1 pt-0.5">
+                        <span className="text-meta font-semibold text-ink sm:text-body">
+                            ₦{product.pricing.retail.price.toLocaleString()}
+                        </span>
+                        <span className="text-fine text-ink-muted">
+                            / {product.pricing.retail.unit}
+                        </span>
+                    </div>
+
+                    {/* Options — compact inline disclosure (only when there's a choice) */}
+                    {allTiers.length > 1 && (
+                    <div className="relative" ref={dropdownRef}>
+                        <button
+                            type="button"
+                            onClick={handleOptionsClick}
+                            aria-expanded={showOptionsDropdown}
+                            className="-mx-1 flex items-center gap-1 rounded-control px-1 py-1 text-fine text-ink-muted outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-brand"
+                        >
+                            {allTiers.length} options
+                            <ChevronDown
+                                size={13}
+                                className={`transition-transform ${showOptionsDropdown ? "rotate-180" : ""}`}
+                            />
+                        </button>
+
+                        {showOptionsDropdown && (
+                            <div className="absolute bottom-full left-0 right-0 z-50 mb-2 max-h-64 overflow-y-auto rounded-card border border-line-strong bg-surface shadow-e2">
+                                <div className="space-y-1 p-2">
+                                    {allTiers.map((tier) => (
+                                        <button
+                                            key={tier.name}
+                                            type="button"
+                                            onClick={handleTierSelect}
+                                            className="flex w-full items-center gap-2 rounded-control p-2 text-left transition-colors hover:bg-surface-sunken"
+                                        >
+                                            <img
+                                                src={product.images[0]}
+                                                alt=""
+                                                className="h-9 w-9 rounded-control object-cover"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-meta font-medium text-ink">
+                                                    {formatTierName(tier)}
+                                                </p>
+                                                <p className="text-fine text-ink-muted">
+                                                    ₦{tier.price.toLocaleString()}
+                                                </p>
+                                            </div>
+                                            <CheckCircle size={16} className="shrink-0 text-brand" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    )}
                 </div>
             </div>
 

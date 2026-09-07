@@ -8,16 +8,20 @@ interface ProductGridProps {
     isSidebarVisible?: boolean;
 }
 
+// Compact grid — more product per screen (cf. Pricepally / Farm to People).
+// gutter 10 / 12 / 16 ; columns without sidebar 2 / 3 / 4 / 5, with sidebar 2 / 2 / 3 / 4
 export const ProductGrid: React.FC<ProductGridProps> = ({ products, isSidebarVisible = true }) => {
     return (
-        <div className={`grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 ${isSidebarVisible ? 'md:grid-cols-3' : 'md:grid-cols-4'
-            }`}>
+        <div
+            className={`grid grid-cols-2 gap-2.5 sm:gap-3 lg:gap-4 ${
+                isSidebarVisible
+                    ? "lg:grid-cols-3 xl:grid-cols-4"
+                    : "sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            }`}
+        >
             {products.map((p) => (
                 <ProductCard key={p._id} product={p} />
             ))}
         </div>
     );
 };
-
-
-

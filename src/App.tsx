@@ -1,6 +1,7 @@
 import './App.css'
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Navbar from './components/Navbar';
+import MobileTabBar from './components/MobileTabBar';
 
 import { useEffect, Suspense } from 'react';
 
@@ -61,7 +62,7 @@ function App() {
     <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey}>
       <Navbar />
 
-      <main>
+      <main className="pb-14 md:pb-0">
         <Suspense fallback={
           <div className="flex flex-col items-center justify-center min-h-screen bg-green-50">
             <div className="w-12 h-12 border-4 border-green-200 border-t-[#1D7B3C] rounded-full animate-spin will-change-transform" />
@@ -71,8 +72,10 @@ function App() {
           <Outlet />
         </Suspense>
       </main>
+
+      <MobileTabBar />
     </GoogleReCaptchaProvider>
   )
 }
 
-export default App;
+export default App;

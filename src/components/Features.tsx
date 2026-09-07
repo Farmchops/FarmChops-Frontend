@@ -3,6 +3,7 @@ import group from "../assets/featureIcon/Group.png";
 import people from "../assets/featureIcon/people.png";
 import shop from "../assets/featureIcon/shop.png";
 import wallet from "../assets/featureIcon/wallet.png"
+
 const features = [
     {
         id: 1,
@@ -47,37 +48,21 @@ const features = [
     }
 ];
 
-
-const Features: React.FC = () => {
-    return (
-        <section className="py-16 md:pt-32 bg-green-100">
-            <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                <h2 className="text-3xl font-medium text-center mb-12 text-[#20571E]">
-                    Features
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
-                    {features.map((feature) => (
-                        <div
-                            key={feature.id}
-                            className="bg-white p-6 hover:shadow-xl transition-shadow duration-300"
-                        >
-                            <div className="mb-4 text-[#000000] text-base font-light"><img src={feature.icon} alt="" /></div>
-
-                            <h3 className="text-lg font-bold text-[#20571E]">
-                                {feature.title}
-                            </h3>
-                            <p className="text-sm text-[#0A0A0A] mt-2">
-                                {feature.description}
-                            </p>
-                        </div>
-                    ))}
-                </div>
+const Features: React.FC = () => (
+    <section className="bg-brand-tint">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-5 py-12 md:py-16">
+            <h2 className="mb-8 text-heading font-semibold text-ink">Features</h2>
+            <div className="grid gap-px overflow-hidden rounded-card border border-line-strong bg-line-strong md:grid-cols-2 lg:grid-cols-3">
+                {features.map((feature) => (
+                    <div key={feature.id} className="bg-surface p-6">
+                        <img src={feature.icon} alt="" className="mb-3 h-8 w-8 object-contain" />
+                        <h3 className="text-body font-semibold text-brand-ink">{feature.title}</h3>
+                        <p className="mt-2 text-meta text-ink-secondary">{feature.description}</p>
+                    </div>
+                ))}
             </div>
-        </section>
-    )
-}
+        </div>
+    </section>
+)
 
 export default Features;
-
-
-
