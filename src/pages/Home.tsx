@@ -28,8 +28,6 @@ const Home: React.FC = () => {
                 />
             )}
 
-            <HowItWork />
-
             {categories[1] && (
                 <CategoryProductRail
                     categorySlug={categories[1].slug}
@@ -38,6 +36,7 @@ const Home: React.FC = () => {
                 />
             )}
 
+            <HowItWork />
             <Features />
             <WhyChooseUs />
             <ExploreStore />
