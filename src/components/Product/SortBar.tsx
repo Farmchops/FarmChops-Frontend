@@ -1,74 +1,3 @@
-// import React from "react";
-// import filter from "../../assets/featureIcon/Filter.png";
-
-// interface SortBarProps {
-//     totalResults: number;
-// }
-
-// export const SortBar: React.FC<SortBarProps> = ({ totalResults }) => {
-//     return (
-//         <div className="flex flex-col sm:flex-row justify-between items-center p-4 bg-green-50">
-//             {/* Filter Button */}
-//             <button className="px-3 py-2 mt-2 rounded-full bg-[#1D7B3C] text-white text-sm font-light hover:bg-[#20571E] transition flex gap-2">
-//                 Filter <img src={filter} alt="filter icon" />
-//             </button>
-
-
-// //Search input here. 
-
-//             {/* Sort Dropdown */}
-//             <div className="flex items-center gap-2 relative">
-//                 <span className="text-[#808080]">Sort by:</span>
-//                 <div className="relative">
-//                     <select
-//                         className="
-//                             appearance-none
-//                             p-2
-//                             pr-2
-//                             rounded-lg
-//                             text-[#4D4D4D]
-//                             bg-green-50
-//                             hover:bg-green-50
-//                             focus:outline-none
-//                             transition-all duration-200
-//                             cursor-pointer
-//                         "
-//                     >
-//                         <option className="bg-white text-[#4D4D4D] hover:bg-green-100">Latest</option>
-//                         <option className="bg-white text-[#4D4D4D] hover:bg-green-100">Price: Low to High</option>
-//                         <option className="bg-white text-[#4D4D4D] hover:bg-green-100">Price: High to Low</option>
-//                     </select>
-
-//                     {/* Custom Dropdown Arrow */}
-//                     <svg
-//                         className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1A1A1A] pointer-events-none"
-//                         fill="none"
-//                         stroke="currentColor"
-//                         strokeWidth={2}
-//                         viewBox="0 0 24 24"
-//                     >
-//                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-//                     </svg>
-//                 </div>
-//             </div>
-
-//             {/* Results Count */}
-//             <p className="text-[#666666]"><span className="text-[#1A1A1A]">{totalResults} </span>Results Found</p>
-//         </div>
-//     );
-// };
-
-
-
-
-
-
-
-
-
-
-
-
 // src/components/Product/SortBar.tsx
 import React from "react"
 import { Search } from "lucide-react"
@@ -81,7 +10,6 @@ import {
 } from "@/components/ui/select"
 
 interface SortBarProps {
-    totalResults: number
     searchTerm: string
     onSearchChange: (term: string) => void
     sortBy: string
@@ -95,44 +23,34 @@ export const SortBar: React.FC<SortBarProps> = ({
     onSortChange,
 }) => {
     return (
-        <div className="bg-green-50 p-4 md:px-8">
-            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-                {/* Search and Sort - full width */}
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                    {/* Search and Sort */}
-                    <div className="flex w-full items-stretch overflow-hidden rounded-lg border border-gray-300 bg-white sm:w-auto">
-                        {/* Search */}
-                        <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
-                            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search products..."
-                                value={searchTerm}
-                                onChange={(e) => onSearchChange(e.target.value)}
-                                className="w-full h-full pr-10 pl-4 py-2 bg-white focus:outline-none placeholder:text-sm border-none"
-                            />
-                        </div>
-
-                        {/* Divider */}
-                        <div className="w-px bg-gray-300"></div>
-
-                        {/* Sort Dropdown with shadcn Select */}
-                        <div className="flex shrink-0 items-center">
-                            <Select value={sortBy} onValueChange={onSortChange}>
-                                <SelectTrigger className="h-full w-[116px] rounded-none border-none bg-white focus:ring-0 sm:w-[180px]">
-                                    <SelectValue placeholder="Latest" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="latest">Latest</SelectItem>
-                                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                                    <SelectItem value="name">Name: A-Z</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+            <div className="relative min-w-0 flex-1">
+                <Search
+                    size={18}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+                />
+                <input
+                    type="search"
+                    placeholder="Search products…"
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    aria-label="Search products"
+                    className="h-11 w-full rounded-control border border-line-input bg-surface pl-10 pr-3 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40"
+                />
             </div>
+
+            <Select value={sortBy} onValueChange={onSortChange}>
+                <SelectTrigger className="h-11 w-[130px] shrink-0 rounded-control border-line-input bg-surface text-meta text-ink sm:w-[170px]">
+                    <SelectValue placeholder="Latest" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="latest">Latest</SelectItem>
+                    <SelectItem value="price-low">Price: low to high</SelectItem>
+                    <SelectItem value="price-high">Price: high to low</SelectItem>
+                    <SelectItem value="name">Name: A–Z</SelectItem>
+                </SelectContent>
+            </Select>
         </div>
     )
 }

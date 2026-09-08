@@ -1,13 +1,15 @@
 // src/pages/Products.tsx - Main Product Page with API
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { SlidersHorizontal, PackageX } from "lucide-react";
 import { FilterSidebar } from "../components/Product/FilterBar";
 import { SortBar } from "../components/Product/SortBar";
 import { ProductGrid } from "../components/Product/ProductGrid";
-import ProductPageHero from "../components/Product/ProductPageHero";
 import type { Product } from "../types/product";
 import { useGetProductsQuery } from "@/redux/api/productApi";
 import { useGetCategoriesQuery } from "@/redux/api/categoryApi";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Footer from "@/components/Footer";
 
 export type { Product };
@@ -19,11 +21,15 @@ const Products: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 20;
 
-  // Read category from URL parameter on mount
+  // Read category / search from URL parameters (e.g. links from the home page)
   useEffect(() => {
     const categoryFromUrl = searchParams.get("category");
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
+    }
+    const searchFromUrl = searchParams.get("search");
+    if (searchFromUrl) {
+      setSearchTerm(searchFromUrl);
     }
   }, [searchParams]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
@@ -74,6 +80,11 @@ const Products: React.FC = () => {
     return aOut - bOut;
   });
 
+  const activeCategory = categories.find((c) => c.slug === selectedCategory);
+  const heading = activeCategory ? activeCategory.name : searchTerm.trim() ? `Results for “${searchTerm.trim()}”` : "All products";
+
+  const isLoading = productsLoading || categoriesLoading;
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -84,140 +95,120 @@ const Products: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  if (productsLoading || categoriesLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1D7B3C] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading products...</p>
-        </div>
-      </div>
-    );
-  }
+  // Page numbers with ellipsis
+  const pageItems = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
+    (page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1
+  );
 
   return (
-    <div>
-      <ProductPageHero />
-      <SortBar
-        totalResults={totalResults}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-      />
+    <div className="min-h-screen bg-canvas">
+      <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-5 sm:px-5">
+        <SortBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
 
-      <div className="flex flex-col lg:flex-row min-h-screen bg-green-50 p-4 md:px-8 gap-6">
-        {/* Sidebar */}
-        <div className={`lg:w-1/4 transition-all duration-300 ${isSidebarVisible ? 'block' : 'hidden'}`}>
-          <FilterSidebar
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            priceRange={priceRange}
-            onPriceRangeChange={setPriceRange}
-            stockFilter={stockFilter}
-            onStockFilterChange={setStockFilter}
-          />
-        </div>
+        <div className="mt-5 flex flex-col gap-6 lg:flex-row">
+          {/* Sidebar */}
+          <div className={`lg:w-64 lg:shrink-0 ${isSidebarVisible ? "block" : "hidden"}`}>
+            <FilterSidebar
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              priceRange={priceRange}
+              onPriceRangeChange={setPriceRange}
+              stockFilter={stockFilter}
+              onStockFilterChange={setStockFilter}
+            />
+          </div>
 
-        {/* Toggle Button (Show when sidebar is hidden) */}
-        {!isSidebarVisible && (
-          <button
-            onClick={() => setIsSidebarVisible(true)}
-            className="fixed top-24 left-4 z-50 bg-[#1D7B3C] text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-all"
-            title="Show Filters"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-          </button>
-        )}
-
-        {/* Main Content */}
-        <div className={`flex-1 flex flex-col gap-4 mb-16 transition-all duration-300 ${!isSidebarVisible ? 'lg:w-full' : ''}`}>
-          {/* Close Sidebar Button (Show when sidebar is visible, desktop only) */}
-          {isSidebarVisible && (
-            <button
-              onClick={() => setIsSidebarVisible(false)}
-              className="hidden lg:flex items-center gap-2 self-start bg-[#1D7B3C] text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all text-sm font-medium shadow-sm"
-              title="Hide category filters to view more products"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-              </svg>
-              Hide Filters
-            </button>
-          )}
-          {products.length === 0 ? (
-            <div className="bg-white rounded-lg p-12 text-center">
-              <div className="text-gray-400 text-5xl mb-4">🔍</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-              <p className="text-gray-500">Try adjusting your search or filters</p>
+          {/* Main content */}
+          <div className="min-w-0 flex-1">
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="truncate text-heading font-semibold text-ink">{heading}</h1>
+                {!isLoading && (
+                  <p className="mt-0.5 text-meta text-ink-muted">
+                    {totalResults} {totalResults === 1 ? "item" : "items"}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="secondary"
+                onClick={() => setIsSidebarVisible((v) => !v)}
+                className="hidden shrink-0 px-3 text-meta lg:inline-flex"
+              >
+                <SlidersHorizontal size={16} aria-hidden="true" />
+                {isSidebarVisible ? "Hide filters" : "Filters"}
+              </Button>
             </div>
-          ) : (
-            <>
-              <ProductGrid products={products} isSidebarVisible={isSidebarVisible} />
 
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8 bg-white rounded-lg p-4 shadow">
-                  {/* Previous Button */}
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === 1
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#1D7B3C] text-white hover:bg-green-700'
-                      }`}
-                  >
-                    Previous
-                  </button>
-
-                  {/* Page Numbers */}
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(page => {
-                        // Show first page, last page, current page, and pages around current
-                        return (
-                          page === 1 ||
-                          page === totalPages ||
-                          Math.abs(page - currentPage) <= 1
-                        );
-                      })
-                      .map((page, idx, arr) => (
-                        <React.Fragment key={page}>
-                          {/* Add ellipsis if there's a gap */}
-                          {idx > 0 && arr[idx - 1] !== page - 1 && (
-                            <span className="px-2 text-gray-400">...</span>
-                          )}
-                          <button
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === page
-                              ? 'bg-[#1D7B3C] text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                          >
-                            {page}
-                          </button>
-                        </React.Fragment>
-                      ))}
+            {isLoading ? (
+              <div className={`grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:gap-4 ${isSidebarVisible ? "lg:grid-cols-3 xl:grid-cols-4" : "sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"}`}>
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="flex flex-col gap-2 rounded-card border border-line-strong bg-surface p-2.5">
+                    <Skeleton className="aspect-square w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
                   </div>
+                ))}
+              </div>
+            ) : products.length === 0 ? (
+              <div className="rounded-card border border-line-strong bg-surface p-12 text-center">
+                <PackageX size={40} className="mx-auto mb-3 text-ink-muted" aria-hidden="true" />
+                <h3 className="text-body font-semibold text-ink">No products found</h3>
+                <p className="mt-1 text-meta text-ink-muted">Try adjusting your search or filters.</p>
+              </div>
+            ) : (
+              <>
+                <ProductGrid products={products} isSidebarVisible={isSidebarVisible} />
 
-                  {/* Next Button */}
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === totalPages
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#1D7B3C] text-white hover:bg-green-700'
-                      }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+                {totalPages > 1 && (
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 text-meta"
+                    >
+                      Previous
+                    </Button>
+
+                    {pageItems.map((page, idx) => (
+                      <React.Fragment key={page}>
+                        {idx > 0 && pageItems[idx - 1] !== page - 1 && (
+                          <span className="px-1 text-meta text-ink-muted">…</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          aria-current={currentPage === page ? "page" : undefined}
+                          className={`h-11 min-w-11 rounded-card px-3 text-meta font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand ${
+                            currentPage === page
+                              ? "bg-brand text-brand-fg"
+                              : "border border-line-input text-ink hover:bg-surface-sunken"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    ))}
+
+                    <Button
+                      variant="secondary"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-4 text-meta"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
