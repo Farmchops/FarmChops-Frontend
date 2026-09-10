@@ -9,22 +9,25 @@ interface Category {
     productCount: number;
 }
 
-interface FilterSidebarProps {
+interface CategoryTabsProps {
     categories: Category[];
     selectedCategory: string;
     onCategoryChange: (category: string) => void;
-    priceRange: [number, number];
-    onPriceRangeChange: (range: [number, number]) => void;
-    stockFilter: string[];
-    onStockFilterChange: (filter: string[]) => void;
 }
 
-export const FilterSidebar: React.FC<FilterSidebarProps> = ({
+const tabClass = (active: boolean) =>
+    `shrink-0 whitespace-nowrap border-b-2 px-0.5 py-3.5 text-body font-semibold outline-none transition-colors focus-visible:text-brand-ink ${
+        active
+            ? "border-brand text-brand-ink"
+            : "border-transparent text-ink-muted hover:text-ink"
+    }`;
+
+/** Full-width horizontal category tab strip (all breakpoints), drag- and wheel-scrollable. */
+export const CategoryTabs: React.FC<CategoryTabsProps> = ({
     categories,
     selectedCategory,
     onCategoryChange,
 }) => {
-    // Drag-to-scroll for the mobile chip row
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
@@ -44,72 +47,36 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     };
     const stopDrag = () => setIsDragging(false);
 
-    const chipClass = (active: boolean) =>
-        `flex shrink-0 items-center gap-2 whitespace-nowrap rounded-pill px-3.5 py-2 text-meta font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand ${
-            active
-                ? "bg-brand text-brand-fg"
-                : "border border-line-input bg-surface text-ink hover:border-brand hover:text-brand-ink"
-        }`;
-
-    const rowClass = (active: boolean) =>
-        `flex w-full items-center gap-2 rounded-control px-2 py-2 text-left text-meta outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand ${
-            active ? "bg-brand-tint font-medium text-brand-ink" : "text-ink hover:bg-surface-sunken"
-        }`;
+    const tabs = [
+        { key: "all", label: "All Categories" },
+        ...categories.map((c) => ({ key: c.slug, label: c.name })),
+    ];
 
     return (
-        <>
-            {/* Mobile / tablet — horizontal chips */}
+        <div className="-mx-4 border-b border-line-strong px-4 sm:-mx-5 sm:px-5">
             <div
                 ref={scrollRef}
                 onMouseDown={onMouseDown}
                 onMouseMove={onMouseMove}
                 onMouseUp={stopDrag}
                 onMouseLeave={stopDrag}
-                className="flex gap-2 overflow-x-auto pb-1 select-none lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                role="tablist"
+                aria-label="Product categories"
+                className="flex select-none gap-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-                <button type="button" onClick={() => onCategoryChange("all")} className={chipClass(selectedCategory === "all")}>
-                    All
-                </button>
-                {categories.map((cat) => (
+                {tabs.map((tab) => (
                     <button
-                        key={cat._id}
+                        key={tab.key}
                         type="button"
-                        onClick={() => onCategoryChange(cat.slug)}
-                        className={chipClass(selectedCategory === cat.slug)}
+                        role="tab"
+                        aria-selected={selectedCategory === tab.key}
+                        onClick={() => onCategoryChange(tab.key)}
+                        className={tabClass(selectedCategory === tab.key)}
                     >
-                        {cat.image && (
-                            <img src={cat.image} alt="" className="h-5 w-5 rounded-pill object-cover" />
-                        )}
-                        {cat.name}
+                        {tab.label}
                     </button>
                 ))}
             </div>
-
-            {/* Desktop — vertical list */}
-            <aside className="hidden rounded-card border border-line-strong bg-surface p-3 lg:block">
-                <h2 className="px-2 pb-2 text-meta font-semibold text-ink">Categories</h2>
-                <ul className="space-y-0.5">
-                    <li>
-                        <button type="button" onClick={() => onCategoryChange("all")} className={rowClass(selectedCategory === "all")}>
-                            All products
-                        </button>
-                    </li>
-                    {categories.map((cat) => (
-                        <li key={cat._id}>
-                            <button
-                                type="button"
-                                onClick={() => onCategoryChange(cat.slug)}
-                                className={rowClass(selectedCategory === cat.slug)}
-                            >
-                                {cat.image && (
-                                    <img src={cat.image} alt="" className="h-6 w-6 rounded-control object-cover" />
-                                )}
-                                <span className="truncate">{cat.name}</span>
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </aside>
-        </>
+        </div>
     );
 };
