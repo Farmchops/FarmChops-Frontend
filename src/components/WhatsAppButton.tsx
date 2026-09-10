@@ -3,7 +3,7 @@ import React from "react";
 // WhatsApp "Click to Chat" — country code + number, no "+", no leading 0.
 // TODO: move to an env var before production.
 const WHATSAPP_NUMBER = "2349011709403";
-const PREFILLED = "Hi FarmChops, I'd like some help with";
+const PREFILLED = "Hi FarmChops! 👋 I have a question and would like some help.";
 
 const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(PREFILLED)}`;
 
