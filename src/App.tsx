@@ -2,6 +2,7 @@ import './App.css'
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Navbar from './components/Navbar';
 import MobileTabBar from './components/MobileTabBar';
+import WhatsAppButton from './components/WhatsAppButton';
 
 import { useEffect, Suspense } from 'react';
 
@@ -73,6 +74,7 @@ function App() {
         </Suspense>
       </main>
 
+      <WhatsAppButton />
       <MobileTabBar />
     </GoogleReCaptchaProvider>
   )
