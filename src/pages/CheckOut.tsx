@@ -95,6 +95,9 @@ const DELIVERY_ZONES = [
     },
 ];
 
+const PICKUP_AREAS = DELIVERY_ZONES.find((zone) => zone.label === "Pickup")?.areas ?? [];
+const PICKUP_LOCATION = { address: "FarmChops Self Pickup, Jabi", city: "Abuja", state: "FCT" };
+
 const loadGoogleMapsScript = (apiKey?: string): Promise<void> => {
     return new Promise((resolve, reject) => {
         if (!apiKey) {
@@ -236,6 +239,7 @@ const Checkout: React.FC = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(false);
     const [deliveryError, setDeliveryError] = useState<string | null>(null);
+    const isPickup = PICKUP_AREAS.includes(selectedArea);
 
     const cart = cartData?.cart;
     const totalItems = cartData?.cart?.totalItems || 0;
@@ -410,9 +414,11 @@ const Checkout: React.FC = () => {
 
     // Place Order - Create Order and Process Payment
         const handlePlaceOrder = async () => {
-        // Validation
-        if (!formData.name || !formData.phone || !formData.address) {
-            alert("Please fill in all required fields (Name, Phone, Address)");
+        // Validation — pickup orders don't need a delivery address
+        if (!formData.name || !formData.phone || (!isPickup && !formData.address)) {
+            alert(isPickup
+                ? "Please fill in all required fields (Name, Phone)"
+                : "Please fill in all required fields (Name, Phone, Address)");
             return;
         }
 
@@ -425,7 +431,7 @@ const Checkout: React.FC = () => {
                 const checkoutResponse = await checkout({
                     name: formData.name,
                     phone: formData.phone,
-                    address: formData.address,
+                    address: isPickup ? PICKUP_LOCATION.address : formData.address,
                     area: selectedArea || undefined,
                     notes: formData.notes,
                     country: formData.country || undefined,
@@ -460,9 +466,11 @@ const Checkout: React.FC = () => {
             throw new Error("Delivery data not available");
         }
 
+        const address = isPickup ? PICKUP_LOCATION.address : formData.address;
+
         // Extract city and state robustly
-        let city = (formData.city || "").trim();
-        let state = (formData.state || "").trim();
+        let city = (isPickup ? PICKUP_LOCATION.city : formData.city || "").trim();
+        let state = (isPickup ? PICKUP_LOCATION.state : formData.state || "").trim();
 
         if (!city || !state) {
             const parts = formData.address.split(",").map(p => p.trim()).filter(Boolean);
@@ -502,13 +510,14 @@ const Checkout: React.FC = () => {
 
         const orderResponse = await createOrder({
             deliveryInfo: {
-                address: formData.address,
+                address,
                 city,
                 state,
                 phoneNumber: formData.phone,
                 country: formData.country || undefined,
                 postalCode: formData.postalCode || undefined,
             },
+            area: selectedArea || undefined,
             paymentMethod: paymentMethod!,
             deliveryFee: deliveryData.delivery.fee ?? 0,
             notes: formData.notes || undefined,
@@ -770,6 +779,66 @@ const Checkout: React.FC = () => {
                                     </div>
                                 )}
 
+                                {/* Area dropdown */}
+                                <div>
+                                    <label htmlFor="checkout-area" className="block text-sm font-medium mb-2">
+                                        Delivery Area <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        id="checkout-area"
+                                        value={selectedArea}
+                                        onChange={async (e) => {
+                                            const area = e.target.value;
+                                            const pickup = PICKUP_AREAS.includes(area);
+                                            const address = pickup ? PICKUP_LOCATION.address : formData.address;
+                                            setSelectedArea(area);
+                                            setCheckoutData(null);
+                                            setDeliveryError(null);
+                                            if (formData.name && formData.phone && address && area) {
+                                                setIsCalculatingDelivery(true);
+                                                try {
+                                                    const res = await checkout({
+                                                        name: formData.name,
+                                                        phone: formData.phone,
+                                                        address,
+                                                        area,
+                                                        notes: formData.notes,
+                                                    }).unwrap();
+                                                    if (res.success && res.data) setCheckoutData(res.data);
+                                                } catch (error: unknown) {
+                                                    const msg = resolveDeliveryError(error);
+                                                    if (msg) setDeliveryError(msg);
+                                                } finally {
+                                                    setIsCalculatingDelivery(false);
+                                                }
+                                            }
+                                        }}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white text-sm"
+                                    >
+                                        <option value="">Select your area</option>
+                                        {DELIVERY_ZONES.map((zone) => (
+                                            <optgroup key={zone.label} label={zone.label}>
+                                                {zone.areas.map((area) => (
+                                                    <option key={area} value={area}>{area}</option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                    {isPickup && (
+                                        deliveryError ? (
+                                            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                                {deliveryError}
+                                            </p>
+                                        ) : (
+                                            <p className="mt-2 text-sm text-gray-500">
+                                                No delivery address needed — you'll collect your order at our Jabi pickup point.
+                                            </p>
+                                        )
+                                    )}
+                                </div>
+
+                                {!isPickup && (
                                 <div>
                                     <label htmlFor="checkout-address" className="block text-sm font-medium mb-2">Delivery Address *</label>
                                     <HybridAddressInput
@@ -778,7 +847,6 @@ const Checkout: React.FC = () => {
                                             setFormData(prev => ({ ...prev, address }));
                                             setCheckoutData(null);
                                             setDeliveryError(null);
-                                            setSelectedArea("");
                                         }}
                                         onAddressSelect={async (addressDetails) => {
                                             const updated = {
@@ -826,55 +894,11 @@ const Checkout: React.FC = () => {
                                         </p>
                                     ) : formData.address && !checkoutData && !isCalculatingDelivery && !selectedArea ? (
                                         <p className="mt-2 text-sm text-gray-500">
-                                            Please select your delivery area below to see the delivery fee.
+                                            Please select your delivery area above to see the delivery fee.
                                         </p>
                                     ) : null}
                                 </div>
-
-                                {/* Area dropdown */}
-                                <div>
-                                    <label htmlFor="checkout-area" className="block text-sm font-medium mb-2">
-                                        Delivery Area <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        id="checkout-area"
-                                        value={selectedArea}
-                                        onChange={async (e) => {
-                                            const area = e.target.value;
-                                            setSelectedArea(area);
-                                            setCheckoutData(null);
-                                            setDeliveryError(null);
-                                            if (formData.name && formData.phone && formData.address && area) {
-                                                setIsCalculatingDelivery(true);
-                                                try {
-                                                    const res = await checkout({
-                                                        name: formData.name,
-                                                        phone: formData.phone,
-                                                        address: formData.address,
-                                                        area,
-                                                        notes: formData.notes,
-                                                    }).unwrap();
-                                                    if (res.success && res.data) setCheckoutData(res.data);
-                                                } catch (error: unknown) {
-                                                    const msg = resolveDeliveryError(error);
-                                                    if (msg) setDeliveryError(msg);
-                                                } finally {
-                                                    setIsCalculatingDelivery(false);
-                                                }
-                                            }
-                                        }}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white text-sm"
-                                    >
-                                        <option value="">Select your area</option>
-                                        {DELIVERY_ZONES.map((zone) => (
-                                            <optgroup key={zone.label} label={zone.label}>
-                                                {zone.areas.map((area) => (
-                                                    <option key={area} value={area}>{area}</option>
-                                                ))}
-                                            </optgroup>
-                                        ))}
-                                    </select>
-                                </div>
+                                )}
 
                                 {/* Optional: Separate city/state fields */}
                                 <div className="grid md:grid-cols-2 gap-4 hidden">

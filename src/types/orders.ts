@@ -233,6 +233,7 @@ export interface CheckoutResponse {
 // Create Order Request
 export interface CreateOrderRequest {
     deliveryInfo: DeliveryInfo;
+    area?: string;
     paymentMethod: PaymentMethod;
     deliveryFee: number;
     notes?: string; // pass buyer's note so backend can persist it
