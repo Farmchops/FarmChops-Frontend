@@ -91,7 +91,7 @@ const DELIVERY_ZONES = [
     },
     {
         label: "Pickup",
-        areas: ["Jabi", "Pickup", "Self Pickup"],
+        areas: ["Pickup"],
     },
 ];
 
