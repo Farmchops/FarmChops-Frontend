@@ -724,10 +724,10 @@ const Checkout: React.FC = () => {
     return (
         <div>
             <CartHero />
-            <section className="max-w-6xl min-h-[60vh] mx-auto py-10 px-4">
+            <section className="max-w-6xl min-h-[60vh] mx-auto py-10 px-4 bg-canvas">
                 <div className="mb-6">
-                    <h2 className="text-3xl font-bold text-[#121212] mb-2">Order Review</h2>
-                    <p className="text-[#737373]">
+                    <h2 className="text-3xl font-bold text-ink mb-2">Order Review</h2>
+                    <p className="text-ink-muted">
                         Complete your order - {totalItems} {totalItems === 1 ? "item" : "items"} in cart
                     </p>
                 </div>
@@ -736,7 +736,7 @@ const Checkout: React.FC = () => {
                     {/* Left - Delivery Information */}
                     <div className="md:col-span-2 space-y-6">
                         {/* Delivery Info Form */}
-                        <div className="border border-[#9FA5A3]/30 bg-green-100 rounded-lg p-6">
+                        <div className="rounded-card border border-line-strong bg-surface p-6">
                             <h3 className="text-lg font-semibold mb-4">Delivery Information</h3>
                             <div className="space-y-4">
                                 <div>
@@ -749,7 +749,7 @@ const Checkout: React.FC = () => {
                                         onChange={handleInputChange}
                                         placeholder="Enter your full name"
                                         autoComplete="name"
-                                        className="w-full px-4 py-3 md:py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
+                                        className="w-full px-4 py-3 md:py-2 rounded-control border border-line-input bg-surface text-ink placeholder:text-ink-muted placeholder:text-sm text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                                         required
                                     />
                                 </div>
@@ -764,7 +764,7 @@ const Checkout: React.FC = () => {
                                         onChange={handleInputChange}
                                         placeholder="+234 812 345 6789 or +44 7700 900000"
                                         autoComplete="tel"
-                                        className="w-full px-4 py-3 md:py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
+                                        className="w-full px-4 py-3 md:py-2 rounded-control border border-line-input bg-surface text-ink placeholder:text-ink-muted placeholder:text-sm text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                                         required
                                     />
                                 </div>
@@ -813,7 +813,7 @@ const Checkout: React.FC = () => {
                                                 }
                                             }
                                         }}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white text-sm"
+                                        className="w-full px-4 py-2 rounded-control border border-line-input bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                                     >
                                         <option value="">Select your area</option>
                                         {DELIVERY_ZONES.map((zone) => (
@@ -912,7 +912,7 @@ const Checkout: React.FC = () => {
                                             onChange={handleInputChange}
                                             placeholder="e.g., Lagos"
                                             autoComplete="address-level2"
-                                            className="w-full px-4 py-2 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
+                                            className="w-full px-4 py-2 rounded-control border border-line-input bg-surface text-ink placeholder:text-ink-muted placeholder:text-sm text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                                         />
                                     </div>
                                     <div>
@@ -925,7 +925,7 @@ const Checkout: React.FC = () => {
                                             onChange={handleInputChange}
                                             placeholder="e.g., Lagos"
                                             autoComplete="address-level1"
-                                            className="w-full px-4 py-3 border- border-gray-300 rounded-lg focus:outline-none   bg-white- placeholder:text-sm text-sm bg-green-50"
+                                            className="w-full px-4 py-3 rounded-control border border-line-input bg-surface text-ink placeholder:text-ink-muted placeholder:text-sm text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                                         />
                                     </div>
                                 </div>
@@ -942,18 +942,18 @@ const Checkout: React.FC = () => {
                                         rows={3}
                                         placeholder="E.g., Please deliver between 2-4 PM"
                                         autoComplete="off"
-                                        className="w-full px-4 py-3 border- border-gray-300 rounded-lg focus:outline-none bg-white- placeholder:text-sm text-sm bg-green-50"
+                                        className="w-full px-4 py-3 rounded-control border border-line-input bg-surface text-ink placeholder:text-ink-muted placeholder:text-sm text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Order Items Preview */}
-                        <div className="border border-[#9FA5A3]/30 bg-green-100 rounded-lg p-6">
+                        <div className="rounded-card border border-line-strong bg-surface p-6">
                             <h3 className="text-lg font-semibold mb-4">Order Details</h3>
                             <div className="space-y-3">
                                 {cart?.items.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-3 bg-green-50 p-3 rounded">
+                                    <div key={index} className="flex items-center gap-3 rounded-control bg-surface-sunken p-3">
                                         <img
                                             src={item.image}
                                             alt={item.name}
@@ -976,7 +976,7 @@ const Checkout: React.FC = () => {
 
                     {/* Right - Order Summary & Payment */}
                     <div className="space-y-6">
-                        <div className="border border-[#9FA5A3]/30 bg-green-100 rounded-lg p-6 sticky top-4">
+                        <div className="rounded-card border border-line-strong bg-surface p-6 sticky top-4">
                             <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
 
                             {/* Coupon Input */}
@@ -1035,9 +1035,9 @@ const Checkout: React.FC = () => {
                                         You'll collect your order at our Jabi pickup point.
                                     </p>
                                 )}
-                                <div className="flex justify-between font-bold text-lg border-t border-[#9FA5A3]/30 pt-3 mt-3">
+                                <div className="flex justify-between font-bold text-lg border-t border-line pt-3 mt-3">
                                     <span>Total:</span>
-                                    <span className="text-[#1D7B3C]">
+                                    <span className="text-brand-ink">
                                         {checkoutData ? (
                                             (() => {
                                                 const actualDeliveryFee = discountData?.hasFreeDelivery || checkoutData.delivery.zoneName === "Pickup" ? 0 : checkoutData.delivery.fee;
@@ -1056,14 +1056,14 @@ const Checkout: React.FC = () => {
                                 <h4 className="font-semibold mb-3">Payment Method</h4>
                                 <div className="space-y-2">
                                     {/* Paystack */}
-                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "paystack" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "paystack" ? "bg-brand-tint border-2 border-brand" : "bg-surface border-2 border-line-strong"}`}>
                                         <input
                                             type="radio"
                                             name="paymentMethod"
                                             value="paystack"
                                             checked={paymentMethod === "paystack"}
                                             onChange={(e) => setPaymentMethod(e.target.value as "paystack")}
-                                            className="mr-3 accent-[#1D7B3C]"
+                                            className="mr-3 accent-brand"
                                         />
                                         <div className="flex-1">
                                             <span className="font-medium">Pay with Paystack</span>
@@ -1072,14 +1072,14 @@ const Checkout: React.FC = () => {
                                     </label>
 
                                     {/* ALAT Pay */}
-                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "alat" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "alat" ? "bg-brand-tint border-2 border-brand" : "bg-surface border-2 border-line-strong"}`}>
                                         <input
                                             type="radio"
                                             name="paymentMethod"
                                             value="alat"
                                             checked={paymentMethod === "alat"}
                                             onChange={(e) => setPaymentMethod(e.target.value as "alat")}
-                                            className="mr-3 accent-[#1D7B3C]"
+                                            className="mr-3 accent-brand"
                                         />
                                         <div className="flex-1">
                                             <span className="font-medium">Pay with ALAT</span>
@@ -1088,14 +1088,14 @@ const Checkout: React.FC = () => {
                                     </label>
 
                                     {/* Wallet Payment Option */}
-                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "wallet" ? "bg-green-100 border-2 border-[#1D7B3C]" : "bg-green-50 border-2 border-transparent"}`}>
+                                    <label className={`flex items-center p-3 rounded-lg cursor-pointer transition ${paymentMethod === "wallet" ? "bg-brand-tint border-2 border-brand" : "bg-surface border-2 border-line-strong"}`}>
                                         <input
                                             type="radio"
                                             name="paymentMethod"
                                             value="wallet"
                                             checked={paymentMethod === "wallet"}
                                             onChange={(e) => setPaymentMethod(e.target.value as "wallet")}
-                                            className="mr-3 accent-[#1D7B3C]"
+                                            className="mr-3 accent-brand"
                                         />
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
@@ -1145,7 +1145,7 @@ const Checkout: React.FC = () => {
                                             value="pay_later"
                                             checked={paymentMethod === "pay_later"}
                                             onChange={(e) => setPaymentMethod(e.target.value as "pay_later")}
-                                            className="mr-3 accent-[#1D7B3C]"
+                                            className="mr-3 accent-brand"
                                         />
                                         <div className="flex-1 ">
                                             <span className="font-medium">Pay Later</span>
@@ -1165,7 +1165,7 @@ const Checkout: React.FC = () => {
                                     !!alatOrderId ||
                                     (paymentMethod === "wallet" && checkoutData !== null && walletBalance < checkoutData.totals.grandTotal)
                                 }
-                                className="w-full text-sm mt-6 bg-[#1D7B3C] text-white py-3 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full text-sm mt-6 bg-brand text-brand-fg py-3 rounded-card hover:bg-brand-hover transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isProcessing ? "Processing Order..." : isCalculatingDelivery ? "Calculating..." : paymentMethod === "wallet" ? "Pay with Wallet" : paymentMethod === "alat" ? "Pay with ALAT" : paymentMethod === "paystack" ? "Pay with Paystack" : !paymentMethod ? "Select a Payment Method" : "Place Order"}
                             </button>
